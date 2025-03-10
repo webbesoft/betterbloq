@@ -3,9 +3,17 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('welcome');
-})->name('home');
+Route::domain(config('app.app_urls.bulkbuy'))->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('shop/landing');
+    })->name('buy-landing');
+});
+
+Route::domain('')->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('welcome');
+    })->name('home');
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
@@ -24,5 +32,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';
