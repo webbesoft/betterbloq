@@ -9,4 +9,9 @@ class App extends Model
 {
     /** @use HasFactory<\Database\Factories\AppFactory> */
     use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'subdomain'
+    ];
 }
