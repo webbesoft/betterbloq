@@ -9,4 +9,10 @@ class Vendor extends Model
 {
     /** @use HasFactory<\Database\Factories\Apps\BulkBuy\VendorFactory> */
     use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'phone',
+        'user_id',
+    ];
 }

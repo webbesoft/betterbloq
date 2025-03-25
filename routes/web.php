@@ -1,5 +1,7 @@
 <?php
 
+use App\Apps\BulkBuy\Controllers\OrderController;
+use App\Apps\BulkBuy\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -16,21 +18,23 @@ Route::domain('')->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
-
     // BulkBuy app routes
     Route::domain(config('app.app_urls.bulkbuy'))->group(function () {
         Route::get('dashboard', function () {
             return Inertia::render('shop/dashboard');
         })->name('buy-dashboard');
 
-        Route::get('market', function () {
-            return Inertia::render('shop/market');
-        })->name('buy-market');
+        // market
+        Route::get('market', [ProductController::class, 'index'])->name('buy-market');
+        Route::get('market/product/{product}', [ProductController::class, 'show'])->name('buy-product');
+        // products
+        Route::post('products', [OrderController::class, 'store'])->name('buy-product.store');
     });
+
+    Route::get('dashboard', function () {
+        return Inertia::render('dashboard');
+    })->name('dashboard');
 });
 
-require __DIR__ . '/settings.php';
-require __DIR__ . '/auth.php';
+require __DIR__.'/settings.php';
+require __DIR__.'/auth.php';

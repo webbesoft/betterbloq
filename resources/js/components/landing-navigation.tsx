@@ -7,7 +7,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
     // const page = usePage();
 
     return (
-        <header className="mb-6 w-full max-w-[335px] text-sm not-has-[nav]:hidden lg:max-w-4xl">
+        <header className="mb-6 w-full max-w-[335px] text-sm not-has-[nav]:hidden lg:max-w-4xl p-8">
             <nav className="flex items-center justify-between gap-4">
                 <div>
                     {items.map((item) => (
