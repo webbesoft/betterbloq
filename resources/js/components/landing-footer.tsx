@@ -1,6 +1,6 @@
 export function LandingFooter () {
     return (
-        <footer className="p-4 bg-[var(--background-50)] md:p-8 lg:p-10  w-full">
+        <footer className="p-4 bg-[var(--background)] md:p-8 lg:p-10  w-full">
             <div className="mx-auto max-w-screen-xl text-center">
                 <a href="#"
                    className="flex justify-center items-center text-2xl font-semibold text-gray-900 dark:text-white">
