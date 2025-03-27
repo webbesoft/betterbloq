@@ -78,7 +78,6 @@
 }
 
 :root {
-    --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.145 0 0);
@@ -114,7 +113,6 @@
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.145 0 0);
     --card-foreground: oklch(0.985 0 0);
@@ -155,140 +153,32 @@
 
     @layer base {
         :root {
-            --text-50: #eff2f5;
-            --text-100: #e0e4eb;
-            --text-200: #c1c9d7;
-            --text-300: #a2aec3;
-            --text-400: #8393af;
-            --text-500: #63789c;
-            --text-600: #50607c;
-            --text-700: #3c485d;
-            --text-800: #28303e;
-            --text-900: #14181f;
-            --text-950: #0a0c10;
-
-            --background-50: #f0f4f5;
-            --background-100: #e0e9eb;
-            --background-200: #c2d3d6;
-            --background-300: #a3bdc2;
-            --background-400: #85a7ad;
-            --background-500: #669199;
-            --background-600: #52747a;
-            --background-700: #3d575c;
-            --background-800: #293a3d;
-            --background-900: #141d1f;
-            --background-950: #0a0e0f;
-
-            --primary-50: #eff1f5;
-            --primary-100: #e0e3eb;
-            --primary-200: #c1c7d7;
-            --primary-300: #a2abc3;
-            --primary-400: #838faf;
-            --primary-500: #63739c;
-            --primary-600: #505c7c;
-            --primary-700: #3c455d;
-            --primary-800: #282e3e;
-            --primary-900: #14171f;
-            --primary-950: #0a0c10;
-
-            --secondary-50: #f5eff1;
-            --secondary-100: #ebe0e2;
-            --secondary-200: #d7c1c5;
-            --secondary-300: #c3a2a8;
-            --secondary-400: #af838c;
-            --secondary-500: #9c636f;
-            --secondary-600: #7c5059;
-            --secondary-700: #5d3c42;
-            --secondary-800: #3e282c;
-            --secondary-900: #1f1416;
-            --secondary-950: #100a0b;
-
-            --accent-50: #f5f2ef;
-            --accent-100: #ebe6e0;
-            --accent-200: #d8ccc0;
-            --accent-300: #c4b3a1;
-            --accent-400: #b09a82;
-            --accent-500: #9d8062;
-            --accent-600: #7d674f;
-            --accent-700: #5e4d3b;
-            --accent-800: #3f3327;
-            --accent-900: #1f1a14;
-            --accent-950: #100d0a;
+          --custom-text: #100c09;
+          --custom-background: #eae8e6;
+          --custom-primary: #d46f40;
+          --custom-secondary: #78cee3;
+          --custom-accent: #5b7a9f;
         }
         .dark {
-            --text-50: #0a0c10;
-            --text-100: #14181f;
-            --text-200: #28303e;
-            --text-300: #3c495d;
-            --text-400: #50617c;
-            --text-500: #63799c;
-            --text-600: #8394af;
-            --text-700: #a2afc3;
-            --text-800: #c1c9d7;
-            --text-900: #e0e4eb;
-            --text-950: #eff2f5;
-
-            --background-50: #0a0e0f;
-            --background-100: #141d1f;
-            --background-200: #293a3d;
-            --background-300: #3d575c;
-            --background-400: #52747a;
-            --background-500: #669199;
-            --background-600: #85a7ad;
-            --background-700: #a3bdc2;
-            --background-800: #c2d3d6;
-            --background-900: #e0e9eb;
-            --background-950: #f0f4f5;
-
-            --primary-50: #0a0c10;
-            --primary-100: #14171f;
-            --primary-200: #282e3e;
-            --primary-300: #3c455d;
-            --primary-400: #505c7c;
-            --primary-500: #63739c;
-            --primary-600: #838faf;
-            --primary-700: #a2abc3;
-            --primary-800: #c1c7d7;
-            --primary-900: #e0e3eb;
-            --primary-950: #eff1f5;
-
-            --secondary-50: #100a0b;
-            --secondary-100: #1f1416;
-            --secondary-200: #3e282c;
-            --secondary-300: #5d3c42;
-            --secondary-400: #7c5059;
-            --secondary-500: #9c636f;
-            --secondary-600: #af838c;
-            --secondary-700: #c3a2a8;
-            --secondary-800: #d7c1c5;
-            --secondary-900: #ebe0e2;
-            --secondary-950: #f5eff1;
-
-            --accent-50: #100d0a;
-            --accent-100: #1f1a14;
-            --accent-200: #3f3327;
-            --accent-300: #5e4d3b;
-            --accent-400: #7d674f;
-            --accent-500: #9d8062;
-            --accent-600: #b09a82;
-            --accent-700: #c4b3a1;
-            --accent-800: #d8ccc0;
-            --accent-900: #ebe6e0;
-            --accent-950: #f5f2ef;
+          --custom-text: #f6f2ef;
+          --custom-background: #191715;
+          --custom-primary: #bf5a2b;
+          --custom-secondary: #1c7287;
+          --custom-accent: #607fa4;
         }
-    }
+      }
+      
 
-    ,
     body {
-        @apply bg-background text-foreground;
+        @apply bg-[var(--custom-background)] text-[var(--custom-text)];
     }
 
     .alert {
-        @apply bg-destructive w-max rounded-md p-4 text-[var(--text-50)];
+        @apply bg-destructive w-max rounded-md p-4 text-[var(--custom-text)];
     }
 
     .link {
-        color: var(--accent-500);
+        color: var(--custom-accent);
     }
 
     .button {
@@ -300,17 +190,17 @@
     }
 
     .primary-button {
-        color: var(--text-50);
-        background-color: var(--primary-500);
-        @apply hover:bg-[var(--primary-400)];
+        color: var(--custom-text);
+        background-color: var(--custom-primary);
+        @apply hover:bg-[var(--custom-primary)] hover:opacity-85;
     }
 
     .secondary-button {
-        @apply bg-[var(--secondary-500)] text-[var(--text-50)] hover:bg-[var(--secondary-400)];
+        @apply bg-[var(--custom-secondary)] text-[var(--custom-text)] hover:bg-[var(--custom-secondary)];
     }
 
     .accent-button {
-        @apply bg-[var(--accent-500)] text-[var(--text-50)] hover:bg-[var(--accent-500)];
+        @apply bg-[var(--custom-accent)] text-[var(--custom-text)] hover:bg-[var(--custom-accent)];
     }
 
     .h1-text {
@@ -322,14 +212,18 @@
     }
 
     .text {
-        @apply text-[var(--text-900)];
+        @apply text-[var(--text)];
     }
 
     .label {
-        @apply font-light text-[var(--text-900)];
+        @apply font-light text-[var(--text)];
     }
 
     .form-with-label {
         @apply flex flex-col items-start justify-center gap-2;
+    }
+
+    .nav-element {
+        @apply bg-[var(--custom-secondary)] p-2 relative rounded-md;
     }
 }
