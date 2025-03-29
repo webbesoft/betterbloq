@@ -19,7 +19,9 @@ Route::domain('')->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // BulkBuy app routes
-    Route::domain(config('app.app_urls.bulkbuy'))->group(function () {
+    Route::domain(config('app.app_urls.bulkbuy'))
+    // ->middleware(['subscribed'])
+    ->group(function () {
         Route::get('dashboard', function () {
             return Inertia::render('shop/dashboard');
         })->name('buy-dashboard');
@@ -29,6 +31,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('market/product/{product}', [ProductController::class, 'show'])->name('buy-product');
         // products
         Route::post('products', [OrderController::class, 'store'])->name('buy-product.store');
+    });
+
+    Route::domain(config('app.app_urls.bulkbuy'))->group(function () {
+        Route::get('plans', function () {
+            return Inertia::render('shop/plans');
+        })->name('buy-plans');
     });
 
     Route::get('dashboard', function () {

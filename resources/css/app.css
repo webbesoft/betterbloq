@@ -203,6 +203,10 @@
         @apply bg-[var(--custom-accent)] text-[var(--custom-text)] hover:bg-[var(--custom-accent)];
     }
 
+    .transparent-button {
+        @apply bg-[var(--custom-background) text-[var(--custom-text)]];
+    }
+
     .h1-text {
         @apply text-3xl;
     }

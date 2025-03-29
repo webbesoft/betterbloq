@@ -12,3 +12,25 @@ export interface Vendor {
     id: number;
     name: string;
 }
+
+export interface PaginationType {
+    current_page: number;
+    last_page: number;
+    links: PaginationLinks[];
+    per_page: number;
+    total: number;
+}
+
+export interface PaginationBaseLinks {
+    first: string;
+    last: string;
+    next: string;
+    prev: string;
+}
+
+export interface PaginationLinks {
+    active: boolean;
+    label: string;
+    url: string;
+
+}
