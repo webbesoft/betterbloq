@@ -6,7 +6,6 @@ use App\Apps\BulkBuy\Models\Product;
 use App\Apps\BulkBuy\Resources\ProductResource;
 use App\Http\Controllers\Controller;
 use Inertia\Inertia;
-use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class ProductController extends Controller

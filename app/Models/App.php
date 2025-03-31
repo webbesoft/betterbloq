@@ -12,6 +12,6 @@ class App extends Model
 
     protected $fillable = [
         'name',
-        'subdomain'
+        'subdomain',
     ];
 }
