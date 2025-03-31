@@ -3,9 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Vendor;
 
-class ProductSeeder extends Seeder
+class CategorySeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -14,15 +13,14 @@ class ProductSeeder extends Seeder
     {
         //
         if (app()->environment() === 'local') {
-            $products = [
+            $categories = [
                 [
-                    'name' => 'Roofing sheets',
-                    'vendor_id' => Vendor::first()->pluck('id'),
+                    'name' => 'Default',
                 ],
             ];
 
-            foreach ($products as $product) {
-                Product::create($product);
+            foreach ($categories as $category) {
+                Category::create($category);
             }
         }
     }

@@ -40,6 +40,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
             <Head title="Log in" />
 
             <form className="flex flex-col gap-6" onSubmit={submit}>
+                @csrf
                 <div className="grid gap-6">
                     <div className="grid gap-2">
                         <Label htmlFor="email" className={'label'}>Email address</Label>

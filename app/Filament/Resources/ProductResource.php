@@ -36,10 +36,6 @@ class ProductResource extends Resource
                     ->numeric()
                     ->default(0)
                     ->prefix('$'),
-                Forms\Components\TextInput::make('amount')
-                    ->required()
-                    ->numeric()
-                    ->default(0),
                 Forms\Components\TextInput::make('unit')
                     ->required(),
                 Forms\Components\TextInput::make('category_id')
@@ -59,12 +55,13 @@ class ProductResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('stripe_product_id')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('stripe_price_id')
+                    ->searchable(),
                 Tables\Columns\ImageColumn::make('image'),
                 Tables\Columns\TextColumn::make('price')
                     ->money()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('amount')
-                    ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('unit')
                     ->searchable(),

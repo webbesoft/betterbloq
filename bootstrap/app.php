@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckUserSubscription;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetAssetUrlForSubdomain;
@@ -17,12 +18,19 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->encryptCookies(except: ['appearance']);
+        $middleware->validateCsrfTokens(except: [
+            'stripe/*',
+        ]);
 
         $middleware->web(append: [
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
             SetAssetUrlForSubdomain::class,
+        ]);
+
+        $middleware->web()->alias([
+            'subscribed' => CheckUserSubscription::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

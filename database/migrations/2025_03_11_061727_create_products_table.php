@@ -37,7 +37,6 @@ return new class extends Migration
             $table->string('image', 255)->default('Default Image');
             $table->text('description');
             $table->decimal('price', 10, 2)->default(0.00);
-            $table->decimal('amount', 10, 2)->default(0.00);
             $table->string('unit', 10)->default('pc');
 
             $table->unsignedBigInteger('category_id');

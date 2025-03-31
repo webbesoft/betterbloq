@@ -1,0 +1,8 @@
+services:
+  db:
+    image: mariadb
+    restart: on-failure
+    ports:
+      - 3306:3306
+    environment:
+      MARIADB_ROOT_PASSWORD: example
