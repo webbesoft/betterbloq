@@ -123,6 +123,8 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'main_domain' => env('APP_DOMAIN'),
+
     'app_urls' => [
         'bulkbuy' => env('APP_URL_BULK_BUY', 'bulk.localhost'),
     ],

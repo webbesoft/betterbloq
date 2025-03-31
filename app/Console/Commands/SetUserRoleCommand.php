@@ -19,7 +19,7 @@ class SetUserRoleCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'This command will set the admin user account as an account admin.';
 
     /**
      * Execute the console command.

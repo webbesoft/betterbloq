@@ -27,6 +27,14 @@ export default function Market(props: MarketProps) {
 
     const { data, meta, links } = products;
 
+    const paginationLinks = () => {
+        for (let index = 1; index < meta.total; index++) {
+            return (
+                <PaginationLink href="#" size={1} className='rounded-sm'>{index}</PaginationLink>
+            )                                            
+        }
+    }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Market" />
@@ -50,20 +58,20 @@ export default function Market(props: MarketProps) {
                         );
                     })}
                 </div>
-                <div className='mt-2'>
+                <div className='mb-0'>
                     {
                         meta && meta.total > 1 && (
                             <Pagination>
-                                <PaginationContent className='gap-2'>
+                                <PaginationContent className='gap-2 justify-center'>
                                     <PaginationItem>
                                         <PaginationPrevious hidden={! links.prev} href={links.prev} size={1} />
                                     </PaginationItem>
-                                    <PaginationItem className='shadow-sm px-2'>
-                                        <PaginationLink href="#" size={1}>1</PaginationLink>
+                                    <PaginationItem className='shadow-sm p-2'>
+                                        {paginationLinks()}
                                     </PaginationItem>
-                                    <PaginationItem>
-                                        {/* <PaginationEllipsis /> */}
-                                    </PaginationItem>
+                                    {/* <PaginationItem>
+                                        <PaginationEllipsis />
+                                    </PaginationItem> */}
                                     <PaginationItem>
                                         <PaginationNext hidden={! links.next} href={links.next} size={1} />
                                     </PaginationItem>
