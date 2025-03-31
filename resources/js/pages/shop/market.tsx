@@ -23,7 +23,6 @@ interface MarketProps {
 }
 
 export default function Market(props: MarketProps) {
-    console.log(props);
     const { products } = props;
 
     const { data, meta, links } = products;

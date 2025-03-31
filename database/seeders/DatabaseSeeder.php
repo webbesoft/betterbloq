@@ -16,8 +16,17 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Base User',
+            'email' => 'admin@betterbloq.com',
+        ]);
+
+        $this->call([
+            AppSeeder::class,
+            PlanSeeder::class,
+            RolesAndPermissionsSeeder::class,
+            VendorSeeder::class,
+            CategorySeeder::class,
+            ProductSeeder::class,
         ]);
     }
 }

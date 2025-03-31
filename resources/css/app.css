@@ -204,7 +204,7 @@
     }
 
     .transparent-button {
-        @apply bg-[var(--custom-background) text-[var(--custom-text)]];
+        @apply bg-[var(--custom-background)] text-[var(--custom-text)];
     }
 
     .h1-text {

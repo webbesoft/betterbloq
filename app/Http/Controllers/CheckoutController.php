@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
+use Inertia\Inertia;
 
 class CheckoutController extends Controller
 {
@@ -12,22 +14,28 @@ class CheckoutController extends Controller
         $priceId = $request->input('priceId');
         $user = $request->user();
 
-        dd($request);
-        dd($priceId, $user);
-
         if ($user && $priceId) {
             try {
-                $checkoutUrl = $user->newSubscription('default', $priceId)
-                    ->checkout()->url;
+                $session = $user->newSubscription('standard', $priceId)
+                    ->trialDays(14)
+                    ->checkout([
+                        'success_url' => route('buy-dashboard'),
+                        'cancel_url' => route('buy-plans'),
+                    ]);
 
-                return Redirect::away($checkoutUrl);
+                return Inertia::render('shop/payment-pending', [
+                    'url' => $session->url,
+                ]);
             } catch (\Exception $e) {
+                info('exception in checkout', [$e]);
                 Session::flash('message', 'Could not initiate checkout.');
 
                 return back();
             }
         }
 
-        return back()->with('error', 'Invalid request.');
+        Session::flash('message', 'Could not initiate checkout. Invalid Request');
+
+        return back()->withErrors('error', 'Invalid request.');
     }
 }

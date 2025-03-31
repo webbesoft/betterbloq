@@ -34,3 +34,12 @@ export interface PaginationLinks {
     url: string;
 
 }
+
+export interface PlanType {
+    name: string;
+    stripe_plan: string;
+    price: number;
+    slug: string;
+    isPopular: boolean;
+    features: any[];
+}

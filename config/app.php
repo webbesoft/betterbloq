@@ -127,4 +127,12 @@ return [
         'bulkbuy' => env('APP_URL_BULK_BUY', 'bulk.localhost'),
     ],
 
+    'plans' => [
+        'standard_monthly' => [
+            'stripe_name' => env('STANDARD_MONTHLY_ID'),
+            'price' => 4.99,
+        ],
+        'standard_yearly' => env('STANDARD_YEARLY_ID'),
+    ],
+
 ];
