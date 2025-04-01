@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -9,7 +11,7 @@ import { FormEventHandler, useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Market',
+        title: 'Product',
         href: '/market',
     },
 ];
@@ -42,7 +44,7 @@ export default function Market(props: ProductProps) {
         reset,
     } = useForm<OrderForm>({
         product_id: data.id,
-        quantity: 0,
+        quantity: 1,
         expected_delivery_date: '',
     });
 
@@ -55,7 +57,7 @@ export default function Market(props: ProductProps) {
         });
     };
 
-    const [total, setTotal] = useState(0);
+    const [total, setTotal] = useState(data.price);
 
     useEffect(() => {
         setTotal(formdata.quantity * data.price);
@@ -64,52 +66,75 @@ export default function Market(props: ProductProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={data.name} />
-            <div className="flex h-full w-full items-start justify-between gap-2 rounded-xl p-4">
-                <div className="flex w-1/2 flex-col gap-2 rounded-md p-4" key={data.id}>
-                    <h2 className="h2-text">{data.vendor.name}</h2>
-                    <img src={data.image} alt={data.name} />
-                    <p className="text">{data.name}</p>
-                    <span>
-                        ${data.price}/{data.unit}
-                    </span>
-                </div>
-                <div className="flex w-1/2 flex-col gap-2 p-4">
-                    <form className="flex flex-col gap-4" onSubmit={submit}>
-                        {errors.quantity && <p className="error-text">{errors.quantity}</p>}
-                        <Label className="form-with-label" htmlFor="quantity">
-                            Quantity
-                            <Input
-                                type="number"
-                                id="quantity"
-                                name="quantity"
-                                className="border px-2 py-1"
-                                onChange={(e) => setData('quantity', Number(e.target.value))}
-                                value={formdata.quantity}
-                            />
-                        </Label>
-                        {errors.expected_delivery_date && <p className="error-text">{errors.expected_delivery_date}</p>}
-                        <Label className="form-with-label" htmlFor="expected_delivery_date">
-                            Expected Delivery Date
-                            <Input
-                                type="date"
-                                id="expected_delivery_date"
-                                name="expected_delivery_date"
-                                className="border px-2 py-1"
-                                onChange={(e) => setData('expected_delivery_date', e.target.value)}
-                                value={formdata.expected_delivery_date}
-                            />
-                        </Label>
-                        <Separator />
-                        <div className="flex items-center justify-between">
-                            <p>Total </p>
-                            <span>${total}</span>
-                        </div>
+            <div className="container mx-auto h-full py-8">
+                <div className="grid h-full grid-cols-1 gap-6 md:grid-cols-2">
+                    <Card className="flex h-full flex-col justify-between rounded-xs shadow-sm md:order-1">
+                        {' '}
+                        <CardHeader>
+                            <CardTitle className="text-xl font-semibold">{data.vendor.name}</CardTitle>
+                            <CardDescription className="text-gray-500">{data.name}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex flex-grow flex-col items-start justify-start p-6">
+                            <div className="aspect-w-1 aspect-h-1 mb-4 w-full max-w-md overflow-hidden rounded-md">
+                                <img src={data.image} alt={data.name} className="h-full max-h-[300px] w-full object-cover" />
+                            </div>
+                            <p className="text-lg font-semibold text-[var(--custom-accent)]">
+                                ${data.price} / {data.unit}
+                            </p>
+                        </CardContent>
+                        <CardFooter></CardFooter>
+                    </Card>
 
-                        <input type="hidden" name="product_id" value={data.id} />
-                        <button type="submit" className="button primary-button text-center" disabled={processing}>
-                            Order
-                        </button>
-                    </form>
+                    <Card className="flex h-full flex-col justify-between rounded-xs shadow-sm md:order-2">
+                        {' '}
+                        {/* Ensure order form is second on larger screens */}
+                        <CardHeader>
+                            <CardTitle>Order Information</CardTitle>
+                            <CardDescription>Place your order for {data.name}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-grow space-y-4">
+                            <form className="flex h-full flex-col justify-between space-y-4" onSubmit={submit}>
+                                {errors.quantity && <p className="text-sm text-red-500">{errors.quantity}</p>}
+                                <div className="grid grid-cols-1 gap-2">
+                                    <Label htmlFor="quantity">Quantity</Label>
+                                    <Input
+                                        type="number"
+                                        id="quantity"
+                                        name="quantity"
+                                        className="col-span-3"
+                                        onChange={(e) => setData('quantity', Number(e.target.value))}
+                                        value={formdata.quantity}
+                                        min="1"
+                                    />
+                                </div>
+
+                                {errors.expected_delivery_date && <p className="text-sm text-red-500">{errors.expected_delivery_date}</p>}
+                                <div className="grid grid-cols-1 gap-2">
+                                    <Label htmlFor="expected_delivery_date">Expected Delivery Date</Label>
+                                    <Input
+                                        type="date"
+                                        id="expected_delivery_date"
+                                        name="expected_delivery_date"
+                                        className="col-span-3"
+                                        onChange={(e) => setData('expected_delivery_date', e.target.value)}
+                                        value={formdata.expected_delivery_date}
+                                    />
+                                </div>
+
+                                <Separator />
+
+                                <div className="flex items-center justify-between">
+                                    <p className="font-semibold">Total</p>
+                                    <span className="text-xl font-bold text-[var(--custom-accent)]">${total}</span>
+                                </div>
+
+                                <input type="hidden" name="product_id" value={data.id} />
+                                <Button type="submit" className="mt-auto w-full" disabled={processing}>
+                                    {processing ? 'Ordering...' : 'Order Now'}
+                                </Button>
+                            </form>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </AppLayout>

@@ -27,8 +27,10 @@ class SetUserRoleCommand extends Command
     public function handle()
     {
         //
-        $user = User::where('email', '=', 'admin@betterbloq.com')->first();
+        $users = User::where('email', 'like', '%@betterbloq.com')->get();
 
-        $user->assignRole('Super Admin');
+        foreach ($users as $user) {
+            $user->assignRole('Super Admin');
+        }
     }
 }
