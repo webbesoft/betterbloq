@@ -4,6 +4,7 @@ namespace App\Apps\BulkBuy\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
@@ -22,9 +23,20 @@ use Stripe\Stripe;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * 
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Apps\BulkBuy\Models\Category> $category
  *
  * @method static \Illuminate\Database\Eloquent\Builder|Product newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Product newQuery()
+ * @method static Builder|Product filterByName(string $name)
+ * @method static Builder|Product filterByPrice(int $price)
+ * 
+ * @method static Builder|Product whereId($value)
+ * @method static Builder|Product whereName($value)
+ * @method static Builder|Product wherePrice($value)
+ * @method static Builder|Product whereVendor($value)
+ * @method static Builder|Product whereCategory($value)
+ * 
  *
  * @mixin Eloquent
  */
@@ -88,5 +100,42 @@ class Product extends Model
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function scopeFilterByName(Builder $query, string $name)
+    {
+        return $query->where('name', 'like', "%$name%");
+    }
+
+    public function scopeVendor(Builder $query, int $vendor_id)
+    {
+        return $query->where('vendor_id', $vendor_id);
+    }
+
+    public function scopeCategory(Builder $query, int $category_id)
+    {
+        dd($category);
+        return $query->where('category_id', $category->id);
+    }
+
+    public function scopePriceBetween(Builder $query, string $value): Builder
+    {
+        if ($value) {
+            [$min, $max] = explode(':', $value);
+            $query->whereBetween('price', [floatval($min), floatval($max)]);
+        }
+        return $query;
+    }
+
+    public function scopeHasOpenPurchasePool(Builder $query): Builder
+    {
+        return $query->whereHas('purchasePools', function (Builder $poolQuery) {
+            $poolQuery->where('status', 'open');
+        });
     }
 }

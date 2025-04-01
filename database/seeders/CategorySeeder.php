@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Apps\BulkBuy\Models\Category;
 use Illuminate\Database\Seeder;
 
 class CategorySeeder extends Seeder

@@ -84,6 +84,7 @@ return new class extends Migration
             $table->unsignedBigInteger('purchase_pool_id');
             $table->foreign('purchase_pool_id')->references('id')->on('purchase_pools')->onDelete('cascade');
 
+            $table->softDeletes();
             $table->timestamps();
         });
     }
