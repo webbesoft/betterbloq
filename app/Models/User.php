@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Apps\BulkBuy\Models\PurchasePool;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -68,6 +69,11 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function watchedPurchasePools()
+    {
+        return $this->belongsToMany(PurchasePool::class, 'purchase_pool_watchers', 'user_id', 'purchase_pool_id');
     }
 
     public function canAccessPanel(Panel $panel): bool

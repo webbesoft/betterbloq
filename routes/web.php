@@ -3,7 +3,9 @@
 use App\Apps\BulkBuy\Controllers\OrderController;
 use App\Apps\BulkBuy\Controllers\ProductController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlanController;
+use App\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -24,15 +26,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::domain(config('app.app_urls.bulkbuy'))
         ->middleware(['subscribed'])
         ->group(function () {
-            Route::get('dashboard', function () {
-                return Inertia::render('shop/dashboard');
-            })->name('buy-dashboard');
+            Route::get('dashboard', [DashboardController::class, 'index'])->name('buy-dashboard');
 
             // market
             Route::get('market', [ProductController::class, 'index'])->name('buy-market');
             Route::get('market/product/{product}', [ProductController::class, 'show'])->name('buy-product');
             // products
             Route::post('products', [OrderController::class, 'store'])->name('buy-product.store');
+
+            Route::resource('projects', ProjectController::class);
         });
 
     Route::domain(config('app.app_urls.bulkbuy'))->group(function () {
