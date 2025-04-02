@@ -35,6 +35,10 @@ export interface PaginationLinks {
 }
 
 export interface PlanType {
+    description: ReactNode;
+    recommended: any;
+    billingNote: any;
+    ctaText: ReactNode;
     name: string;
     stripe_plan: string;
     price: number;

@@ -62,7 +62,7 @@ export default function Market(props: MarketProps) {
     const reload = useCallback(
         debounce((newFilters) => {
             console.log('Requesting with filters:', newFilters);
-            router.get(route('buy-market'), newFilters, {
+            router.get(route('market'), newFilters, {
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,

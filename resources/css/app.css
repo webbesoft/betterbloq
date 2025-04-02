@@ -77,6 +77,7 @@
     }
 }
 
+/* Your original theme with Oklch variables - Keep this as is in the global :root */
 :root {
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
@@ -147,87 +148,175 @@
 }
 
 @layer base {
+    .landing-page {
+        /* shadcn variables mapped from your custom theme */
+        --background: 24 6% 91%; /* #eae8e6 - Mapped from --custom-background */
+        --foreground: 24 6% 7%; /* #100c09 - Mapped from --custom-text */
+
+        --primary: 20 65% 54%; /* #d46f40 - Mapped from --custom-primary */
+        --primary-foreground: 0 0% 100%; /* White text for contrast on primary */
+
+        --secondary: 191 64% 69%; /* #78cee3 - Mapped from --custom-secondary */
+        --secondary-foreground: 200 70% 10%; /* Dark text for contrast on secondary */
+
+        --accent: 211 27% 50%; /* #5b7a9f - Mapped from --custom-accent */
+        --accent-foreground: 0 0% 100%; /* White text for contrast on accent */
+
+        /* Add other required shadcn variables (sensible defaults) */
+        --card: var(--background);
+        --card-foreground: var(--foreground);
+
+        --popover: var(--background);
+        --popover-foreground: var(--foreground);
+
+        --muted: 24 6% 85%; /* Lighter shade of background/gray */
+        --muted-foreground: 24 6% 45%; /* Darker muted text */
+
+        --destructive: 0 84% 60%; /* Standard red */
+        --destructive-foreground: 0 0% 100%; /* White */
+
+        --border: 24 6% 80%; /* Slightly darker than background */
+        --input: 24 6% 75%; /* Slightly darker border for inputs */
+        --ring: var(--primary); /* Use primary color for focus rings */
+
+        --radius: 0.5rem; /* Default border radius */
+
+        /* Your original custom variables (can keep for direct use if needed) */
+        --custom-text: #100c09;
+        --custom-background: #eae8e6;
+        --custom-primary: #d46f40;
+        --custom-secondary: #78cee3;
+        --custom-accent: #5b7a9f;
+    }
+
+    .landing-page.dark {
+        /* shadcn variables mapped from your custom dark theme */
+        --background: 24 6% 9%; /* #191715 - Mapped from --custom-background */
+        --foreground: 24 6% 95%; /* #f6f2ef - Mapped from --custom-text */
+
+        --primary: 20 65% 46%; /* #bf5a2b - Mapped from --custom-primary */
+        --primary-foreground: 24 6% 95%; /* Light text for contrast */
+
+        --secondary: 191 64% 32%; /* #1c7287 - Mapped from --custom-secondary */
+        --secondary-foreground: 24 6% 95%; /* Light text for contrast */
+
+        --accent: 211 27% 51%; /* #607fa4 - Mapped from --custom-accent */
+        --accent-foreground: 24 6% 95%; /* Light text for contrast */
+
+        /* Add other required shadcn variables for dark mode */
+        --card: var(--background);
+        --card-foreground: var(--foreground);
+
+        --popover: var(--background);
+        --popover-foreground: var(--foreground);
+
+        --muted: 24 6% 15%; /* Darker shade */
+        --muted-foreground: 24 6% 65%; /* Lighter muted text */
+
+        --destructive: 0 63% 31%; /* Darker red */
+        --destructive-foreground: 24 6% 95%;
+
+        --border: 24 6% 20%; /* Slightly lighter than dark background */
+        --input: 24 6% 25%; /* Slightly lighter border for inputs */
+        --ring: var(--primary); /* Use primary color */
+
+        /* Your original custom dark variables */
+        --custom-text: #f6f2ef;
+        --custom-background: #191715;
+        --custom-primary: #bf5a2b;
+        --custom-secondary: #1c7287;
+        --custom-accent: #607fa4;
+    }
+}
+
+/* Apply base background/text color for the landing page */
+@layer base {
+    body.landing-page {
+        @apply bg-background text-foreground;
+    }
+
+    .landing-page {
+        .link {
+            @apply text-accent;
+        }
+
+        .alert {
+            @apply bg-destructive text-foreground w-max rounded-md p-4;
+        }
+
+        .button {
+            @apply rounded-md px-5 py-3.5 text-sm font-semibold opacity-85 shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2;
+        }
+
+        .error-text {
+            @apply text-destructive;
+        }
+
+        .primary-button {
+            @apply bg-primary hover:bg-primary-foreground text-foreground;
+        }
+
+        .secondary-button {
+            @apply bg-secondary text-foreground hover:bg-secondary-foreground;
+        }
+
+        .accent-button {
+            @apply bg-accent text-foreground hover:bg-accent;
+        }
+
+        .transparent-button {
+            @apply bg-[var(--custom-background)] text-[var(--custom-text)];
+        }
+
+        .h1-text {
+            @apply text-3xl;
+        }
+
+        .h2-text {
+            @apply text-2xl font-bold;
+        }
+
+        .text {
+            @apply text-[var(--text)];
+        }
+
+        .label {
+            @apply font-light text-[var(--text)];
+        }
+
+        .form-with-label {
+            @apply flex flex-col items-start justify-center gap-2;
+        }
+
+        .nav-element {
+            @apply relative rounded-md bg-[var(--custom-secondary)] p-2;
+        }
+    }
+}
+
+@layer base {
     * {
         @apply border-border;
     }
 
     @layer base {
         :root {
-          --custom-text: #100c09;
-          --custom-background: #eae8e6;
-          --custom-primary: #d46f40;
-          --custom-secondary: #78cee3;
-          --custom-accent: #5b7a9f;
+            --custom-text: #100c09;
+            --custom-background: #eae8e6;
+            --custom-primary: #d46f40;
+            --custom-secondary: #78cee3;
+            --custom-accent: #5b7a9f;
         }
         .dark {
-          --custom-text: #f6f2ef;
-          --custom-background: #191715;
-          --custom-primary: #bf5a2b;
-          --custom-secondary: #1c7287;
-          --custom-accent: #607fa4;
+            --custom-text: #f6f2ef;
+            --custom-background: #191715;
+            --custom-primary: #bf5a2b;
+            --custom-secondary: #1c7287;
+            --custom-accent: #607fa4;
         }
-      }
-      
+    }
 
     body {
         @apply bg-[var(--custom-background)] text-[var(--custom-text)];
-    }
-
-    .alert {
-        @apply bg-destructive w-max rounded-md p-4 text-[var(--custom-text)];
-    }
-
-    .link {
-        color: var(--custom-accent);
-    }
-
-    .button {
-        @apply rounded-md px-5 py-3.5 text-sm font-semibold opacity-85 shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2;
-    }
-
-    .error-text {
-        @apply text-destructive;
-    }
-
-    .primary-button {
-        color: var(--custom-text);
-        background-color: var(--custom-primary);
-        @apply hover:bg-[var(--custom-primary)] hover:opacity-85;
-    }
-
-    .secondary-button {
-        @apply bg-[var(--custom-secondary)] text-[var(--custom-text)] hover:bg-[var(--custom-secondary)];
-    }
-
-    .accent-button {
-        @apply bg-[var(--custom-accent)] text-[var(--custom-text)] hover:bg-[var(--custom-accent)];
-    }
-
-    .transparent-button {
-        @apply bg-[var(--custom-background)] text-[var(--custom-text)];
-    }
-
-    .h1-text {
-        @apply text-3xl;
-    }
-
-    .h2-text {
-        @apply text-2xl font-bold;
-    }
-
-    .text {
-        @apply text-[var(--text)];
-    }
-
-    .label {
-        @apply font-light text-[var(--text)];
-    }
-
-    .form-with-label {
-        @apply flex flex-col items-start justify-center gap-2;
-    }
-
-    .nav-element {
-        @apply bg-[var(--custom-secondary)] p-2 relative rounded-md;
     }
 }

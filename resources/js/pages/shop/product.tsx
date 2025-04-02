@@ -51,7 +51,7 @@ export default function Market(props: ProductProps) {
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
 
-        post(route('buy-product.store'), {
+        post(route('product.store'), {
             onFinish: () => reset('quantity', 'expected_delivery_date'),
             onError: () => reset('quantity', 'expected_delivery_date'),
         });
