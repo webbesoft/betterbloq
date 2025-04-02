@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Apps\BulkBuy\Models\Order;
+use App\Models\Order;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * App\Apps\BulkBuy\Models\Project
+ * App\Models\Project
  *
  * @property int $id
  */

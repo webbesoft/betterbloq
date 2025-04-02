@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Apps\BulkBuy\Models;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * App\Apps\BulkBuy\Models\PurchasePool
+ * App\Models\PurchasePool
  *
  * @property int $id
  * @property string status

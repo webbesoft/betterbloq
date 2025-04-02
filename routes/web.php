@@ -1,7 +1,7 @@
 <?php
 
-use App\Apps\BulkBuy\Controllers\OrderController;
-use App\Apps\BulkBuy\Controllers\ProductController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlanController;
@@ -9,42 +9,32 @@ use App\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::domain(config('app.app_urls.bulkbuy'))->group(function () {
-    Route::get('/', function () {
-        return Inertia::render('shop/landing');
-    })->name('buy-landing');
-});
-
-Route::domain('')->group(function () {
-    Route::get('/', function () {
-        return Inertia::render('welcome');
-    })->name('home');
-});
+Route::get('/', function () {
+    return Inertia::render('shop/landing');
+})->name('landing');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // BulkBuy app routes
-    Route::domain(config('app.app_urls.bulkbuy'))
-        ->middleware(['subscribed'])
-        ->group(function () {
-            Route::get('dashboard', [DashboardController::class, 'index'])->name('buy-dashboard');
+    Route::middleware(['subscribed'])->group(function () {
+            Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
             // market
-            Route::get('market', [ProductController::class, 'index'])->name('buy-market');
-            Route::get('market/product/{product}', [ProductController::class, 'show'])->name('buy-product');
+            Route::get('market', [ProductController::class, 'index'])->name('market');
+            Route::get('market/product/{product}', [ProductController::class, 'show'])->name('product.show');
             // products
-            Route::post('products', [OrderController::class, 'store'])->name('buy-product.store');
+            Route::post('products', [OrderController::class, 'store'])->name('product.store');
 
             Route::resource('projects', ProjectController::class);
         });
 
-    Route::domain(config('app.app_urls.bulkbuy'))->group(function () {
-        Route::get('plans', [PlanController::class, 'index'])->name('buy-plans');
+    Route::prefix('')->group(function () {
+        Route::get('plans', [PlanController::class, 'index'])->name('plans.index');
         Route::post('checkout', [CheckoutController::class, 'create'])->name('checkout.create');
     });
 
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    // Route::get('dashboard', function () {
+    //     return Inertia::render('dashboard');
+    // })->name('dashboard');
 });
 
 require __DIR__.'/settings.php';

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Apps\BulkBuy\Controllers;
+namespace App\Http\Controllers;
 
-use App\Apps\BulkBuy\Models\Product;
-use App\Apps\BulkBuy\Models\Category;
-use App\Apps\BulkBuy\Models\Vendor;
-use App\Apps\BulkBuy\Resources\ProductResource;
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\Vendor;
+use App\Http\Resources\ProductResource;
 use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 use Spatie\QueryBuilder\QueryBuilder;

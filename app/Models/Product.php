@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Apps\BulkBuy\Models;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Stripe\Stripe;
 
 /**
- * App\Apps\BulkBuy\Models\Product
+ * App\Models\Product
  *
  * @property int $id
  * @property string $name

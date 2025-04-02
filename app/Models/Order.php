@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Apps\BulkBuy\Models;
+namespace App\Models;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * App\Apps\BulkBuy\Models\Order
+ * App\Models\Order
  *
  * @property int id
  * @property string name

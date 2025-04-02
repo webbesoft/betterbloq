@@ -28,7 +28,7 @@ class CheckUserSubscription
                 // On the plans page
                 if ($request->user()->subscribed('standard')) {
                     // User is already subscribed, redirect them to the dashboard or another appropriate page
-                    return redirect()->route('buy-dashboard')->with('info', 'You already have an active subscription.');
+                    return redirect()->route('dashboard')->with('info', 'You already have an active subscription.');
                 }
 
                 // User is not subscribed, allow access to the plans page
@@ -37,7 +37,7 @@ class CheckUserSubscription
                 // Not on the plans page
                 if (! $request->user()->subscribed('standard')) {
                     // User is not subscribed, redirect them to the plans page
-                    return redirect()->route('buy-plans')->with('warning', 'Please choose a subscription plan to continue.');
+                    return redirect()->route('plans.index')->with('warning', 'Please choose a subscription plan to continue.');
                 }
 
                 // User is subscribed, allow access to the requested page

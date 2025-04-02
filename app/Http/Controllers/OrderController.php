@@ -2,8 +2,8 @@
 
 namespace App\Apps\BulkBuy\Controllers;
 
-use App\Apps\BulkBuy\Managers\OrderManager;
-use App\Apps\BulkBuy\Requests\StoreOrderRequest;
+use App\Services\OrderService;
+use App\Http\Requests\StoreOrderRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Session;
 
@@ -13,7 +13,7 @@ class OrderController extends Controller
     {
         $validated = $request->validated();
 
-        $order = OrderManager::createOrder($request->user(), $validated);
+        $order = OrderService::createOrder($request->user(), $validated);
 
         if (! data_get($order, 'error')) {
             return to_route('orders.pay', $order);

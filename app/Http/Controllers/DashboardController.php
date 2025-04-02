@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Apps\BulkBuy\Models\Order;
-use App\Apps\BulkBuy\Models\PurchasePool;
+use App\Models\Order;
+use App\Models\PurchasePool;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Inertia\Inertia;

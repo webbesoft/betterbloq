@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Apps\BulkBuy\Managers;
+namespace App\Services;
 
-use App\Apps\BulkBuy\Models\Order;
-use App\Apps\BulkBuy\Models\PurchasePool;
+use App\Models\Order;
+use App\Models\PurchasePool;
 use App\Models\User;
 
-class OrderManager
+class OrderService
 {
     public static function createOrder(User $user, array $data)
     {
