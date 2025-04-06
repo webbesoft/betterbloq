@@ -24,7 +24,7 @@ use Stripe\Stripe;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  *
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Apps\BulkBuy\Models\Category> $category
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Category> $category
  *
  * @method static \Illuminate\Database\Eloquent\Builder|Product newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Product newQuery()
@@ -119,8 +119,7 @@ class Product extends Model
 
     public function scopeCategory(Builder $query, int $category_id)
     {
-        dd($category);
-        return $query->where('category_id', $category->id);
+        return $query->where('category_id', $category_id);
     }
 
     public function scopePriceBetween(Builder $query, string $value): Builder

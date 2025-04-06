@@ -56,7 +56,7 @@ class DashboardController extends Controller
             ->with('vendor')
             ->select('vendor_id')
             ->groupBy('vendor_id')
-            ->orderByDesc(\DB::raw('count(*)'))
+            ->orderByDesc(DB::raw('count(*)'))
             ->limit(5)
             ->get()
             ->map(function ($order) {
