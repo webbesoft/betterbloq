@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Cache;
  */
 class Vendor extends Model
 {
-    /** @use HasFactory<\Database\Factories\Apps\BulkBuy\VendorFactory> */
+    /** @use HasFactory<\Database\Factories\VendorFactory> */
     use HasFactory;
 
     protected $fillable = [

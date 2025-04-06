@@ -23,26 +23,26 @@ use Stripe\Stripe;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * 
+ *
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Apps\BulkBuy\Models\Category> $category
  *
  * @method static \Illuminate\Database\Eloquent\Builder|Product newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Product newQuery()
  * @method static Builder|Product filterByName(string $name)
  * @method static Builder|Product filterByPrice(int $price)
- * 
+ *
  * @method static Builder|Product whereId($value)
  * @method static Builder|Product whereName($value)
  * @method static Builder|Product wherePrice($value)
  * @method static Builder|Product whereVendor($value)
  * @method static Builder|Product whereCategory($value)
- * 
+ *
  *
  * @mixin Eloquent
  */
 class Product extends Model
 {
-    /** @use HasFactory<\Database\Factories\Apps\BulkBuy\ProductFactory> */
+    /** @use HasFactory<\Database\Factories\ProductFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = [

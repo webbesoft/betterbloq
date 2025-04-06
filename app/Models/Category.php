@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Cache;
 
 class Category extends Model
 {
-    /** @use HasFactory<\Database\Factories\Apps\BulkBuy\CategoryFactory> */
+    /** @use HasFactory<\Database\Factories\CategoryFactory> */
     use HasFactory, SoftDeletes;
 
     protected $guarded = [];

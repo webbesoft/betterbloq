@@ -4,8 +4,9 @@ namespace Tests\Unit\Services;
 
 use App\Models\Product;
 use App\Models\User;
-use AppModels\PurchasePool;
-use AppModels\Vendor;
+use App\Models\PurchasePool;
+use App\Models\Vendor;
+use App\Services\OrderService;
 
 it('should create a new order and a new purchase pool when none exists', function () {
     $vendorUser = User::factory()->create();
@@ -25,7 +26,7 @@ it('should create a new order and a new purchase pool when none exists', functio
         'quantity' => 10,
     ];
 
-    OrderManager::createOrder($account, $orderData);
+    OrderService::createOrder($account, $orderData);
 
     $purchase_pool = PurchasePool::where('product_id', '=', $product->id);
 

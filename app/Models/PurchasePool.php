@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Database\Factories\Apps\BulkBuy\PurchasePoolFactory;
+use Database\Factories\PurchasePoolFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -34,7 +34,7 @@ use Illuminate\Support\Collection;
  * @method static Builder|PurchasePool newModelQuery()
  * @method static Builder|PurchasePool newQuery()
  *
- * @mixin \Eloquent
+ * @mixin Eloquent
  */
 class PurchasePool extends Model
 {
