@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Apps\BulkBuy\Models\Category;
 use App\Filament\Resources\CategoryResource\Pages;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -14,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CategoryResource extends Resource
 {
-    protected static ?string $model = Category::class;
+    protected static ?string $model = \App\Models\Category::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 

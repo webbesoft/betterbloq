@@ -12,11 +12,12 @@ class ProductResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'description' => $this->description,
             'image' => $this->image,
             'price' => $this->price,
             'unit' => $this->unit,
             'vendor' => $this->vendor,
-            'category' => $this->category->name
+            'category' => $this->category->name,
         ];
     }
 }

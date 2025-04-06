@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources;
 
-use App\Apps\BulkBuy\Models\Order;
 use App\Filament\Resources\OrderResource\Pages;
+use App\Models\Order;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;

@@ -1,12 +1,11 @@
 <?php
 
-namespace Tests\Unit\Managers;
+namespace Tests\Unit\Services;
 
-use App\Apps\BulkBuy\Managers\OrderManager;
-use App\Apps\BulkBuy\Models\Product;
-use App\Apps\BulkBuy\Models\PurchasePool;
-use App\Apps\BulkBuy\Models\Vendor;
+use App\Models\Product;
 use App\Models\User;
+use AppModels\PurchasePool;
+use AppModels\Vendor;
 
 it('should create a new order and a new purchase pool when none exists', function () {
     $vendorUser = User::factory()->create();

@@ -292,6 +292,10 @@
             @apply relative rounded-md bg-[var(--custom-secondary)] p-2;
         }
     }
+
+    .link {
+        @apply underline text-[var(--custom-accent)];
+    }
 }
 
 @layer base {

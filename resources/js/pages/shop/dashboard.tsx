@@ -4,6 +4,9 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Eye, ListChecks, MapPin, PieChart, ShoppingBag } from 'lucide-react';
+import SetupGuide from '@/pages/shop/components/setup-guide';
+import { useState } from 'react';
+import { Separator } from '@radix-ui/react-separator';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -11,6 +14,17 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/dashboard',
     },
 ];
+
+interface DashboardProps {
+    ongoingProjectsCount: number,
+    totalExpenses: number,
+    projectBudgetSpent: any[],
+    purchasePoolCompletion: any[],
+    watchedPurchasePools: any[],
+    frequentProducts: any[],
+    regularVendors: any[],
+    hasCompletedGuide: boolean
+}
 
 export default function Dashboard({
     ongoingProjectsCount,
@@ -20,11 +34,17 @@ export default function Dashboard({
     watchedPurchasePools,
     frequentProducts,
     regularVendors,
-}) {
+    hasCompletedGuide
+}: DashboardProps) {
+    const [setupGuideVisible, setSetupGuideVisible] = useState<boolean>(true);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+                {/* setup guide */}
+                {(!hasCompletedGuide && setupGuideVisible) && <SetupGuide visibility={setupGuideVisible} onUpdateVisibility={setSetupGuideVisible} />}
+                <Separator />
                 <div className="grid auto-rows-min gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {/* Ongoing Projects Overview */}
                     <Card>

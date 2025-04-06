@@ -18,11 +18,13 @@ type PlanForm = {
 
 interface PropsType {
     flash: any;
-    plans: PlanType[];
+    plans: { data: PlanType[] };
 }
 
 export default function Plans(props: PropsType) {
     const { flash, plans } = props;
+
+    const { data: plansData } = plans;
 
     const [isMonthly, setIsMonthly] = useState<boolean>(true);
     const { post, data, setData } = useForm<Required<PlanForm>>({
@@ -86,8 +88,8 @@ export default function Plans(props: PropsType) {
                         </span>
                     </div>
                     `{/* Plan Cards using Shadcn Card */}
-                    <form method="post" onSubmit={(e) => e.preventDefault()} className="mx-auto grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                        {plans.map((plan, index) => (
+                    <form method="post" onSubmit={(e) => e.preventDefault()} className="mx-auto grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-2">
+                        {plansData.map((plan, index) => (
                             <Card
                                 key={index}
                                 className={cn(
@@ -110,15 +112,25 @@ export default function Plans(props: PropsType) {
                                         <span className="text-sm text-gray-600"> / mo</span>
                                     </div>
                                     <ul className="mb-6 list-none space-y-3">
+                                        {
+                                            plan.limits &&
+                                            plan.limits.map((limit, i) => (
+                                                <li key={i} className="flex items-center text-sm text-accent-foreground">
+                                                    <Check className="mr-2 h-5 w-5 text-green-500" />
+                                                    Up to {limit.value} {limit.model}s
+                                                    {/*{limit.text}*/}
+                                                </li>
+                                            ))
+                                        }
                                         {plan.features &&
                                             plan.features.map((feature, i) => (
-                                                <li key={i} className="flex items-center text-sm text-gray-700">
-                                                    {feature.included ? (
-                                                        <Check className="mr-2 h-5 w-5 text-green-500" />
-                                                    ) : (
-                                                        <X className="mr-2 h-5 w-5 text-red-500" />
-                                                    )}
-                                                    {feature.text}
+                                                <li key={i} className="flex items-center text-sm text-accent-foreground">
+                                                    {/*{feature.included ? (*/}
+                                                    <Check className="mr-2 h-5 w-5 text-green-500" />
+                                                    {/*) : (*/}
+                                                    {/*    <X className="mr-2 h-5 w-5 text-red-500" />*/}
+                                                    {/*)}*/}
+                                                    {feature.description}
                                                 </li>
                                             ))}
                                     </ul>

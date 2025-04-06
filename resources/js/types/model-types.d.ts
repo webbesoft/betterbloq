@@ -1,4 +1,5 @@
 export interface Product {
+    description: string;
     id: number;
     name: string;
     image: string;
@@ -45,6 +46,7 @@ export interface PlanType {
     slug: string;
     isPopular: boolean;
     features: any[];
+    limits: any[];
 }
 
 export interface Project {
@@ -95,4 +97,31 @@ interface DashboardProps {
     watchedPurchasePools: WatchedPurchasePool[];
     frequentProducts: FrequentProduct[];
     regularVendors: RegularVendor[];
+}
+
+export interface Order {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    product_id: number;
+    user_id: number;
+    purchase_pool_id: number;
+    status: string;
+    deleted_at: string | null;
+    purchase_pool?: PurchasePool;
+    product?: Product;
+    vendor?: Vendor;
+}
+
+export interface PurchasePool {
+    status: string;
+    start_date: Date;
+    end_date: Date;
+    target_delivery_date: Date;
+    created_at: Date;
+    updated_at: Date;
+    id: number;
+    name: string;
 }

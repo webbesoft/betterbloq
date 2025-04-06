@@ -13,13 +13,6 @@ import {
 } from './ui/dropdown-menu';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from './ui/navigation-menu';
 
-// Assuming 'items' is passed as a prop or defined in the component
-const items = [
-    // Example items - replace with your actual data
-    { title: 'Features', url: '/features' },
-    { title: 'Pricing', url: '/pricing' },
-];
-
 // Helper to get initials from name
 const getInitials = (name = '') => {
     return name
@@ -34,7 +27,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
     const { auth } = usePage<SharedData>().props;
     const { user } = auth;
 
-    const handleLogout = (e) => {
+    const handleLogout = (e: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
         e.preventDefault();
         // Use Inertia.post for logout
         router.post(route('logout'));
@@ -84,8 +77,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                                         <Avatar className="h-8 w-8">
-                                            {/* Add AvatarImage if user object has an image URL */}
-                                            {user.profile_photo_url && <AvatarImage src={user.profile_photo_url} alt={user.name} />}
+                                            {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
                                             <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                                         </Avatar>
                                     </Button>
@@ -122,8 +114,10 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                         ) : (
                             <>
                                 <Button asChild variant="ghost" size="sm">
-                                    <Link href={route('login')} className="stretch">
-                                        Log in
+                                    <Link href={route('login')} className="stretch text">
+                                        <span className={'text-foreground'}>
+                                            Log in
+                                        </span>
                                     </Link>
                                 </Button>
                                 <Button asChild variant="default" size="sm">

@@ -21,7 +21,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call([
-            AppSeeder::class,
             PlanSeeder::class,
             RolesAndPermissionsSeeder::class,
             VendorSeeder::class,

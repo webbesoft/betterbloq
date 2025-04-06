@@ -53,7 +53,7 @@ export default function Market(props: MarketProps) {
         return meta.links
             .filter((link) => link.active)
             .map((link, index) => (
-                <PaginationLink key={index} href={link.url} size={1} className="rounded-sm" dangerouslySetInnerHTML={{ __html: link.label }} />
+                <PaginationLink key={index} href={link.url} size={1}  className="rounded-sm" dangerouslySetInnerHTML={{ __html: link.label }} />
             ));
     };
 
@@ -61,7 +61,6 @@ export default function Market(props: MarketProps) {
 
     const reload = useCallback(
         debounce((newFilters) => {
-            console.log('Requesting with filters:', newFilters);
             router.get(route('market'), newFilters, {
                 preserveState: true,
                 preserveScroll: true,
@@ -221,7 +220,7 @@ export default function Market(props: MarketProps) {
                     <div className="grid grid-cols-4 gap-4">
                         {data.map((product: Product) => {
                             return (
-                                <div>
+                                <div key={product.id}>
                                     <ProductListItem product={product} key={product.id} />
                                 </div>
                             );
