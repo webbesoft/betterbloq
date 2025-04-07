@@ -32,9 +32,9 @@ export default function Landing() {
                     <FeaturesSection />
 
                     {/* <!--    Upselling--> */}
-                    <div className="flex min-h-[66vh] w-full items-center justify-center bg-[var(--secondary-200)]">
-                        <p>what we can do for you</p>
-                    </div>
+                    {/*<div className="flex min-h-[66vh] w-full items-center justify-center bg-[var(--secondary-200)]">*/}
+                    {/*    <p>what we can do for you</p>*/}
+                    {/*</div>*/}
 
                     <PricingSection />
 
