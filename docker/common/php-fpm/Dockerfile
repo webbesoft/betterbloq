@@ -101,13 +101,13 @@ RUN set -e; \
 WORKDIR /var/www
 
 # Ensure correct permissions (adjust if entrypoint script handles this)
-# RUN chown -R ${USER}:${USER} /var/www  # Run chown before switching user if needed
+RUN chown -R ${USER}:${USER} /var/www
 
 # Switch to the non-privileged user to run the application
 USER ${USER}
 
 # Change the default command to run the entrypoint script if you have one
- ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Expose the configured FPM port (mainly informational)
 EXPOSE ${FPM_LISTEN_PORT}
