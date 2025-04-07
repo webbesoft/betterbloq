@@ -30,14 +30,9 @@ class StripeEventListener
     {
         //
         if ($event->payload['type'] === 'checkout.session.completed') {
-            info('payload: ', $event->payload);
             $session = $event->payload;
 
             $stripeCustomerId = data_get($session, 'data.object.customer');
-
-            info('session: ', $session);
-
-            info('stripe customer id: ', [$stripeCustomerId]);
 
             $user = User::whereStripeCustomerId($stripeCustomerId)->first();
 
@@ -55,9 +50,6 @@ class StripeEventListener
                         $product = Product::where('stripe_price_id', $stripePriceId)->first();
 
                         if ($product) {
-                            // **Crucially, you need the expected_delivery_date here.**
-                            // The best way to get this is to pass it as metadata
-                            // when you create the Stripe Checkout Session in your `createOrder` function.
                             $expectedDeliveryDate = data_get($session, 'data.object.metadata.expected_delivery_date');
 
                             if ($expectedDeliveryDate) {
@@ -86,13 +78,11 @@ class StripeEventListener
                                         'current_amount' => $openPool->current_amount + $price->unit_amount / 100,
                                     ]);
                                 } else {
-                                    // Handle the case where no active pool is found for the product and date
                                     info('No active purchase pool found for product after successful payment', [
                                         'product_id' => $product->id,
                                         'expected_delivery_date' => $expectedDeliveryDate,
                                         'stripe_session_id' => data_get($session, 'data.object.id'),
                                     ]);
-                                    // You might want to log this or take other actions (e.g., refund)
                                 }
                             } else {
                                 // Handle the case where expected_delivery_date is not found in metadata

@@ -48,7 +48,7 @@ class DashboardController extends Controller
                 return [
                     'product_id' => $order->product->id,
                     'name' => $order->product->name,
-//                    'frequency' => $order->getAttribute('count'),
+                    //                    'frequency' => $order->getAttribute('count'),
                 ];
             });
 
@@ -63,7 +63,7 @@ class DashboardController extends Controller
                 return [
                     'vendor_id' => $order->vendor->id,
                     'name' => $order->vendor->name,
-//                    'frequency' => $order->getAttribute('count'),
+                    //                    'frequency' => $order->getAttribute('count'),
                 ];
             });
 
