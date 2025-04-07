@@ -12,9 +12,9 @@ services:
       - caddy_config:/config
     networks:
       - laravel-network
-    depends_on:
-      - php-fpm-staging
-      - php-fpm-prod
+#    depends_on:
+#      - php-fpm-staging
+#      - php-fpm-prod
 
   php-fpm-staging:
     build:
@@ -35,8 +35,8 @@ services:
     networks:
       - laravel-network
     depends_on:
-      mariadb:
-        condition: service_healthy
+#      mariadb:
+#        condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck: # Keep healthcheck for FPM
@@ -64,8 +64,8 @@ services:
     networks:
       - laravel-network
     depends_on:
-      mariadb: # << CHANGED from postgres
-        condition: service_healthy
+#      mariadb:
+#        condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck: # Keep healthcheck for FPM
