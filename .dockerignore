@@ -14,5 +14,4 @@ vendor
 public/storage # If linked from storage/app/public
 public/hot
 *.DS_Store
-docker/
 docker-compose.yml
