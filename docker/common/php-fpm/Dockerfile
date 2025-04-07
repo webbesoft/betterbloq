@@ -47,7 +47,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 RUN npm ci && npm run build
 
 # Stage 2: Production environment
-FROM php:8.4-fpm as production
+FROM php:8.4-fpm AS production
 
 # Accept build arguments for environment specific settings
 ARG USER=www-data
@@ -94,7 +94,8 @@ RUN sed -i "s|listen = 127.0.0.1:9000|listen = 0.0.0.0:${FPM_LISTEN_PORT}|" /usr
 COPY --from=builder /var/www /var/www
 
 # Create a non-root user to run the application
-RUN groupadd -g $GID -o ${USER} && useradd -m -u $UID -g $GID -o -s /bin/bash ${USER}
+RUN set -e; if ! getent group www-data; then groupadd -g 1000 -o www-data; fi && \
+    useradd -m -u 1000 -g 1000 -o -s /bin/bash www-data
 
 # Set working directory
 WORKDIR /var/www
