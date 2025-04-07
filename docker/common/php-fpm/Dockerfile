@@ -21,7 +21,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Install PHP extensions
     && docker-php-ext-install -j$(nproc) \
     pdo_mysql \
-    mysqli \
     opcache \
     intl \
     zip \
