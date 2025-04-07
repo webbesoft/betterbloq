@@ -22,9 +22,9 @@ services:
       dockerfile: ./docker/common/php-fpm/Dockerfile
       target: production # Use the final stage of the multi-stage build
       args:
-        # USER: www-data # Optional: override user/group if needed
-        # UID: 1000
-        # GID: 1000
+        USER: www-data # Optional: override user/group if needed
+        UID: 1000
+        GID: 1000
         FPM_LISTEN_PORT: 9000 # Configure FPM to listen on port 9000
     container_name: laravel-staging-app # Optional: specific container name
     restart: unless-stopped
@@ -35,7 +35,7 @@ services:
     networks:
       - laravel-network
     depends_on:
-      mariadb: # << CHANGED from postgres
+      mariadb:
         condition: service_healthy
       redis:
         condition: service_healthy
