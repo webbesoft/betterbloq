@@ -103,7 +103,7 @@ WORKDIR /var/www
 RUN chmod -R 775 /var/www/storage
 RUN chmod -R 775 /var/www/bootstrap/cache
 # Ensure correct permissions (adjust if entrypoint script handles this)
-RUN chown -R ${USER}:${USER} /var/www
+RUN chown -R ${USER}:${USER} /var/www /var/www/storage /var/www/bootstrap/cache
 
 # Switch to the non-privileged user to run the application
 USER ${USER}
