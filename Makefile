@@ -5,17 +5,17 @@ STRIPE_LISTEN := stripe listen --forward-to localhost:8000/stripe/webhook --skip
 .PHONY: stripe-listen develop build-staging build-prod
 
 stripe-listen:
-        $(STRIPE_LISTEN)
+	$(STRIPE_LISTEN)
 
 develop:
-        $(DOCKER_COMPOSE) up -d
-        composer install
-        composer run dev
+	$(DOCKER_COMPOSE) up -d
+	composer install
+	composer run dev
 
 build-staging:
-        git checkout staging || true
-        $(DOCKER_COMPOSE_PROD) build php-fpm-staging
+	git checkout staging || true
+	$(DOCKER_COMPOSE_PROD) build php-fpm-staging
 
 build-prod:
-        git checkout main || true
-        $(DOCKER_COMPOSE_PROD) build php-fpm-prod
+	git checkout main || true
+	$(DOCKER_COMPOSE_PROD) build php-fpm-prod
