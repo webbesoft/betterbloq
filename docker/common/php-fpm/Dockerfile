@@ -50,8 +50,8 @@ FROM php:8.4-fpm AS production
 
 # Accept build arguments for environment specific settings
 ARG USER=www-data
-ARG UID=1000
-ARG GID=1000
+ARG UID=33
+ARG GID=33
 ARG FPM_LISTEN_PORT=9000
 
 # Install only runtime libraries needed in production
@@ -94,8 +94,8 @@ COPY --from=builder /var/www /var/www
 
 # Create a non-root user to run the application
 RUN set -e; \
-    if ! getent group www-data; then groupadd -g 1000 -o www-data; fi && \
-    if ! getent passwd www-data; then useradd -m -u 1000 -g www-data -o -s /bin/bash www-data; fi
+    if ! getent group www-data; then groupadd -g 33 -o www-data; fi && \
+    if ! getent passwd www-data; then useradd -m -u 33 -g www-data -o -s /bin/bash www-data; fi
 
 # Set working directory
 WORKDIR /var/www
