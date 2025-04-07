@@ -70,8 +70,8 @@ RUN curl -o /usr/local/bin/php-fpm-healthcheck \
     && chmod +x /usr/local/bin/php-fpm-healthcheck
 
 # Copy the initialization script (if you have one, adjust path if needed)
-# COPY ./docker/production/php-fpm/entrypoint.sh /usr/local/bin/entrypoint.sh
-# RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY ./docker/common/php-fpm/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Copy the initial storage structure (optional, useful for directory setup)
 # COPY ./storage /var/www/storage-init
@@ -108,7 +108,7 @@ WORKDIR /var/www
 USER ${USER}
 
 # Change the default command to run the entrypoint script if you have one
-# ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+ ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Expose the configured FPM port (mainly informational)
 EXPOSE ${FPM_LISTEN_PORT}
