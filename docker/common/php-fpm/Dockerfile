@@ -100,6 +100,8 @@ RUN set -e; \
 # Set working directory
 WORKDIR /var/www
 
+RUN chmod -R 775 /var/www/storage \
+    chmod -R 775 /var/www/bootstrap/cache
 # Ensure correct permissions (adjust if entrypoint script handles this)
 RUN chown -R ${USER}:${USER} /var/www
 

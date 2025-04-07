@@ -12,8 +12,8 @@ if [ -d "/var/www/storage" ]; then
     # Change ownership to the user/group FPM runs as. Adjust if you use a different user.
     # chown -R ${USER}:${USER} /var/www/storage /var/www/bootstrap/cache
     # Set correct permissions (Laravel recommendations)
-    chmod -R 775 /var/www/storage
-    chmod -R 775 /var/www/bootstrap/cache
+#    chmod -R 775 /var/www/storage
+#    chmod -R 775 /var/www/bootstrap/cache
 else
     echo "WARNING: /var/www/storage directory not found. Skipping permissions."
 fi
