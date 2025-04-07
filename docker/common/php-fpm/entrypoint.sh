@@ -10,7 +10,7 @@ USER=www-data # Assuming default www-data user/group from Dockerfile
 if [ -d "/var/www/storage" ]; then
     echo "Setting permissions for /var/www/storage..."
     # Change ownership to the user/group FPM runs as. Adjust if you use a different user.
-    chown -R ${USER}:${USER} /var/www/storage /var/www/bootstrap/cache
+    # chown -R ${USER}:${USER} /var/www/storage /var/www/bootstrap/cache
     # Set correct permissions (Laravel recommendations)
     chmod -R 775 /var/www/storage
     chmod -R 775 /var/www/bootstrap/cache

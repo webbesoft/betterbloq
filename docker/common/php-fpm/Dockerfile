@@ -101,7 +101,7 @@ RUN set -e; \
 WORKDIR /var/www
 
 # Ensure correct permissions (adjust if entrypoint script handles this)
-RUN #chown -R ${USER}:${USER} /var/www
+RUN chown -R ${USER}:${USER} /var/www
 
 # Switch to the non-privileged user to run the application
 USER ${USER}
