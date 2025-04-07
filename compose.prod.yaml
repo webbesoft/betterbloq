@@ -81,7 +81,7 @@ services:
     restart: unless-stopped
     # user: mysql # Usually not needed, runs as mysql user by default
     ports:
-       - "${DB_PORT:-3306}:3306" # Use env var if needed
+       - "${DB_PORT:-3306}:3306"
     environment:
       MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-secret_root_password}
       MARIADB_USER: ${DB_USERNAME:-laravel}
@@ -97,6 +97,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   redis:
     image: redis:alpine
