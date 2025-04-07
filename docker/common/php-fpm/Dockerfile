@@ -47,7 +47,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 RUN npm ci && npm run build
 
 # Stage 2: Production environment
-FROM php:8.4-fpm
+FROM php:8.4-fpm as production
 
 # Accept build arguments for environment specific settings
 ARG USER=www-data
