@@ -93,7 +93,9 @@ RUN sed -i "s|listen = 127.0.0.1:9000|listen = 0.0.0.0:${FPM_LISTEN_PORT}|" /usr
 COPY --from=builder /var/www /var/www
 
 # Create a non-root user to run the application
-RUN groupadd -g $GID -o ${USER} && useradd -m -u $UID -g $GID -o -s /bin/bash ${USER}
+RUN set -e; \
+    if ! getent group www-data; then groupadd -g $GID -o ${USER}; fi && \
+    if ! getent passwd www-data; then useradd -m -u $UID -g $GID -o -s /bin/bash ${USER}; fi
 
 # Set working directory
 WORKDIR /var/www
