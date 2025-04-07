@@ -96,7 +96,7 @@ COPY --from=builder /var/www /var/www
 # Create a non-root user to run the application
 RUN set -e; \
     if ! getent group www-data; then groupadd -g 1000 -o www-data; fi && \
-    useradd -m -u 1000 -g www-data -o -s /bin/bash www-data
+    if ! getent passwd www-data; then useradd -m -u 1000 -g www-data -o -s /bin/bash www-data; fi
 
 # Set working directory
 WORKDIR /var/www
