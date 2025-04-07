@@ -1,46 +1,118 @@
-FROM unit:1.34.1-php8.3
+# Stage 1: Build environment, Composer dependencies, and Static Assets
+FROM php:8.4-fpm AS builder
 
-RUN apt update && apt install -y \
-    curl unzip git libicu-dev libzip-dev libpng-dev libjpeg-dev libfreetype6-dev libssl-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) pcntl opcache pdo pdo_mysql intl zip gd exif ftp bcmath \
+ARG NODE_MAJOR=23
+
+# Install system dependencies, PHP extensions, Git, and Node.js/NPM
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    unzip \
+    git \
+    libmariadb-dev \
+    libonig-dev \
+    libssl-dev \
+    libxml2-dev \
+    libcurl4-openssl-dev \
+    libicu-dev \
+    libzip-dev \
+    # Node.js setup
+    && curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
+    && apt-get install -y nodejs \
+    # Install PHP extensions
+    && docker-php-ext-install -j$(nproc) \
+    pdo_mysql \
+    opcache \
+    intl \
+    zip \
+    bcmath \
+    soap \
     && pecl install redis \
-    && docker-php-ext-enable redis
+    && docker-php-ext-enable redis \
+    # Clean up
+    && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN echo "opcache.enable=1" > /usr/local/etc/php/conf.d/custom.ini \
-    && echo "opcache.jit=tracing" >> /usr/local/etc/php/conf.d/custom.ini \
-    && echo "opcache.jit_buffer_size=256M" >> /usr/local/etc/php/conf.d/custom.ini \
-    && echo "memory_limit=512M" > /usr/local/etc/php/conf.d/custom.ini \
-    && echo "upload_max_filesize=64M" >> /usr/local/etc/php/conf.d/custom.ini \
-    && echo "post_max_size=64M" >> /usr/local/etc/php/conf.d/custom.ini
+# Set the working directory inside the container
+WORKDIR /var/www
 
-COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
+# Copy the entire Laravel application code into the container
+# Assumes you have checked out the correct branch (staging or main) BEFORE building!
+COPY . /var/www
 
-ENV NODE_VERSION=23.10.0
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
-ENV NVM_DIR=/root/.nvm
-RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
-ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+# Install Composer and dependencies (production-optimized)
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+    && composer install --no-dev --optimize-autoloader --no-interaction --no-progress --prefer-dist
 
-# Install npm dependencies and build assets
-RUN npm install && npm run build
+# Install Node.js dependencies and build assets for production
+RUN npm ci && npm run build
 
-WORKDIR /var/www/html
+# Stage 2: Production environment
+FROM php:8.4-fpm AS production
 
-RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache
+# Accept build arguments for environment specific settings
+ARG USER=www-data
+ARG UID=1000
+ARG GID=1000
+ARG FPM_LISTEN_PORT=9000
 
-RUN chown -R unit:unit /var/www/html/storage bootstrap/cache && chmod -R 775 /var/www/html/storage
+# Install only runtime libraries needed in production
+# libfcgi-bin and procps are required for the php-fpm-healthcheck script
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libicu-dev \
+    libzip-dev \
+    libfcgi-bin \
+    procps \
+    && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY . .
+# Download and install php-fpm health check script
+RUN curl -o /usr/local/bin/php-fpm-healthcheck \
+    https://raw.githubusercontent.com/renatomefi/php-fpm-healthcheck/master/php-fpm-healthcheck \
+    && chmod +x /usr/local/bin/php-fpm-healthcheck
 
-RUN chown -R unit:unit storage bootstrap/cache && chmod -R 775 storage bootstrap/cache
+# Copy the initialization script (if you have one, adjust path if needed)
+COPY ./docker/common/php-fpm/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-RUN composer install --prefer-dist --optimize-autoloader --no-interaction
+# Copy the initial storage structure (optional, useful for directory setup)
+# COPY ./storage /var/www/storage-init
 
-COPY unit.json /docker-entrypoint.d/unit.json
+# Copy PHP extensions and libraries from the builder stage
+COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=builder /usr/local/bin/docker-php-ext-* /usr/local/bin/
 
-EXPOSE 8000
+# Use the recommended production PHP configuration
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
-CMD ["unitd", "--no-daemon"]
+# Enable PHP-FPM status page
+RUN sed -i '/\[www\]/a pm.status_path = /status' /usr/local/etc/php-fpm.d/zz-docker.conf
+
+# Configure PHP-FPM to listen on the specified port
+RUN sed -i "s|listen = 127.0.0.1:9000|listen = 0.0.0.0:${FPM_LISTEN_PORT}|" /usr/local/etc/php-fpm.d/zz-docker.conf
+
+# Copy the application code and built assets from the build stage
+COPY --from=builder /var/www /var/www
+
+# Create a non-root user to run the application
+RUN set -e; \
+    if ! getent group www-data; then groupadd -g $GID -o ${USER}; fi && \
+    if ! getent passwd www-data; then useradd -m -u $UID -g $GID -o -s /bin/bash ${USER}; fi
+
+# Set working directory
+WORKDIR /var/www
+
+RUN chmod -R 775 /var/www/storage
+RUN chmod -R 775 /var/www/bootstrap/cache
+# Ensure correct permissions (adjust if entrypoint script handles this)
+RUN chown -R ${USER}:${USER} /var/www /var/www/storage /var/www/bootstrap/cache
+
+# Switch to the non-privileged user to run the application
+USER ${USER}
+
+# Change the default command to run the entrypoint script if you have one
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# Expose the configured FPM port (mainly informational)
+EXPOSE ${FPM_LISTEN_PORT}
+
+# Start php-fpm server
+CMD ["php-fpm"]
