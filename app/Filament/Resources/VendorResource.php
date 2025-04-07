@@ -2,8 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Apps\BulkBuy\Models\Vendor;
 use App\Filament\Resources\VendorResource\Pages;
+use App\Models\User;
+use App\Models\Vendor;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -26,9 +27,11 @@ class VendorResource extends Resource
                 Forms\Components\TextInput::make('phone')
                     ->tel()
                     ->required(),
-                Forms\Components\TextInput::make('user_id')
+                Forms\Components\Select::make('user_id')
+                    ->label('User')
                     ->required()
-                    ->numeric(),
+                    ->options(User::all()->pluck('name', 'id'))
+                    ->searchable(),
             ]);
     }
 

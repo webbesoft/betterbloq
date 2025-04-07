@@ -2,6 +2,7 @@ import { Loader } from "lucide-react";
 import { useEffect } from "react";
 
 export default function PaymentPending(props: { url: string }) {
+    console.log(props);
     const { url } = props;
 
     useEffect(() => {

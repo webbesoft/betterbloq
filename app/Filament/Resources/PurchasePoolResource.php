@@ -2,8 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Apps\BulkBuy\Models\PurchasePool;
 use App\Filament\Resources\PurchasePoolResource\Pages;
+use App\Filament\Resources\PurchasePoolResource\RelationManagers\PurchasePoolTiersRelationManager;
+use App\Models\PurchasePool;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -28,10 +29,6 @@ class PurchasePoolResource extends Resource
                     ->required(),
                 Forms\Components\DatePicker::make('target_delivery_date')
                     ->required(),
-                Forms\Components\TextInput::make('discount_percentage')
-                    ->required()
-                    ->numeric()
-                    ->default(0),
                 Forms\Components\TextInput::make('min_orders_for_discount')
                     ->required()
                     ->numeric()
@@ -39,8 +36,20 @@ class PurchasePoolResource extends Resource
                 Forms\Components\TextInput::make('max_orders')
                     ->numeric()
                     ->default(0),
-                Forms\Components\TextInput::make('status')
-                    ->required(),
+                Forms\Components\Select::make('status')
+                    ->options([
+                        'pending' => 'Pending',
+                        'active' => 'Active',
+                        'closed' => 'Closed',
+                    ]),
+                Forms\Components\TextInput::make('target_amount')
+                    ->required()
+                    ->numeric()
+                    ->default(0),
+                Forms\Components\TextInput::make('current_amount')
+                    ->required()
+                    ->numeric()
+                    ->default(0),
                 Forms\Components\TextInput::make('vendor_id')
                     ->required()
                     ->numeric(),
@@ -63,8 +72,9 @@ class PurchasePoolResource extends Resource
                 Tables\Columns\TextColumn::make('target_delivery_date')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('discount_percentage')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('target_amount')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('current_amount')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('min_orders_for_discount')
                     ->numeric()
@@ -112,6 +122,7 @@ class PurchasePoolResource extends Resource
     {
         return [
             //
+            PurchasePoolTiersRelationManager::class,
         ];
     }
 

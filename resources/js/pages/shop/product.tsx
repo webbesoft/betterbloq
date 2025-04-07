@@ -6,8 +6,9 @@ import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Product } from '@/types/model-types';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEventHandler, useEffect, useState } from 'react';
+import { Clock } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -22,6 +23,14 @@ interface ProductData {
 
 interface ProductProps {
     product: ProductData;
+    flash: {
+        message: {
+            success?: string;
+            error?: string;
+            message?: string;
+        }
+    },
+    hasPurchasePoolRequest: boolean;
 }
 
 type OrderForm = {
@@ -31,7 +40,7 @@ type OrderForm = {
 };
 
 export default function Market(props: ProductProps) {
-    const { product } = props;
+    const { product, flash, hasPurchasePoolRequest } = props;
 
     const { data } = product;
 
@@ -51,13 +60,50 @@ export default function Market(props: ProductProps) {
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
 
-        post(route('buy-product.store'), {
-            onFinish: () => reset('quantity', 'expected_delivery_date'),
-            onError: () => reset('quantity', 'expected_delivery_date'),
+        if (flash?.message?.error) {
+            post(route('purchase-pool-requests.store'), {
+                onFinish: () => {}
+            });
+
+            return;
+        }
+
+        post(route('orders.store'), {
+            onFinish: () => {},
+            onError: () => {},
+            onSuccess: () => reset('quantity', 'expected_delivery_date')
         });
     };
 
     const [total, setTotal] = useState(data.price);
+
+    const getFormButton = () => {
+        if (hasPurchasePoolRequest) {
+            return (
+                <div className={'flex flex-col items-center justify-start gap-2'}>
+                    <p className={'text-sm font-light text-foreground/60'}>
+                        You have a pending purchase pool request for this product.
+                        {' '}<Link href={'#'} className={'link'}>View Requests</Link>
+                    </p>
+                </div>
+            )
+        }
+
+        if (flash?.message?.error) {
+            return (
+                <Button type="submit" className="mt-auto w-full" disabled={processing}>
+                    <Clock />
+                    Request Purchase Pool
+                </Button>
+            )
+        }
+
+        return (
+            <Button type="submit" className="mt-auto w-full" disabled={processing}>
+                {processing ? 'Ordering...' : 'Order Now'}
+            </Button>
+        )
+    }
 
     useEffect(() => {
         setTotal(formdata.quantity * data.price);
@@ -78,7 +124,10 @@ export default function Market(props: ProductProps) {
                             <div className="aspect-w-1 aspect-h-1 mb-4 w-full max-w-md overflow-hidden rounded-md">
                                 <img src={data.image} alt={data.name} className="h-full max-h-[300px] w-full object-cover" />
                             </div>
-                            <p className="text-lg font-semibold text-[var(--custom-accent)]">
+                            <p className={'text-md text-foreground mb-2'}>
+                                {data.description}
+                            </p>
+                            <p className="text-lg font-semibold text-foreground text-center">
                                 ${data.price} / {data.unit}
                             </p>
                         </CardContent>
@@ -93,7 +142,7 @@ export default function Market(props: ProductProps) {
                             <CardDescription>Place your order for {data.name}</CardDescription>
                         </CardHeader>
                         <CardContent className="flex-grow space-y-4">
-                            <form className="flex h-full flex-col justify-between space-y-4" onSubmit={submit}>
+                            <form className="flex h-full flex-col justify-start space-y-4" onSubmit={submit}>
                                 {errors.quantity && <p className="text-sm text-red-500">{errors.quantity}</p>}
                                 <div className="grid grid-cols-1 gap-2">
                                     <Label htmlFor="quantity">Quantity</Label>
@@ -115,7 +164,7 @@ export default function Market(props: ProductProps) {
                                         type="date"
                                         id="expected_delivery_date"
                                         name="expected_delivery_date"
-                                        className="col-span-3"
+                                        className="col-span-3 text-foreground"
                                         onChange={(e) => setData('expected_delivery_date', e.target.value)}
                                         value={formdata.expected_delivery_date}
                                     />
@@ -125,13 +174,12 @@ export default function Market(props: ProductProps) {
 
                                 <div className="flex items-center justify-between">
                                     <p className="font-semibold">Total</p>
-                                    <span className="text-xl font-bold text-[var(--custom-accent)]">${total}</span>
+                                    <span className="text-xl font-bold text-foreground">${total}</span>
                                 </div>
 
                                 <input type="hidden" name="product_id" value={data.id} />
-                                <Button type="submit" className="mt-auto w-full" disabled={processing}>
-                                    {processing ? 'Ordering...' : 'Order Now'}
-                                </Button>
+                                {getFormButton()}
+
                             </form>
                         </CardContent>
                     </Card>

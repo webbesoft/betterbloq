@@ -19,8 +19,8 @@ class CheckoutController extends Controller
                 $session = $user->newSubscription('standard', $priceId)
                     ->trialDays(14)
                     ->checkout([
-                        'success_url' => route('buy-dashboard'),
-                        'cancel_url' => route('buy-plans'),
+                        'success_url' => route('dashboard'),
+                        'cancel_url' => route('plans.index'),
                     ]);
 
                 return Inertia::render('shop/payment-pending', [

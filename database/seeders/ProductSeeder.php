@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Apps\BulkBuy\Models\Vendor;
-use App\Apps\BulkBuy\Models\Product;
-use App\Apps\BulkBuy\Models\Category;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\Vendor;
 use Illuminate\Database\Seeder;
 
 class ProductSeeder extends Seeder
@@ -20,7 +20,7 @@ class ProductSeeder extends Seeder
                 [
                     'name' => 'Roofing sheets',
                     'description' => 'test generated product',
-                    'image' => 'https://picsum.photos/id/237/200/300',
+                    'image' => 'https://picsum.photos/id/77/200/300',
                     'vendor_id' => Vendor::first()['id'],
                     'price' => 4.99,
                     'unit' => 'each',

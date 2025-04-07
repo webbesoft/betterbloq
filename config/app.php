@@ -130,11 +130,22 @@ return [
     ],
 
     'plans' => [
-        'standard_monthly' => [
-            'stripe_name' => env('STANDARD_MONTHLY_ID'),
+        'basic_monthly' => [
+            'stripe_name' => env('BASIC_MONTHLY_ID'),
             'price' => 4.99,
         ],
-        'standard_yearly' => env('STANDARD_YEARLY_ID'),
+        'basic_yearly' => [
+            'price' => 54.99,
+            'stripe_name' => env('BASIC_YEARLY_ID'),
+        ],
+        'pro_monthly' => [
+            'stripe_name' => env('PRO_MONTHLY_ID'),
+            'price' => 9.99,
+        ],
+        'pro_yearly' => [
+            'stripe_name' => env('PRO_YEARLY_ID'),
+            'price' => 109.99,
+        ],
     ],
 
 ];

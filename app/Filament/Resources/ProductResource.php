@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources;
 
-use App\Apps\BulkBuy\Models\Product;
 use App\Filament\Resources\ProductResource\Pages;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\Vendor;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -38,12 +40,14 @@ class ProductResource extends Resource
                     ->prefix('$'),
                 Forms\Components\TextInput::make('unit')
                     ->required(),
-                Forms\Components\TextInput::make('category_id')
+                Forms\Components\Select::make('category_id')
+                    ->options(Category::all()->pluck('name', 'id'))
                     ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('vendor_id')
+                    ->searchable(),
+                Forms\Components\Select::make('vendor_id')
+                    ->options(Vendor::all()->pluck('name', 'id'))
                     ->required()
-                    ->numeric(),
+                    ->searchable(),
             ]);
     }
 
