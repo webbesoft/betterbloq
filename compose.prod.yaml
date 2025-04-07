@@ -93,7 +93,7 @@ services:
       - laravel-network
     healthcheck:
       # Checks if the server is responding to connection attempts
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "127.0.0.1", "-u${DB_USERNAME:-laravel}", "-p${DB_PASSWORD:-password}"]
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "${DB_HOST:-127.0.0.1}", "-u${DB_USERNAME:-laravel}", "-p${DB_PASSWORD:-password}"]
       interval: 10s
       timeout: 5s
       retries: 5
