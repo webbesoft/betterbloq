@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  caddy:
+    image: caddy:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # Required for HTTP/3
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile # Mount Caddy config
+      - caddy_data:/data # Persistent storage for certs and state
+      - caddy_config:/config
+    networks:
+      - laravel-network
+    depends_on:
+      - php-fpm-staging
+      - php-fpm-prod
+
+  php-fpm-staging:
+    build:
+      context: .
+      dockerfile: ./docker/common/php-fpm/Dockerfile
+      target: production # Use the final stage of the multi-stage build
+      args:
+        # USER: www-data # Optional: override user/group if needed
+        # UID: 1000
+        # GID: 1000
+        FPM_LISTEN_PORT: 9000 # Configure FPM to listen on port 9000
+    container_name: laravel-staging-app # Optional: specific container name
+    restart: unless-stopped
+    volumes:
+      - laravel-storage-staging:/var/www/storage # Separate storage volume for staging
+    env_file:
+      - .env.staging # Load staging environment variables
+    networks:
+      - laravel-network
+    depends_on:
+      mariadb: # << CHANGED from postgres
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck: # Keep healthcheck for FPM
+      test: ["CMD-SHELL", "php-fpm-healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  php-fpm-prod:
+    build:
+      context: .
+      dockerfile: ./docker/common/php-fpm/Dockerfile
+      target: production
+      args:
+        # USER: www-data
+        # UID: 1000
+        # GID: 1000
+        FPM_LISTEN_PORT: 8080 # Configure FPM to listen on port 8080
+    container_name: laravel-production-app # Optional: specific container name
+    restart: unless-stopped
+    volumes:
+      - laravel-storage-production:/var/www/storage # Separate storage volume for production
+    env_file:
+      - .env.production # Load production environment variables
+    networks:
+      - laravel-network
+    depends_on:
+      mariadb: # << CHANGED from postgres
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck: # Keep healthcheck for FPM
+      test: ["CMD-SHELL", "php-fpm-healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # --- MariaDB Service ---
+  mariadb:
+    image: mariadb:11
+    container_name: laravel-mariadb
+    restart: unless-stopped
+    # user: mysql # Usually not needed, runs as mysql user by default
+    ports:
+       - "${DB_PORT:-3306}:3306" # Use env var if needed
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-secret_root_password}
+      MARIADB_USER: ${DB_USERNAME:-laravel}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-password}
+      MARIADB_DATABASE: ${DB_DATABASE:-laravel}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    networks:
+      - laravel-network
+    healthcheck:
+      # Checks if the server is responding to connection attempts
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "127.0.0.1", "-u${DB_USERNAME:-laravel}", "-p${DB_PASSWORD:-password}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    container_name: laravel-redis
+    restart: unless-stopped
+    networks:
+      - laravel-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  laravel-network: # Single network for all services
+    driver: bridge
+
+volumes:
+  mariadb-data: # << CHANGED from postgres-data
+  laravel-storage-staging: # Separate named volume for staging storage
+  laravel-storage-production: # Separate named volume for production storage
+  caddy_data: # Volume for Caddy's persistent data (certs)
+  caddy_config: # Volume for Caddy's config state
