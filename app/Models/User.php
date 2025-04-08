@@ -4,14 +4,17 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Mail\WelcomeUser;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
 use Laravel\Cashier\Billable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
@@ -74,7 +77,16 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
 
-    public function watchedPurchasePools()
+    public static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($user) {
+            Mail::to($user->email)->send(new WelcomeUser($user));
+        });
+    }
+
+    public function watchedPurchasePools(): BelongsToMany
     {
         return $this->belongsToMany(PurchasePool::class, 'purchase_pool_watchers', 'user_id', 'purchase_pool_id');
     }

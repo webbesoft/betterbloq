@@ -14,7 +14,7 @@ develop:
 
 build-staging:
 	git checkout staging || true
-	$(DOCKER_COMPOSE_PROD) build php-fpm-staging
+	docker compose -f compose.prod.yaml up --build -d
 
 build-prod:
 	git checkout main || true

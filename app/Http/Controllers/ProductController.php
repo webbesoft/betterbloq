@@ -18,7 +18,6 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $filterCacheKey = 'shop_available_filters';
-        // Define cache duration in seconds (e.g., 1 hour = 3600 seconds)
         $cacheDuration = 3600;
 
         $availableFiltersData = Cache::remember($filterCacheKey, $cacheDuration, function () {

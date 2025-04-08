@@ -25,6 +25,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(function ($user, $ability) {
             return $user->hasRole('Super Admin') ? true : null;
         });
-        Model::shouldBeStrict();
+        Model::shouldBeStrict(! $this->app->isProduction());
     }
 }

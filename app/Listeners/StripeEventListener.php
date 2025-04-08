@@ -2,11 +2,13 @@
 
 namespace App\Listeners;
 
+use App\Mail\NewOrderConfirmation;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\PurchasePool;
 use App\Models\User;
 use App\Services\LogService;
+use Illuminate\Support\Facades\Mail;
 use Laravel\Cashier\Events\WebhookReceived;
 use Stripe\Exception\ApiErrorException;
 use Stripe\StripeClient;
@@ -60,7 +62,7 @@ class StripeEventListener
                                     ->first();
 
                                 if ($openPool) {
-                                    Order::create([
+                                    $order = Order::create([
                                         'user_id' => $user->id,
                                         'email' => data_get($session, 'data.object.customer_details.email') ?? 'tawanda@betterbloq.com',
                                         'phone' => data_get($session, 'data.object.customer_details.phone') ?? '+1 (456) 7890',
@@ -71,12 +73,15 @@ class StripeEventListener
                                         'quantity' => $quantity,
                                         'stripe_session_id' => data_get($session, 'data.object.id'),
                                         'vendor_id' => $product->vendor_id,
+                                        'total_amount' => ($price->unit_amount / 100) * $quantity,
                                     ]);
 
                                     // #! Stripe provides the unit amount in cents
                                     $openPool->update([
-                                        'current_amount' => $openPool->current_amount + $price->unit_amount / 100,
+                                        'current_amount' => $openPool->current_amount + (($price->unit_amount / 100) * $quantity),
                                     ]);
+
+                                    Mail::to($order->user->email)->send(new NewOrderConfirmation($order, $user));
                                 } else {
                                     info('No active purchase pool found for product after successful payment', [
                                         'product_id' => $product->id,

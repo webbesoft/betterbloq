@@ -174,7 +174,7 @@ export default function Market(props: ProductProps) {
 
                                 <div className="flex items-center justify-between">
                                     <p className="font-semibold">Total</p>
-                                    <span className="text-xl font-bold text-foreground">${total}</span>
+                                    <span className="text-xl font-bold text-foreground">${Number(total).toFixed(2)}</span>
                                 </div>
 
                                 <input type="hidden" name="product_id" value={data.id} />

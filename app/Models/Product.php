@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Services\LogService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
+use Stripe\Exception\ApiErrorException;
 use Stripe\Stripe;
 
 /**
@@ -66,7 +68,7 @@ class Product extends Model
             try {
                 $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
                 $stripeProduct = $stripe->products->create([
-                    'name' => $product->name.' '.$product->vendor->name,
+                    'name' => $product->name.' from '.$product->vendor->name,
                     'description' => $product->description ?? null,
                 ]);
 
@@ -82,10 +84,9 @@ class Product extends Model
                     'stripe_product_id' => $stripeProduct->id,
                     'stripe_price_id' => $stripePrice->id,
                 ]);
-            } catch (\Stripe\Exception\ApiErrorException $e) {
-                // Handle Stripe API errors
+            } catch (ApiErrorException $e) {
+                (new LogService)->createLog('error', $e->getMessage(), Product::class, 'boot::created');
                 Log::error('Error creating Stripe product: '.$e->getMessage());
-                // Optionally, you might want to handle this differently, like setting a flag on the product
             }
         });
 
