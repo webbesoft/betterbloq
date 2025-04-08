@@ -22,4 +22,11 @@ class PurchasePoolController extends Controller
             'purchasePools' => PurchasePoolResource::collection($purchasePoolQuery),
         ]);
     }
+
+    public function show(PurchasePool $purchasePool): Response
+    {
+        return Inertia::render('shop/purchase-pools/show', [
+            'purchasePool' => new PurchasePoolResource($purchasePool),
+        ]);
+    }
 }

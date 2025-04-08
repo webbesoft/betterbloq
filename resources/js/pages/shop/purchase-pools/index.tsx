@@ -159,9 +159,9 @@ export default function PurchasePoolIndex({ purchasePools: initialPurchasePools 
                             <TableRow key={pool.id}>
                                 {columns.includes('id') && <TableCell>{pool.id}</TableCell>}
                                 {columns.includes('status') && <TableCell>{pool.status}</TableCell>}
-                                {columns.includes('start_date') && <TableCell>{pool.start_date}</TableCell>}
-                                {columns.includes('end_date') && <TableCell>{pool.end_date}</TableCell>}
-                                {columns.includes('target_delivery_date') && <TableCell>{pool.target_delivery_date}</TableCell>}
+                                {columns.includes('start_date') && <TableCell>{new Date(pool.start_date).toLocaleDateString()}</TableCell>}
+                                {columns.includes('end_date') && <TableCell>{new Date(pool.end_date).toLocaleDateString()}</TableCell>}
+                                {columns.includes('target_delivery_date') && <TableCell>{new Date(pool.target_delivery_date).toLocaleDateString()}</TableCell>}
                                 {/*{columns.includes('created_at') && <TableCell>{new Date(pool.created_at).toLocaleDateString()}</TableCell>}*/}
                                 {/*{columns.includes('updated_at') && <TableCell>{new Date(pool.updated_at).toLocaleDateString()}</TableCell>}*/}
                                 {columns.includes('actions') && (

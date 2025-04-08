@@ -15,7 +15,7 @@ import {
     TableHead,
     TableCell,
 } from "@/components/ui/table";
-import { PurchasePool } from '@/types/model-types'; // Adjust the import path as needed
+import { PurchasePool } from '@/types/model-types';
 
 interface Props {
     purchasePool: PurchasePool & {
