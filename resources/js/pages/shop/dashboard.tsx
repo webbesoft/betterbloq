@@ -7,6 +7,7 @@ import { Eye, ListChecks, MapPin, PieChart, ShoppingBag } from 'lucide-react';
 import SetupGuide from '@/pages/shop/components/setup-guide';
 import { useState } from 'react';
 import { Separator } from '@radix-ui/react-separator';
+import EmailVerificationNotice from '@/components/EmailVerificationNotice';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -42,6 +43,8 @@ export default function Dashboard({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+                {/*email verification banner*/}
+                <EmailVerificationNotice />
                 {/* setup guide */}
                 {(!hasCompletedGuide && setupGuideVisible) && <SetupGuide visibility={setupGuideVisible} onUpdateVisibility={setSetupGuideVisible} />}
                 <Separator />

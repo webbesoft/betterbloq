@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PurchasePoolTierResource\Pages;
+use App\Models\PurchasePool;
 use App\Models\PurchasePoolTier;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -35,9 +36,12 @@ class PurchasePoolTierResource extends Resource
                 Forms\Components\TextInput::make('discount_percentage')
                     ->required()
                     ->numeric(),
-                Forms\Components\TextInput::make('purchase_pool_id')
-                    ->required()
-                    ->numeric(),
+                Forms\Components\Select::make('purchase_pool_id')
+                ->required()
+                ->options(
+                    PurchasePool::all()->pluck(['', 'id'])
+                )
+                ->searchable(),
             ]);
     }
 

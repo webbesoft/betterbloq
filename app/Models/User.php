@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+ use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Mail\WelcomeUser;
 use Database\Factories\UserFactory;
@@ -38,7 +38,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @method static Builder|User newModelQuery()
  * @method static Builder|User whereStripeCustomerId($value)
  */
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use Billable, HasApiTokens, HasFactory, HasRoles, Notifiable;

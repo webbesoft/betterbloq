@@ -14,6 +14,7 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
         $projects = QueryBuilder::for(Project::class)
+            ->where('user_id', $request->user()->id)
             ->defaultSort('id')
             ->allowedFilters([
                 'name',
