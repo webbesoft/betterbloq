@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
+import { Auth, type BreadcrumbItem } from '@/types';
 import { Product } from '@/types/model-types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEventHandler, useEffect, useMemo, useState } from 'react';
@@ -34,6 +34,7 @@ interface ProductProps {
     },
     hasPurchasePoolRequest: boolean;
     activePurchasePool: ActivePurchasePoolData | null;
+    auth: Auth;
 }
 
 interface PurchasePoolTierData {
@@ -72,6 +73,7 @@ type OrderForm = {
 export default function Market(props: ProductProps) {
     const { product, flash, hasPurchasePoolRequest, activePurchasePool } = props;
 
+    console.log(props);
     const { data: productData } = product;
 
     const {
@@ -131,6 +133,18 @@ export default function Market(props: ProductProps) {
     };
 
     const getFormButton = () => {
+        // 0. if no user
+        if (!props.auth?.user) {
+            return (
+                <div className={'flex flex-col items-center justify-start gap-2 text-center p-4 border rounded-md bg-secondary/50'}>
+                    <p className={'text-sm font-medium text-foreground/80'}>
+                        <Info className="inline h-4 w-4 mr-1" />
+                        You must be logged in to place an order.
+                    </p>
+                    <Link href={route('login')} className={'text-sm link'}>Login</Link>
+                </div>
+            )
+        }
         // 1. User already has a pending request for *this* product
         if (hasPurchasePoolRequest) {
             return (
@@ -189,8 +203,8 @@ export default function Market(props: ProductProps) {
         }
 
         const { current_volume, tiers, current_tier, end_date, max_orders, target_delivery_date } = activePurchasePool;
-        const nextTier = tiers.find(tier => tier.min_volume > current_volume); // Find the *next* tier goal
-        const progressPercent = max_orders ? Math.min(100, (current_volume / max_orders) * 100) : 0; // Progress towards max orders if defined
+        const nextTier = tiers.find(tier => tier.min_volume > current_volume);
+        const progressPercent = max_orders ? Math.min(100, (current_volume / max_orders) * 100) : 0;
 
         return (
             <div className="space-y-4 mt-4 rounded-md border p-4 bg-gradient-to-br from-background to-secondary/30">
@@ -228,7 +242,7 @@ export default function Market(props: ProductProps) {
                             <li key={tier.id} className={`text-sm flex items-center gap-2 ${current_tier?.id === tier.id ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
                                 {current_tier?.id === tier.id ? <CheckCircle className="h-4 w-4 text-primary" /> : <Tag className="h-4 w-4" />}
                                 <span>{tier.min_volume}{tier.max_volume ? ` - ${tier.max_volume}` : '+'} {productData.unit}: <span className={current_tier?.id === tier.id ? "text-foreground" : ""}>{tier.discount_percentage}% off</span></span>
-                                {current_tier?.id === tier.id && <Badge variant="outline" size="sm" className='ml-auto'>Current Tier</Badge>}
+                                {current_tier?.id === tier.id && <Badge variant="outline"  className='ml-auto'>Current Tier</Badge>}
                             </li>
                         ))}
                     </ul>

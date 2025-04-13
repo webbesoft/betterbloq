@@ -15,6 +15,12 @@ Route::get('/', function () {
     return Inertia::render('shop/landing');
 })->name('landing');
 
+
+// market
+Route::get('market', [ProductController::class, 'index'])->name('market');
+//        products
+Route::get('market/product/{product}', [ProductController::class, 'show'])->name('product.show');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     // BulkBuy app routes
     Route::middleware(['subscribed'])->group(function () {
@@ -40,10 +46,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('')->group(function () {
         Route::get('plans', [PlanController::class, 'index'])->name('plans.index');
         Route::post('checkout', [CheckoutController::class, 'create'])->name('checkout.create');
-        // market
-        Route::get('market', [ProductController::class, 'index'])->name('market');
-        //        products
-        Route::get('market/product/{product}', [ProductController::class, 'show'])->name('product.show');
     });
 
     // Route::get('dashboard', function () {
