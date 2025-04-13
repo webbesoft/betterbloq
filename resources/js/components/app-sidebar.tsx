@@ -4,10 +4,15 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Box, HousePlus, LayoutGrid, ShoppingBag, TargetIcon, TruckIcon } from 'lucide-react';
+import { BookOpen, Box, House, HousePlus, LayoutGrid, ShoppingBag, TargetIcon, TruckIcon } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
+    {
+        title: 'Home',
+        url: '/',
+        icon: House
+    },
     {
         title: 'Dashboard',
         url: '/dashboard',
@@ -27,11 +32,6 @@ const mainNavItems: NavItem[] = [
         title: 'Orders',
         url: '/orders',
         icon: TruckIcon
-    },
-    {
-        title: 'Market',
-        url: '/market',
-        icon: ShoppingBag,
     },
 ];
 

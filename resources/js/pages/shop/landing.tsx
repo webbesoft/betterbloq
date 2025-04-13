@@ -8,13 +8,6 @@ import CtaSection from './components/landing/call-to-action';
 import FeaturesSection from './components/landing/features';
 import PricingSection from './components/landing/plans';
 
-const navItems: NavItem[] = [
-    {
-        title: 'Home',
-        url: '#',
-    },
-];
-
 export default function Landing() {
     return (
         <>
@@ -22,9 +15,8 @@ export default function Landing() {
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
             </Head>
-            <LandingLayout>
+            <LandingLayout breadcrumbs={[]}>
                 <div className="landing-page flex min-h-screen flex-col items-center gap-4 bg-[var(--background)] text-[var(--custom-text)] lg:justify-center">
-                    <LandingNavigation items={navItems} />
                     {/* Banner */}
                     <LandingPageBanner />
 
@@ -39,8 +31,6 @@ export default function Landing() {
                     <PricingSection />
 
                     <CtaSection />
-
-                    <LandingFooter />
                 </div>
             </LandingLayout>
         </>

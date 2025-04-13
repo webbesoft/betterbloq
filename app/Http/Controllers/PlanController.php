@@ -11,7 +11,7 @@ class PlanController extends Controller
 {
     public function index(Request $request)
     {
-        $plans = Plan::with(['planFeatures', 'planLimits'])->get();
+        $plans = Plan::with(['planFeatures', 'planLimits', 'planLimits.plan', 'planFeatures.plan'])->get();
 
         return Inertia::render('shop/plans', [
             'plans' => PlanResource::collection($plans),

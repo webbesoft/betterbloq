@@ -17,11 +17,12 @@ class PlanResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'slug' => $this->slug,
             'stripe_plan' => $this->stripe_plan,
             'price' => $this->price,
             'description' => $this->description,
-            'features' => $this->planFeatures,
-            'limits' => $this->planLimits,
+            'features' => PlanFeatureResource::collection($this->planFeatures),
+            'limits' => PlanLimitResource::collection($this->planLimits),
         ];
     }
 }

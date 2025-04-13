@@ -22,6 +22,8 @@ use Illuminate\Support\Collection;
  * @property int $min_orders_for_discount
  * @property int $max_orders
  * @property int $discount_percentage
+ * @property float current_volume
+ * @property float target_volume
  * @property int $product_id
  * @property int $vendor_id
  * @property Carbon|null $deleted_at
@@ -41,6 +43,12 @@ class PurchasePool extends Model
     /** @use HasFactory<PurchasePoolFactory> */
     use HasFactory, SoftDeletes;
 
+    const STATUS_ACTIVE = 'active';
+
+    const STATUS_PENDING = 'pending';
+
+    const STATUS_CLOSED = 'closed';
+
     protected $fillable = [
         'start_date',
         'end_date',
@@ -51,8 +59,8 @@ class PurchasePool extends Model
         'discount_percentage',
         'min_orders_for_discount',
         'max_orders',
-        'target_amount',
-        'current_amount',
+        'target_volume',
+        'current_volume',
     ];
 
     public function casts(): array
@@ -61,8 +69,8 @@ class PurchasePool extends Model
             'start_date' => 'date',
             'end_date' => 'date',
             'target_delivery_date' => 'date',
-            'target_amount' => 'float',
-            'current_amount' => 'float',
+            'target_volume' => 'float',
+            'current_volume' => 'float',
         ];
     }
 

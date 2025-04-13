@@ -20,10 +20,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['subscribed'])->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // market
-        Route::get('market', [ProductController::class, 'index'])->name('market');
-        //        products
-        Route::get('market/product/{product}', [ProductController::class, 'show'])->name('product.show');
         // orders
         Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
@@ -35,6 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('purchase-pools/{purchase-pool}', [PurchasePoolController::class, 'show'])->name('purchase-pools.show');
         Route::post('purchase-pools', [PurchasePoolController::class, 'store'])->name('purchase-pools.store');
         // purchase pool requests
+        Route::post('purchase-pool-requests', [PurchasePoolRequestController::class, 'index'])->name('purchase-pool-requests.index');
         Route::post('purchase-pool-requests', [PurchasePoolRequestController::class, 'store'])->name('purchase-pool-requests.store');
 
         Route::resource('projects', ProjectController::class);
@@ -43,6 +40,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('')->group(function () {
         Route::get('plans', [PlanController::class, 'index'])->name('plans.index');
         Route::post('checkout', [CheckoutController::class, 'create'])->name('checkout.create');
+        // market
+        Route::get('market', [ProductController::class, 'index'])->name('market');
+        //        products
+        Route::get('market/product/{product}', [ProductController::class, 'show'])->name('product.show');
     });
 
     // Route::get('dashboard', function () {

@@ -50,12 +50,14 @@ class PurchasePoolResource extends Resource
                     ->required()
                     ->numeric()
                     ->default(0),
-                Forms\Components\TextInput::make('vendor_id')
+                Forms\Components\Select::make('vendor_id')
+                    ->options(Vendor::all()->pluck('name', 'id'))
                     ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('product_id')
+                    ->searchable(),
+                Forms\Components\Select::make('product_id')
+                    ->options(Product::all()->pluck('name', 'id'))
                     ->required()
-                    ->numeric(),
+                    ->searchable(),
             ]);
     }
 

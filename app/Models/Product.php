@@ -58,6 +58,13 @@ class Product extends Model
         'amount',
     ];
 
+    public function casts(): array
+    {
+        return [
+            'price' => 'float',
+        ];
+    }
+
     protected $table = 'products';
 
     protected static function boot()

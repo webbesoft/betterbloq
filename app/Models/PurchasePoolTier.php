@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string name
  * @property string description
  * @property float discount_percentage
+ * @property int min_volume
+ * @property int max_volume
  *
  * @method static Builder|PurchasePoolTier query()
  * @method static Builder|PurchasePoolTier queryModel()

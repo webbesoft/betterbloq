@@ -14,6 +14,9 @@ import { Head, router } from '@inertiajs/react';
 import { Popover } from '@radix-ui/react-popover';
 import { SetStateAction, useCallback, useEffect, useState } from 'react';
 import ProductListItem from './components/product-list-item';
+import LandingLayout from '@/layouts/landing-layout';
+import ProductListItemListLayout from './components/product-list-item-list-layout';
+import { ChevronDown } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -60,7 +63,7 @@ export default function Market(props: MarketProps) {
     const MAX_PRICE = 1000;
 
     const reload = useCallback(
-        debounce((newFilters) => {
+        debounce((newFilters: any) => {
             router.get(route('market'), newFilters, {
                 preserveState: true,
                 preserveScroll: true,
@@ -107,145 +110,174 @@ export default function Market(props: MarketProps) {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <LandingLayout breadcrumbs={breadcrumbs}>
             <Head title="Market" />
-            <div className="h-full gap-4 rounded-xl p-4">
-                <div className="flex w-full flex-shrink-0 items-center justify-start">
-                    {' '}
-                    <div className="flex w-full flex-col items-start justify-start gap-4">
-                        <Input placeholder="Search" value={searchQuery} onChange={(e) => handleSearchQueryChange(e.target.value)} />
-                        <div className="flex w-full items-center justify-start gap-4">
-                            <div className="flex w-full items-center justify-between gap-2">
-                                <div className="flex w-3/4 items-center justify-start gap-2">
-                                    <Select value={category} onValueChange={handleCategoryChange}>
-                                        <SelectTrigger className="rounded-md">
-                                            {' '}
-                                            <span className="block text-xs text-gray-500">Category</span>
-                                            <SelectValue placeholder="Select Category" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All Categories</SelectItem>
-                                            {availableFilters.categories.map((cat) => (
-                                                <SelectItem key={cat.id} value={String(cat.id)}>
-                                                    {' '}
-                                                    {/* Ensure value is string if needed by Select */}
-                                                    {cat.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <Select value={vendor} onValueChange={handleVendorChange}>
-                                        <SelectTrigger className="rounded-md">
-                                            {' '}
-                                            <span className="block text-xs text-gray-500">Vendor</span>
-                                            <SelectValue placeholder="Select Vendor" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All Vendors</SelectItem>
-                                            {availableFilters.vendors.map((ven) => (
-                                                <SelectItem key={ven.id} value={String(ven.id)}>
-                                                    {' '}
-                                                    {ven.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            {/* This button opens the popover */}
-                                            <Button
-                                                variant="outline"
-                                                className="h-10 w-full justify-start rounded-sm px-4 py-2 text-left font-normal"
-                                            >
-                                                {/* Display current range */}
-                                                <div>
-                                                    <span className="text-xxs block text-gray-500">Price</span>
-                                                    <span className="text-sm">
-                                                        From ${priceRange[0]} - ${priceRange[1]}
-                                                        {priceRange[1] === MAX_PRICE ? '+' : ''}
-                                                    </span>{' '}
-                                                    {/* Optional: Add '+' if max is selected */}
-                                                </div>
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-60 p-4" align="start">
-                                            {' '}
-                                            {/* Adjust width/padding */}
-                                            <div className="space-y-4">
-                                                <Label htmlFor="price-range-slider" className="block text-center">
-                                                    Price Range (${priceRange[0]} - ${priceRange[1]})
-                                                </Label>
-                                                <Slider
-                                                    id="price-range-slider"
-                                                    min={0}
-                                                    max={MAX_PRICE}
-                                                    step={10} // Adjust step value as needed (e.g., 1, 5, 10, 50)
-                                                    value={priceRange} // Bind to state
-                                                    onValueChange={handlePriceChange} // Update state on change
-                                                    className="my-4" // Add some margin
-                                                />
-                                                {/* Optional: Display min/max values clearly */}
-                                                <div className="text-muted-foreground flex justify-between text-sm">
-                                                    <span>${priceRange[0]}</span>
-                                                    <span>${priceRange[1]}</span>
-                                                </div>
-                                            </div>
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-                                <div className="w-48 flex-shrink-0">
-                                    <Select value={sortBy} onValueChange={handleSortChange}>
-                                        <SelectTrigger className="rounded-full">
-                                            <span className="block text-xs text-gray-500">Sort</span>
-                                            <SelectValue placeholder="Sort By" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="-created_at">Newest First</SelectItem>
-                                            <SelectItem value="created_at">Oldest First</SelectItem>
-                                            <SelectItem value="name">Name (A-Z)</SelectItem>
-                                            <SelectItem value="-name">Name (Z-A)</SelectItem>
-                                            <SelectItem value="price">Price (Low to High)</SelectItem>
-                                            <SelectItem value="-price">Price (High to Low)</SelectItem>
-                                            {/* Add other sorting options as needed */}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+            <div className="container mx-auto grid grid-cols-1 gap-6 p-4 lg:grid-cols-4">
+    
+            <aside className="lg:col-span-1">
+        
+                        <div className="space-y-6 rounded-lg border bg-card p-4 shadow-sm">
+        
+                            <div>
+                                <h3 className="mb-2 text-sm font-semibold uppercase text-muted-foreground">Category</h3>
+                                <Select value={category} onValueChange={handleCategoryChange}>
+                                    <SelectTrigger className="w-full rounded-md"> 
+        
+                                        <SelectValue placeholder="All Categories" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Categories</SelectItem>
+                                        {availableFilters?.categories?.map((cat) => (
+                                            <SelectItem key={cat.id} value={String(cat.id)}>
+                                                {cat.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
+
+                            
+                            <div>
+                                <h3 className="mb-2 text-sm font-semibold uppercase text-muted-foreground">Vendor</h3>
+                                <Select value={vendor} onValueChange={handleVendorChange}>
+                                    <SelectTrigger className="w-full rounded-md">
+                                        <SelectValue placeholder="All Vendors" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Vendors</SelectItem>
+                                        {availableFilters?.vendors?.map((ven) => (
+                                            <SelectItem key={ven.id} value={String(ven.id)}>
+                                                {ven.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                        
+                            <div>
+                                <h3 className="mb-2 text-sm font-semibold uppercase text-muted-foreground">Price Range</h3>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className="h-10 w-full justify-between rounded-md px-3 py-2 text-left font-normal" // Full width, adjusted padding
+                                        >
+                                            
+                                            <span className="text-sm">
+                                                ${priceRange[0]} - ${priceRange[1]}
+                                                {priceRange[1] === MAX_PRICE ? '+' : ''}
+                                            </span>
+                                            
+                                             <ChevronDown className="h-4 w-4 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-60 p-4" align="start">
+                                        <div className="space-y-4">
+                                            <Label htmlFor="price-range-slider-side" className="block text-center">
+                                                Price Range (${priceRange[0]} - ${priceRange[1]})
+                                            </Label>
+                                            <Slider
+                                                id="price-range-slider-side"
+                                                min={0}
+                                                max={MAX_PRICE}
+                                                step={10}
+                                                value={priceRange}
+                                                onValueChange={handlePriceChange}
+                                                className="my-4"
+                                            />
+                                            <div className="text-muted-foreground flex justify-between text-sm">
+                                                <span>${0}</span>
+                                                <span>${MAX_PRICE}{MAX_PRICE === priceRange[1] ? '+' : ''}</span>
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+
+                            {/* Optional: Add more filters here (e.g., Rating) */}
+                            {/* <Separator className="my-4" /> */}
+                            {/* <div> */}
+                            {/* <h3 className="mb-2 text-sm font-semibold uppercase text-muted-foreground">Rating</h3> */}
+                                {/* Add Rating filter component */}
+                            {/* </div> */}
+
+                            <Button variant="ghost" className="w-full justify-center">Clear All Filters</Button>
                         </div>
+                    </aside>
+    
+            
+                <main className="lg:col-span-3">
+                    {/* Top Bar: Search and Sort */}
+                    <div className="mb-4 flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+                       <div className="flex-grow">
+                           <Input placeholder="Search Market..." value={searchQuery} onChange={(e) => handleSearchQueryChange(e.target.value)} />
+                       </div>
+                       <div className="w-full flex-shrink-0 md:w-48">
+                           {/* Keep Sort Dropdown */}
+                           <Select value={sortBy} onValueChange={handleSortChange}>
+                                    <SelectTrigger className="w-full rounded-md">
+                                    
+                                        <SelectValue placeholder="Sort By" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                    
+                                        <SelectItem value="-created_at">Newest First</SelectItem>
+                                        <SelectItem value="created_at">Oldest First</SelectItem>
+                                        <SelectItem value="name">Name (A-Z)</SelectItem>
+                                        <SelectItem value="-name">Name (Z-A)</SelectItem>
+                                        <SelectItem value="price">Price (Low to High)</SelectItem>
+                                        <SelectItem value="-price">Price (High to Low)</SelectItem>
+                                        {/* <SelectItem value="-rating">Rating (High to Low)</SelectItem> */}
+                                    </SelectContent>
+                                </Select>
+                       </div>
                     </div>
-                </div>
-                <div className="py-4">
-                    {data.length === 0 && <EmptyResource type="products" />}
-                    <div className="grid grid-cols-4 gap-4">
-                        {data.map((product: Product) => {
-                            return (
-                                <div key={product.id}>
-                                    <ProductListItem product={product} key={product.id} />
-                                </div>
-                            );
-                        })}
+    
+                    
+                     <div className="mb-4 flex items-center justify-between text-sm text-muted-foreground">
+                        <span>Showing {meta?.total || 0} results</span>
+                        {/* Add logic to display active filters here */}
+            
+                     </div>
+    
+    
+                    {/* Product Grid */}
+                    {/* {data.length === 0 && !isLoading && <EmptyResource type="products" />} {/* Add loading state check */}
+                    {/* {isLoading && <div>Loading products...</div>} Add Loading state */}
+    
+                    <div className="space-y-4">
+                        {data.map((product: Product) => (
+                           
+                           <ProductListItemListLayout product={product} key={product.id} />
+                        ))}
                     </div>
-                </div>
-                <div className="mb-0">
-                    {meta && meta.total > 1 && (
+    
+                    {/* Pagination */}
+                    <div className="mt-6">
+                    {meta && meta.last_page > 1 && (
                         <Pagination>
-                            <PaginationContent className="justify-center gap-2">
+                            <PaginationContent className="justify-center gap-1 sm:gap-2"> {/* Adjust gap */}
                                 <PaginationItem>
-                                    <PaginationPrevious hidden={!links.prev} href={links.prev} size={1} />
+                                    <PaginationPrevious href={links?.prev || '#'} disabled={!!links?.prev} size={1} />
                                 </PaginationItem>
-                                <PaginationItem className="p-2 shadow-sm">{paginationLinks()}</PaginationItem>
-                                {/* <PaginationItem>
-                                        <PaginationEllipsis />
-                                    </PaginationItem> */}
+                                <PaginationItem className="hidden items-center gap-1 rounded-md border p-1 px-2 shadow-sm sm:flex">
+                                     {paginationLinks()}
+                                </PaginationItem>
+                                 <PaginationItem className="p-2 text-sm sm:hidden">
+                                      Page {meta.current_page} of {meta.last_page}
+                                 </PaginationItem>
+
                                 <PaginationItem>
-                                    <PaginationNext hidden={!links.next} href={links.next} size={1} />
+                                      
+                                    <PaginationNext href={links?.next || '#'} disabled={!!links?.next} size={1} />
                                 </PaginationItem>
                             </PaginationContent>
                         </Pagination>
                     )}
                 </div>
+                </main>
             </div>
-        </AppLayout>
+        </LandingLayout>
     );
 }

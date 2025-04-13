@@ -34,17 +34,14 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
     };
 
     return (
-        <div className="container mx-auto border-b px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto border-b px-4 sm:px-6 lg:px-8 z-100">
             {' '}
-            {/* Added border */}
             <header className="w-full py-3">
                 {' '}
-                {/* Reduced padding slightly */}
                 <nav className="flex h-14 items-center justify-between gap-6">
                     {/* Logo */}
                     <Link href="/" className="mr-4 flex items-center gap-2">
                         {' '}
-                        {/* Added gap and margin */}
                         <img
                             src="/images/betterbloq.png"
                             alt="betterbloq logo"
@@ -53,17 +50,15 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                         <span className="text-foreground hidden font-bold sm:inline-block">BetterBloq</span> {/* Hide text on xs screens */}
                     </Link>
 
-                    {/* Main Navigation */}
                     {items && items.length > 0 && (
                         <NavigationMenu className="hidden flex-1 lg:flex">
                             {' '}
-                            {/* Allow menu to take space */}
                             <NavigationMenuList>
                                 {items.map((item) => (
                                     <NavigationMenuItem key={item.title}>
-                                        <Link href={item.url}>
-                                            <NavigationMenuLink className={navigationMenuTriggerStyle()}>{item.title}</NavigationMenuLink>
-                                        </Link>
+                        
+                                            <NavigationMenuLink className={navigationMenuTriggerStyle()} href={item.url}>{item.title}</NavigationMenuLink>
+                        
                                     </NavigationMenuItem>
                                 ))}
                             </NavigationMenuList>

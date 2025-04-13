@@ -6,6 +6,9 @@ services:
       - 3306:3306
     environment:
       MARIADB_ROOT_PASSWORD: example
+      MARIADB_USER: ${DB_USERNAME}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_DATABASE: ${DB_DATABASE}
     volumes:
       - db_data:/var/lib/mysql:Z
 

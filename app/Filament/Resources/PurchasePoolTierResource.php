@@ -37,11 +37,11 @@ class PurchasePoolTierResource extends Resource
                     ->required()
                     ->numeric(),
                 Forms\Components\Select::make('purchase_pool_id')
-                ->required()
-                ->options(
-                    PurchasePool::all()->pluck(['', 'id'])
-                )
-                ->searchable(),
+                    ->required()
+                    ->options(
+                        PurchasePool::all()->pluck(['', 'id'])
+                    )
+                    ->searchable(),
             ]);
     }
 

@@ -78,7 +78,7 @@ class StripeEventListener
 
                                     // #! Stripe provides the unit amount in cents
                                     $openPool->update([
-                                        'current_amount' => $openPool->current_amount + (($price->unit_amount / 100) * $quantity),
+                                        'current_volume' => $openPool->current_volume + $quantity,
                                     ]);
 
                                     Mail::to($order->user->email)->send(new NewOrderConfirmation($order, $user));

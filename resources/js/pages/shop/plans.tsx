@@ -55,18 +55,18 @@ export default function Plans(props: PropsType) {
     };
 
     return (
-        <LandingLayout>
+        <LandingLayout breadcrumbs={[]}>
             <Head title="Plans & Pricing">
                 <link rel="preconnect" href="https://fonts.bunny.net" />
                 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
             </Head>
-            <div className="bg-background text-foreground min-h-screen py-16">
+            <div className="bg-background/50 text-foreground min-h-screen pb-8">
                 <div className="mx-auto max-w-screen-lg p-4">
-                    <div className="mb-8">
+                    {/* <div className="mb-8">
                         <Link href={route('landing')} className="text-primary hover:underline">
                             ← Back to Home
                         </Link>
-                    </div>
+                    </div> */}
                     <div className="mb-4">
                         {flash.message && (
                             <Alert className="border border-green-400 bg-green-100 text-green-700">
@@ -88,13 +88,13 @@ export default function Plans(props: PropsType) {
                         </span>
                     </div>
                     `{/* Plan Cards using Shadcn Card */}
-                    <form method="post" onSubmit={(e) => e.preventDefault()} className="mx-auto grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-2">
+                    <form method="post" onSubmit={(e) => e.preventDefault()} className="mx-auto grid grid-cols-1 gap-8 md:grid-cols-3 lg:grid-cols-3">
                         {plansData.map((plan, index) => (
                             <Card
                                 key={index}
                                 className={cn(
-                                    'flex flex-col justify-between overflow-hidden',
-                                    plan.recommended && 'border-4 border-[--custom-accent]',
+                                    'flex flex-col justify-between overflow-hidden bg-background',
+                                    plan.slug.startsWith('pro') && 'border-4 border-[--custom-accent]',
                                 )}
                             >
                                 {plan.recommended && (

@@ -8,3 +8,14 @@ export const debounce = (func, delay) => {
         }, delay);
     };
 };
+
+export const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return 'N/A';
+    try {
+        return new Date(dateString).toLocaleDateString(undefined, {
+            year: 'numeric', month: 'short', day: 'numeric'
+        });
+    } catch (e) {
+        return 'Invalid Date';
+    }
+};
