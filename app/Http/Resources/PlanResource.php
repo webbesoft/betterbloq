@@ -21,6 +21,9 @@ class PlanResource extends JsonResource
             'stripe_plan' => $this->stripe_plan,
             'price' => $this->price,
             'description' => $this->description,
+            'interval' => $this->interval,
+            'order' => $this->order,
+            'is_popular' => $this->is_popular,
             'features' => PlanFeatureResource::collection($this->planFeatures),
             'limits' => PlanLimitResource::collection($this->planLimits),
         ];

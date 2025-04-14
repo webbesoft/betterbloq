@@ -3,15 +3,28 @@ import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Box, House, HousePlus, LayoutGrid, ShoppingBag, TargetIcon, TruckIcon } from 'lucide-react';
 import AppLogo from './app-logo';
+
+interface UserData {
+    id: number;
+    name: string;
+    email: string;
+    plan_slug?: string | null;
+}
+
+// interface SharedProps {
+//     auth: {
+//         user: UserData | null;
+//     };
+// }
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Home',
         url: '/',
-        icon: House
+        icon: House,
     },
     {
         title: 'Dashboard',
@@ -22,26 +35,30 @@ const mainNavItems: NavItem[] = [
         title: 'Projects',
         url: '/projects',
         icon: HousePlus,
+        allowedPlans: ['pro', 'basic'],
     },
     {
         title: 'Purchase Pools',
         url: '/purchase-pools',
         icon: TargetIcon,
+        allowedPlans: ['free'],
     },
     {
         title: 'Orders',
-        url: '/orders',
-        icon: TruckIcon
+        url: route('orders.index'),
+        icon: TruckIcon,
+        allowedPlans: ['pro', 'free'],
     },
+    
+    {
+        title: 'Upgrade Plan',
+        url: '/shop/plans',
+        icon: ShoppingBag,
+        allowedPlans: ['free', 'basic'],
+    }
 ];
 
 const footerNavItems: NavItem[] = [
-    // Possibly will be for other apps that you can access
-    // {
-    //     title: 'Repository',
-    //     url: 'https://github.com/laravel/react-starter-kit',
-    //     icon: Folder,
-    // },
     {
         title: 'Documentation',
         url: route('landing'),
@@ -50,6 +67,36 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { props } = usePage<any>();
+    const currentUser = props.auth?.user;
+
+    const userPlanSlug = currentUser?.plan_slug || 'free';
+
+    
+    const filteredMainNavItems = mainNavItems.filter(item => {
+    
+        if (!item.allowedPlans) {
+            return true;
+        }
+    
+        if (!currentUser) {
+             return false;
+        }
+    
+        return item.allowedPlans.includes(userPlanSlug);
+    });
+
+    
+     const filteredFooterNavItems = footerNavItems.filter(item => {
+        if (!item.allowedPlans) {
+            return true; 
+        }
+         if (!currentUser) {
+             return false; 
+         }
+        return item.allowedPlans.includes(userPlanSlug);
+    });
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -65,7 +112,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={filteredMainNavItems} />
             </SidebarContent>
 
             <SidebarFooter>

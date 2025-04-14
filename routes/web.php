@@ -15,7 +15,6 @@ Route::get('/', function () {
     return Inertia::render('shop/landing');
 })->name('landing');
 
-
 // market
 Route::get('market', [ProductController::class, 'index'])->name('market');
 //        products

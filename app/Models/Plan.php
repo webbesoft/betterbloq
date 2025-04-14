@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * App\Models\Plan
@@ -16,6 +17,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string stripe_plan
  * @property string description
  * @property float price
+ * @property int order
+ * @property int is_popular
+ * @property int interval
  * @property-read Collection<int, PlanFeature> $planFeatures
  * @property-read int|null $plan_features_count
  * @property-read Collection<int, PlanFeature> $planLimits
@@ -40,7 +44,23 @@ class Plan extends Model
         'stripe_plan',
         'price',
         'description',
+        'order',
+        'is_popular',
+        'interval',
     ];
+
+    public static function boot(): void
+    {
+        parent::boot();
+
+        static::created(function ($model) {
+            Cache::forget('shop.plans.all');
+        });
+
+        static::updated(function ($model) {
+            Cache::forget('shop.plans.all');
+        });
+    }
 
     /**
      * Write code on Method

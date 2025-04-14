@@ -35,6 +35,21 @@ class PlanResource extends Resource
                     ->required()
                     ->numeric()
                     ->prefix('$'),
+                Forms\Components\Select::make('interval')
+                    ->required()
+                    ->options([
+                        'monthly' => 'Monthly',
+                        'yearly' => 'Yearly',
+                    ]),
+                Forms\Components\Select::make('is_popular')
+                    ->boolean()
+                    ->options([
+                        true => 'Yes',
+                        false => 'No',
+                    ]),
+                Forms\Components\TextInput::make('order')
+                    ->numeric()
+                    ->required(),
                 Forms\Components\TextInput::make('description')
                     ->required()
                     ->maxLength(255),
@@ -53,6 +68,12 @@ class PlanResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('price')
                     ->money()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('interval')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('order')
+                    ->numeric(),
+                Tables\Columns\TextColumn::make('is_popular')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('description')
                     ->searchable(),

@@ -345,22 +345,22 @@ export default function Market(props: ProductProps) {
                                         {errors.quantity && <p className="text-sm text-red-500 mt-1">{errors.quantity}</p>}
                                     </div>
 
-                                     {activePurchasePool && (
-                                          <div className="grid grid-cols-1 gap-2">
-                                              <Label htmlFor="expected_delivery_date">Your Preferred Delivery Date (Optional)</Label>
-                                              <Input
-                                                  type="date"
-                                                  id="expected_delivery_date"
-                                                  name="expected_delivery_date"
-                                                  className="col-span-3 text-foreground"
-                                                  onChange={(e) => setData('expected_delivery_date', e.target.value)}
-                                                  value={formdata.expected_delivery_date}
-                                                  min={new Date().toISOString().split('T')[0]}
-                                                  disabled={processing}
-                                              />
-                                              {errors.expected_delivery_date && <p className="text-sm text-red-500 mt-1">{errors.expected_delivery_date}</p>}
-                                          </div>
-                                     )}
+                                     
+                                    <div className="grid grid-cols-1 gap-2">
+                                        <Label htmlFor="expected_delivery_date">Your Preferred Delivery Date (Optional)</Label>
+                                        <Input
+                                            type="date"
+                                            id="expected_delivery_date"
+                                            name="expected_delivery_date"
+                                            className="col-span-3 text-foreground"
+                                            onChange={(e) => setData('expected_delivery_date', e.target.value)}
+                                            value={formdata.expected_delivery_date}
+                                            min={new Date().toISOString().split('T')[0]}
+                                            disabled={processing}
+                                        />
+                                        {errors.expected_delivery_date && <p className="text-sm text-red-500 mt-1">{errors.expected_delivery_date}</p>}
+                                    </div>
+                                     
 
 
                                     <Separator />

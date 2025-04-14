@@ -38,7 +38,7 @@ export default ({ children, breadcrumbs }: LandingLayoutProps) => {
         <LandingNavigation items={navItems} />
         <div className='container mx-auto'>
             <header className="border-sidebar-border/50 flex h-16 shrink-0 items-center gap-4 border-b px-4 sm:px-6 md:px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-                {'/' !== window.location.pathname &&
+                {!['/', '/plans'].includes(window.location.pathname) &&
                     <div className="flex items-center gap-2">
                     <Home className="h-4 w-4 text-foreground" />
                     <h1 className="text-lg font-semibold text-foreground truncate">
