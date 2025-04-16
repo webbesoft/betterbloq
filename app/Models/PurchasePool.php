@@ -35,6 +35,26 @@ use Illuminate\Support\Collection;
  * @method static Builder|PurchasePool query()
  * @method static Builder|PurchasePool newModelQuery()
  * @method static Builder|PurchasePool newQuery()
+ * @method static Builder|PurchasePool whereId($value)
+ * @method static Builder|PurchasePool whereStatus($value)
+ * @method static Builder|PurchasePool whereStartDate($value)
+ * @method static Builder|PurchasePool whereEndDate($value)
+ * @method static Builder|PurchasePool whereTargetDeliveryDate($value)
+ * @method static Builder|PurchasePool whereMinOrdersForDiscount($value)
+ * @method static Builder|PurchasePool whereMaxOrders($value)
+ * @method static Builder|PurchasePool whereDiscountPercentage($value)
+ * @method static Builder|PurchasePool whereCurrentVolume($value)
+ * @method static Builder|PurchasePool whereTargetVolume($value)
+ * @method static Builder|PurchasePool whereProductId($value)
+ * @method static Builder|PurchasePool whereVendorId($value)
+ * @method static Builder|PurchasePool whereDeletedAt($value)
+ * @method static Builder|PurchasePool whereCreatedAt($value)
+ * @method static Builder|PurchasePool whereUpdatedAt($value)
+ * @method static Builder|PurchasePool withinDeliveryRange(string $expectedDeliveryDate)
+ * @method static Builder|PurchasePool active()
+ * @method static Builder|PurchasePool pending()
+ * @method static Builder|PurchasePool closed()
+ * 
  *
  * @mixin Eloquent
  */
@@ -77,5 +97,14 @@ class PurchasePool extends Model
     public function purchasePoolTiers(): HasMany
     {
         return $this->hasMany(PurchasePoolTier::class);
+    }
+
+    public function scopeWithinDeliveryRange(Builder $query, string $expectedDeliveryDate): Builder
+    {
+        $expectedDate = Carbon::parse($expectedDeliveryDate);
+        $startDate = $expectedDate->copy()->subDays(3)->toDateString();
+        $endDate = $expectedDate->copy()->addDays(3)->toDateString();
+
+        return $query->whereBetween('target_delivery_date', [$startDate, $endDate]);
     }
 }

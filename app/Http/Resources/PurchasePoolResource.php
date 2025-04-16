@@ -14,6 +14,18 @@ class PurchasePoolResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'current_volume' => $this->current_volume,
+            'target_volume' => $this->target_volume,
+            'target_delivery_date' => $this->target_delivery_date,
+            'min_orders_for_discount' => $this->min_orders_for_discount,
+            'max_orders' => $this->max_orders,
+            'start_date' => $this->start_date,
+            'end_date' => $this->end_date,
+            'status' => $this->status,
+            'tiers' => $this->purchasePoolTiers,
+        ];
     }
 }

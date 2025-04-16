@@ -113,13 +113,19 @@ export interface Order {
     purchase_pool?: PurchasePool;
     product?: Product;
     vendor?: Vendor;
+    quantity: number;
 }
 
 export interface PurchasePool {
     status: string;
     start_date: Date;
     end_date: Date;
+    target_volume: string;
+    current_volume: string;
     target_delivery_date: Date;
+    min_orders_for_discount: number;
+    discount_percentage: number;
+    max_orders: number;
     created_at: Date;
     updated_at: Date;
     id: number;

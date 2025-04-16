@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Product;
 use App\Models\PurchasePool;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 
@@ -12,11 +13,16 @@ class OrderService
 {
     public static function createOrder(User $user, array $data)
     {
-        $open_pool = PurchasePool::where('product_id', data_get($data, 'product_id'))->where('status', 'active')->where('end_date', '>', data_get($data, 'expected_delivery_date'))->where('start_date', '<', data_get($data, 'expected_delivery_date'))->first();
+        $expectedDeliveryDate = Carbon::parse(data_get($data, 'expected_delivery_date'));
 
+        $open_pool = PurchasePool::where('product_id', data_get($data, 'product_id'))
+            ->where('status', 'active')
+            ->withinDeliveryRange(data_get($data, 'expected_delivery_date'))
+            ->first();
+            
         if (! $open_pool) {
             return [
-                'error' => 'No open purchase pools found',
+                'error' => 'Sorry, your delivery date must be within 3 days of the purchase pool delivery date. Please try again or request a new purchase pool for a different date.',
             ];
         }
 

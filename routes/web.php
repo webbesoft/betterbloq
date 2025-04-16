@@ -32,8 +32,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
         //        Route::get('orders', [OrderController::class, 'create'])->name('orders.create');
         // purchase pools
+        Route::get('purchase-pools/{purchasePool}', [PurchasePoolController::class, 'show'])->name('purchase-pools.show');
         Route::get('purchase-pools', [PurchasePoolController::class, 'index'])->name('purchase-pools.index');
-        Route::get('purchase-pools/{purchase-pool}', [PurchasePoolController::class, 'show'])->name('purchase-pools.show');
         Route::post('purchase-pools', [PurchasePoolController::class, 'store'])->name('purchase-pools.store');
         // purchase pool requests
         Route::post('purchase-pool-requests', [PurchasePoolRequestController::class, 'index'])->name('purchase-pool-requests.index');

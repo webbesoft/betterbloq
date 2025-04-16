@@ -14,7 +14,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ChevronDown, ChevronDownSquare } from 'lucide-react';
 import React, { useState } from 'react';
-import { PurchasePool } from '@/types/model-types'; // Adjust the import path as needed
+import { PurchasePool } from '@/types/model-types';
 
 interface Props {
     purchasePools: {

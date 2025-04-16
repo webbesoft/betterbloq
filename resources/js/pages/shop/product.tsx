@@ -73,7 +73,6 @@ type OrderForm = {
 export default function Market(props: ProductProps) {
     const { product, flash, hasPurchasePoolRequest, activePurchasePool } = props;
 
-    console.log(props);
     const { data: productData } = product;
 
     const {
@@ -159,20 +158,17 @@ export default function Market(props: ProductProps) {
         }
 
         // 2. There's an active pool to join
-        if (activePurchasePool) {
             return (
-                <Button type="submit" className="mt-auto w-full" disabled={processing}>
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    {processing ? 'Placing Order...' : `Order Now & Join Pool (${currentDiscountPercent}% Off)`}
-                </Button>
-            );
-        }
-
-        return (
-            <Button type="submit" className="mt-auto w-full" disabled={processing}>
-                <Clock className="mr-2 h-4 w-4" />
-                {processing ? 'Requesting...' : 'Request Purchase Pool'}
-            </Button>
+                <div className={'flex flex-col items-center justify-start gap-2 text-center p-4 rounded-md'}>
+                    <Button type="submit" className="mt-auto w-full" disabled={processing || !activePurchasePool}>
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        {processing ? 'Placing Order...' : `Order Now & Join Pool (${currentDiscountPercent}% Off)`}
+                    </Button>
+                    <Button type="submit" variant={'outline'} className="mt-auto w-full" disabled={processing}>
+                        <Clock className="mr-2 h-4 w-4" />
+                        {processing ? 'Requesting...' : 'Request Purchase Pool'}
+                    </Button>
+                </div>
         );
     };
 

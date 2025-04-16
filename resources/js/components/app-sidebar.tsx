@@ -49,7 +49,12 @@ const mainNavItems: NavItem[] = [
         icon: TruckIcon,
         allowedPlans: ['pro', 'free'],
     },
-    
+    {
+        title: 'Market',
+        url: route('market'),
+        icon: ShoppingBag,
+        allowedPlans: ['pro', 'free', 'basic'],
+    },
     {
         title: 'Upgrade Plan',
         url: '/shop/plans',

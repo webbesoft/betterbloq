@@ -4,7 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PurchasePoolResource\Pages;
 use App\Filament\Resources\PurchasePoolResource\RelationManagers\PurchasePoolTiersRelationManager;
+use App\Models\Product;
 use App\Models\PurchasePool;
+use App\Models\Vendor;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -42,11 +44,11 @@ class PurchasePoolResource extends Resource
                         'active' => 'Active',
                         'closed' => 'Closed',
                     ]),
-                Forms\Components\TextInput::make('target_amount')
+                Forms\Components\TextInput::make('target_volume')
                     ->required()
                     ->numeric()
                     ->default(0),
-                Forms\Components\TextInput::make('current_amount')
+                Forms\Components\TextInput::make('current_volume')
                     ->required()
                     ->numeric()
                     ->default(0),

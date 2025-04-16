@@ -57,8 +57,7 @@ class StripeEventListener
                             if ($expectedDeliveryDate) {
                                 $openPool = PurchasePool::where('product_id', $product->id)
                                     ->where('status', 'active')
-                                    ->where('end_date', '>', $expectedDeliveryDate)
-                                    ->where('start_date', '<', $expectedDeliveryDate)
+                                    ->withinDeliveryRange($expectedDeliveryDate)
                                     ->first();
 
                                 if ($openPool) {

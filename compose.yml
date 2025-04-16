@@ -12,5 +12,11 @@ services:
     volumes:
       - db_data:/var/lib/mysql:Z
 
+  adminer:
+    image: adminer
+    restart: on-failure
+    ports:
+      - 8080:8080
+
 volumes:
   db_data:
