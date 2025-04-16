@@ -54,7 +54,6 @@ use Illuminate\Support\Collection;
  * @method static Builder|PurchasePool active()
  * @method static Builder|PurchasePool pending()
  * @method static Builder|PurchasePool closed()
- * 
  *
  * @mixin Eloquent
  */

@@ -19,7 +19,7 @@ class OrderService
             ->where('status', 'active')
             ->withinDeliveryRange(data_get($data, 'expected_delivery_date'))
             ->first();
-            
+
         if (! $open_pool) {
             return [
                 'error' => 'Sorry, your delivery date must be within 3 days of the purchase pool delivery date. Please try again or request a new purchase pool for a different date.',
