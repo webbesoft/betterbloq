@@ -21,6 +21,7 @@ class Vendor extends Model
         'name',
         'phone',
         'user_id',
+        'prep_time',
     ];
 
     protected static function boot(): void

@@ -46,6 +46,7 @@ class Product extends Model
 
     protected $fillable = [
         'name',
+        'delivery_time',
         'stripe_price_id',
         'stripe_product_id',
         'description',

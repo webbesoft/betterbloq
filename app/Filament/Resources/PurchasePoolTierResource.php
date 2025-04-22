@@ -23,25 +23,31 @@ class PurchasePoolTierResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->helperText('The name of the tier'),
                 Forms\Components\TextInput::make('description')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->helperText('The description of the tier'),
                 Forms\Components\TextInput::make('min_volume')
                     ->numeric()
-                    ->default(null),
+                    ->default(null)
+                    ->helperText('The minimum volume of the tier'),
                 Forms\Components\TextInput::make('max_volume')
                     ->numeric()
-                    ->default(null),
+                    ->default(null)
+                    ->helperText('The maximum volume of the tier'),
                 Forms\Components\TextInput::make('discount_percentage')
                     ->required()
-                    ->numeric(),
+                    ->numeric()
+                    ->helperText('The discount percentage of the tier'),
                 Forms\Components\Select::make('purchase_pool_id')
                     ->required()
                     ->options(
-                        PurchasePool::all()->pluck(['', 'id'])
+                        PurchasePool::all()->pluck('', 'id')
                     )
-                    ->searchable(),
+                    ->searchable()
+                    ->helperText('The purchase pool the tier belongs to'),
             ]);
     }
 

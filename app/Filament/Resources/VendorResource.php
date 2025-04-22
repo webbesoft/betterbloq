@@ -27,6 +27,14 @@ class VendorResource extends Resource
                 Forms\Components\TextInput::make('phone')
                     ->tel()
                     ->required(),
+                Forms\Components\TextInput::make('prep_time')
+                    ->label('Preparation Time (Days)')
+                    ->numeric()
+                    ->integer() // Ensure it's a whole number of days
+                    ->minValue(0)
+                    ->default(0)
+                    ->required()
+                    ->helperText('Days needed to prepare order after pool ends.'),
                 Forms\Components\Select::make('user_id')
                     ->label('User')
                     ->required()
@@ -44,6 +52,9 @@ class VendorResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('phone')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('prep_time')
+                    ->label('Prep Time (Days)')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('user_id')
                     ->numeric()
                     ->sortable(),

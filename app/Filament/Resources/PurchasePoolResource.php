@@ -30,7 +30,10 @@ class PurchasePoolResource extends Resource
                 Forms\Components\DatePicker::make('end_date')
                     ->required(),
                 Forms\Components\DatePicker::make('target_delivery_date')
-                    ->required(),
+                    ->label('Calculated Target Delivery Date')
+                    ->disabled()
+                    ->dehydrated(true)
+                    ->helperText('Calculated based on End Date + Vendor Prep Time + Product Delivery Time.'),
                 Forms\Components\TextInput::make('min_orders_for_discount')
                     ->required()
                     ->numeric()

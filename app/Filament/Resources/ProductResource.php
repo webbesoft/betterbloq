@@ -26,28 +26,43 @@ class ProductResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
-                    ->required(),
+                    ->required()
+                    ->helperText('The name of the product'),
                 Forms\Components\FileUpload::make('image')
                     ->image()
-                    ->required(),
+                    ->required()
+                    ->helperText('The image of the product'),
                 Forms\Components\Textarea::make('description')
                     ->required()
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->helperText('The description of the product'),
                 Forms\Components\TextInput::make('price')
                     ->required()
                     ->numeric()
                     ->default(0)
-                    ->prefix('$'),
+                    ->prefix('$')
+                    ->helperText('The price of the product in dollars'),
                 Forms\Components\TextInput::make('unit')
-                    ->required(),
+                    ->required()
+                    ->helperText('The unit of measurement for the product. E.g. kg, lb, pcs'),
+                Forms\Components\TextInput::make('delivery_time')
+                    ->label('Delivery Time (Days)')
+                    ->numeric()
+                    ->integer()
+                    ->minValue(0)
+                    ->default(0)
+                    ->required()
+                    ->helperText('The number of days needed for delivery after vendor preparation'),
                 Forms\Components\Select::make('category_id')
                     ->options(Category::all()->pluck('name', 'id'))
                     ->required()
-                    ->searchable(),
+                    ->searchable()
+                    ->helperText('The category the product belongs to'),
                 Forms\Components\Select::make('vendor_id')
                     ->options(Vendor::all()->pluck('name', 'id'))
                     ->required()
-                    ->searchable(),
+                    ->searchable()
+                    ->helperText('The vendor who supplies the product'),
             ]);
     }
 
@@ -56,37 +71,53 @@ class ProductResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('id')
-                    ->searchable(),
+                    ->searchable()
+                    ->helperText('The ID of the product'),
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable()
+                    ->helperText('The name of the product'),
                 Tables\Columns\TextColumn::make('stripe_product_id')
-                    ->searchable(),
+                    ->searchable()
+                    ->helperText('The Stripe product ID'),
                 Tables\Columns\TextColumn::make('stripe_price_id')
-                    ->searchable(),
-                Tables\Columns\ImageColumn::make('image'),
+                    ->searchable()
+                    ->helperText('The Stripe price ID'),
+                Tables\Columns\ImageColumn::make('image')
+                    ->helperText('The image of the product'),
                 Tables\Columns\TextColumn::make('price')
                     ->money()
-                    ->sortable(),
+                    ->sortable()
+                    ->helperText('The price of the product in dollars'),
                 Tables\Columns\TextColumn::make('unit')
-                    ->searchable(),
+                    ->searchable()
+                    ->helperText('The unit of measurement for the product'),
+                Tables\Columns\TextColumn::make('delivery_time')
+                    ->label('Delivery Time (Days)')
+                    ->sortable()
+                    ->helperText('The number of days needed for delivery after vendor preparation'),
                 Tables\Columns\TextColumn::make('category_id')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->helperText('The category the product belongs to'),
                 Tables\Columns\TextColumn::make('vendor_id')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->helperText('The vendor who supplies the product'),
                 Tables\Columns\TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->helperText('The date and time the product was deleted'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->helperText('The date and time the product was created'),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->helperText('The date and time the product was last updated'),
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
