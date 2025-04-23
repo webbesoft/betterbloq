@@ -296,6 +296,44 @@
     .link {
         @apply underline text-[var(--custom-accent)];
     }
+
+        /* In your CSS file (e.g., styles/globals.css) */
+    
+        .countdown-display {
+            
+        }
+    
+        .countdown-digit {
+            /* Style for each individual digit */
+            display: inline-block;
+            width: 0.6em;
+            /* Adjust size as needed */
+            text-align: center;
+            position: relative;
+        }
+    
+        .countdown-colon {
+            display: inline-block;
+            /* Adjust size */
+            text-align: center;
+            position: relative;
+            /* Basic colon styling */
+            font-weight: bold;
+            margin-inline: auto;
+            margin-bottom: auto;
+        }
+    
+        .countdown-group {
+            /* Optional: Add margin/padding between groups if space-x is not enough */
+        }
+    
+        .countdown-unit {
+            /* Style for the unit labels (Days, Hrs, etc.) */
+            font-size: 0.4em;
+            /* Smaller than digits */
+            opacity: 0.8;
+            margin-top: 0.1em;
+        }
 }
 
 @layer base {

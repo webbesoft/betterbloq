@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\ProductResource;
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\PurchasePool;
 use App\Models\PurchasePoolRequest;
+use App\Models\PurchasePoolTier;
 use App\Models\Vendor;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -84,7 +86,6 @@ class ProductController extends Controller
 
         $poolData = null;
         if ($activePool) {
-            // Determine the current tier based on volume
             $currentTier = $this->determineCurrentTier($activePool, $activePool->current_volume);
 
             $poolData = [
@@ -95,6 +96,7 @@ class ProductController extends Controller
                 'min_orders_for_discount' => $activePool->min_orders_for_discount,
                 'max_orders' => $activePool->max_orders,
                 'current_volume' => $activePool->current_volume,
+                'target_volume' => $activePool->target_volume ?? 1000,
                 'tiers' => $activePool->purchasePoolTiers->map(fn ($tier) => [
                     'id' => $tier->id,
                     'name' => $tier->name,
@@ -102,7 +104,7 @@ class ProductController extends Controller
                     'discount_percentage' => $tier->discount_percentage,
                     'min_volume' => $tier->min_volume,
                     'max_volume' => $tier->max_volume,
-                ])->all(), // ->values() might be needed if keys are important
+                ])->all(),
                 'current_tier' => $currentTier ? [
                     'id' => $currentTier->id,
                     'name' => $currentTier->name,
@@ -124,6 +126,10 @@ class ProductController extends Controller
             'product' => new ProductResource($product),
             'hasPurchasePoolRequest' => $hasPurchasePoolRequest,
             'activePurchasePool' => $poolData,
+            'hasOrder' => Order::where('user_id', $request->user()->id)
+                ->where('product_id', $product->id)
+                ->where('purchase_pool_id', $poolData['id'] ?? null)
+                ->exists(),
         ]);
     }
 

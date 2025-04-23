@@ -101,7 +101,7 @@ export default function ProductListItemListLayout({ product }: ProductListItemPr
                  {/* Price */}
                  <div className="mb-2">
                      <p className="text-lg font-semibold sm:text-xl">
-                         ${product.price}
+                         ${Number(product.price).toFixed(2)}
                      </p>
                      {product.is_on_sale && product.original_price && (
                          <p className="text-sm text-muted-foreground line-through">

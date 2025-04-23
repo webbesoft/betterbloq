@@ -13,6 +13,7 @@ import LandingLayout from '@/layouts/landing-layout';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { formatDate } from '@/lib/helpers';
+import { CountdownTimer } from './components/countdown-timer';
 
 const breadcrumbs = [
     { title: 'Market', href: route('market') },
@@ -35,6 +36,7 @@ interface ProductProps {
     hasPurchasePoolRequest: boolean;
     activePurchasePool: ActivePurchasePoolData | null;
     auth: Auth;
+    hasOrder: boolean;
 }
 
 interface PurchasePoolTierData {
@@ -54,6 +56,7 @@ interface ActivePurchasePoolData {
     min_orders_for_discount: number;
     max_orders?: number | null;
     current_volume: number;
+    target_volume: number;
     tiers: PurchasePoolTierData[];
     current_tier?: {
         id: number;
@@ -71,7 +74,7 @@ type OrderForm = {
 };
 
 export default function Market(props: ProductProps) {
-    const { product, flash, hasPurchasePoolRequest, activePurchasePool } = props;
+    const { product, flash, activePurchasePool, hasOrder } = props;
 
     const { data: productData } = product;
 
@@ -90,7 +93,7 @@ export default function Market(props: ProductProps) {
         expected_delivery_date: '',
     });
 
-     const getSubmitRoute = () => {
+    const getSubmitRoute = () => {
         return activePurchasePool
             ? route('orders.store')
             : route('purchase-pool-requests.store');
@@ -98,7 +101,7 @@ export default function Market(props: ProductProps) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        clearErrors(); // Clear previous form errors
+        clearErrors();
 
         const targetRoute = getSubmitRoute();
 
@@ -108,11 +111,11 @@ export default function Market(props: ProductProps) {
                 quantity: formdata.quantity,
                 expected_delivery_date: formdata.expected_delivery_date,
                 purchase_pool_id: activePurchasePool.id
-              }
+            }
             : { // Sending pool request data
                 product_id: formdata.product_id
                 // Add quantity/other fields if needed for pool requests
-              };
+            };
 
 
         post(targetRoute, {
@@ -144,35 +147,32 @@ export default function Market(props: ProductProps) {
                 </div>
             )
         }
-        // 1. User already has a pending request for *this* product
-        if (hasPurchasePoolRequest) {
+
+        if (activePurchasePool && hasOrder) {
             return (
-                <div className={'flex flex-col items-center justify-start gap-2 text-center p-4 border rounded-md bg-secondary/50'}>
-                    <p className={'text-sm font-medium text-foreground/80'}>
-                        <Clock className="inline h-4 w-4 mr-1" />
-                        You have a pending purchase pool request for this product.
+                <div className={'flex flex-col items-center justify-start gap-2 text-center p-4 border rounded-md bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'}>
+                    <CheckCircle className="inline h-6 w-6 mb-2" />
+                    <p className={'text-sm font-medium'}>
+                        You have already placed an order for this product in the active purchase pool.
                     </p>
-                    <Link href={route('purchase-pool-requests.index')} className={'text-sm link'}>View My Requests</Link>
+                    {/* Optional: Link to view their order */}
+                    {/* <Link href={route('orders.index')} className={'text-sm link mt-1'}>View My Orders</Link> */}
                 </div>
             );
         }
 
         // 2. There's an active pool to join
-            return (
-                <div className={'flex flex-col items-center justify-start gap-2 text-center p-4 rounded-md'}>
-                    <Button type="submit" className="mt-auto w-full" disabled={processing || !activePurchasePool}>
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        {processing ? 'Placing Order...' : `Order Now & Join Pool (${currentDiscountPercent}% Off)`}
-                    </Button>
-                    <Button type="submit" variant={'outline'} className="mt-auto w-full" disabled={processing}>
-                        <Clock className="mr-2 h-4 w-4" />
-                        {processing ? 'Requesting...' : 'Request Purchase Pool'}
-                    </Button>
-                </div>
+        return (
+            <div className={'flex flex-col items-center justify-start gap-2 text-center p-4 rounded-md'}>
+                <Button type="submit" className="mt-auto w-full" disabled={processing || !activePurchasePool}>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    {processing ? 'Placing Order...' : `Order Now & Join Pool (${currentDiscountPercent}% Off)`}
+                </Button>
+            </div>
         );
     };
 
-     const currentDiscountPercent = activePurchasePool?.current_tier?.discount_percentage ?? 0;
+    const currentDiscountPercent = activePurchasePool?.current_tier?.discount_percentage ?? 0;
     const pricePerUnit = productData.price;
     const discountedPricePerUnit = useMemo(() => {
         return pricePerUnit * (1 - currentDiscountPercent / 100);
@@ -191,14 +191,11 @@ export default function Market(props: ProductProps) {
                     <p className="text-sm text-muted-foreground">
                         No active purchase pool currently available for this product.
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        You can request one using the button below.
-                    </p>
                 </div>
             );
         }
 
-        const { current_volume, tiers, current_tier, end_date, max_orders, target_delivery_date } = activePurchasePool;
+        const { current_volume, tiers, current_tier, end_date, max_orders, target_delivery_date, target_volume } = activePurchasePool;
         const nextTier = tiers.find(tier => tier.min_volume > current_volume);
         const progressPercent = max_orders ? Math.min(100, (current_volume / max_orders) * 100) : 0;
 
@@ -206,28 +203,28 @@ export default function Market(props: ProductProps) {
             <div className="space-y-4 mt-4 rounded-md border p-4 bg-gradient-to-br from-background to-secondary/30">
                 <div className='flex justify-between items-center'>
                     <CardTitle className="text-lg flex items-center gap-2">
-                         <Users className="h-5 w-5 text-primary" /> Active Purchase Pool
+                        <Users className="h-5 w-5 text-primary" /> Active Purchase Pool
                     </CardTitle>
                     <Badge variant="default">Active</Badge>
                 </div>
 
-                 {max_orders && max_orders > 0 && (
+                {max_orders && max_orders > 0 && (
                     <div>
                         <div className="mb-1 flex justify-between text-xs font-medium text-muted-foreground">
-                             <span>Current Volume: {current_volume} / {max_orders} {productData.unit}</span>
+                            <span>Current Volume: {current_volume} / {target_volume}</span>
                             {nextTier && <span>Next Tier at {nextTier.min_volume}</span>}
                         </div>
                         <Progress value={progressPercent} className="w-full h-2" />
-                         {nextTier && (
-                             <p className="text-xs text-muted-foreground mt-1 text-right">
-                                 {nextTier.min_volume - current_volume} more needed for {nextTier.discount_percentage}% discount
-                             </p>
-                         )}
+                        {nextTier && (
+                            <p className="text-xs text-muted-foreground mt-1 text-right">
+                                {nextTier.min_volume - current_volume} more needed for {nextTier.discount_percentage}% discount
+                            </p>
+                        )}
                     </div>
-                 )}
-                 {!max_orders && (
-                      <p className="text-sm text-muted-foreground">Current Volume: {current_volume} {productData.unit}</p>
-                 )}
+                )}
+                {!max_orders && (
+                    <p className="text-sm text-muted-foreground">Current Volume: {current_volume} {productData.unit}</p>
+                )}
 
 
                 {/* Display Tiers */}
@@ -237,8 +234,8 @@ export default function Market(props: ProductProps) {
                         {tiers.map((tier) => (
                             <li key={tier.id} className={`text-sm flex items-center gap-2 ${current_tier?.id === tier.id ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
                                 {current_tier?.id === tier.id ? <CheckCircle className="h-4 w-4 text-primary" /> : <Tag className="h-4 w-4" />}
-                                <span>{tier.min_volume}{tier.max_volume ? ` - ${tier.max_volume}` : '+'} {productData.unit}: <span className={current_tier?.id === tier.id ? "text-foreground" : ""}>{tier.discount_percentage}% off</span></span>
-                                {current_tier?.id === tier.id && <Badge variant="outline"  className='ml-auto'>Current Tier</Badge>}
+                                <span>{Number(tier.min_volume).toFixed(0)}{tier.max_volume ? ` - ${Number(tier.max_volume).toFixed(0)} units` : '+'}: <span className={current_tier?.id === tier.id ? "text-foreground" : ""}>{tier.discount_percentage}% off</span></span>
+                                {current_tier?.id === tier.id && <Badge variant="outline" className='ml-auto'>Current Tier</Badge>}
                             </li>
                         ))}
                     </ul>
@@ -248,16 +245,16 @@ export default function Market(props: ProductProps) {
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                     {end_date && (
                         <div className="flex items-center gap-1 text-muted-foreground">
-                             <Calendar className="h-4 w-4" />
+                            <Calendar className="h-4 w-4" />
                             <span>Pool Ends:</span>
                             <span className='font-medium text-foreground'>{formatDate(end_date)}</span>
                         </div>
                     )}
-                     {target_delivery_date && (
+                    {target_delivery_date && (
                         <div className="flex items-center gap-1 text-muted-foreground">
-                             <Calendar className="h-4 w-4" />
+                            <Calendar className="h-4 w-4" />
                             <span>Target Delivery:</span>
-                             <span className='font-medium text-foreground'>{formatDate(target_delivery_date)}</span>
+                            <span className='font-medium text-foreground'>{formatDate(target_delivery_date)}</span>
                         </div>
                     )}
                 </div>
@@ -281,14 +278,14 @@ export default function Market(props: ProductProps) {
                             <CardDescription className="text-muted-foreground">{productData.vendor.name}</CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-grow flex-col items-start justify-start p-6">
-                             
+
                             <div className="w-full aspect-video mb-4 overflow-hidden rounded-md border bg-muted">
-                                <img src={productData.image} alt={productData.name} className="h-full w-full object-contain" /> 
+                                <img src={productData.image} alt={productData.name} className="h-full w-full object-contain" />
                             </div>
                             <p className={'text-base text-foreground mb-4'}>
                                 {productData.description}
                             </p>
-                            
+
                             <div className="mt-auto w-full text-right">
                                 {activePurchasePool && currentDiscountPercent > 0 ? (
                                     <>
@@ -312,19 +309,37 @@ export default function Market(props: ProductProps) {
                     {/* Order/Pool Info Card (Right) */}
                     <Card className="flex h-full flex-col justify-between rounded-lg shadow-md md:order-2">
                         <CardHeader>
-                            <CardTitle>Order & Purchase Pool</CardTitle>
+                            <CardTitle>Order {activePurchasePool && '& Purchase Pool'}</CardTitle> {/* Adjust title based on pool presence */}
                             <CardDescription>
-                                {activePurchasePool ? 'Join the active pool or ' : 'Order '}
-                                {productData.name}
-                                {activePurchasePool ? ' below.' : ' or request a purchase pool.'}
-                             </CardDescription>
+                                {activePurchasePool ? 'Join the active purchase pool below to get a discount on your order of ' : 'Order '}
+                                {productData.name}.
+                            </CardDescription>
+                            {activePurchasePool && (
+                                <div className="mt-4 p-3 bg-primary text-primary-foreground rounded-md text-center font-bold">
+                                    <p className="text-lg">Pool Closes In:</p>
+                                    <p className="text-2xl">
+                                        <CountdownTimer endDate={activePurchasePool.end_date!} />
+                                    </p>
+                                </div>
+                            )}
                         </CardHeader>
                         <CardContent className="flex-grow space-y-4">
-                            {renderPurchasePoolInfo()}
+                            {activePurchasePool ? renderPurchasePoolInfo() : renderPurchasePoolInfo()} {/* Render pool info always, it handles the no-pool case */}
 
-                            <Separator className='my-6' />
+                            {activePurchasePool && <Separator className='my-6' />}
 
-                             {!hasPurchasePoolRequest && (
+                            {/* Conditional rendering of the form or the "already ordered" message */}
+                            {activePurchasePool && hasOrder ? (
+                                // Display message if user has already ordered in the active pool
+                                <div className={'flex flex-col items-center justify-start gap-2 text-center p-4 border rounded-md bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'}>
+                                    <CheckCircle className="inline h-6 w-6 mb-2" />
+                                    <p className={'text-sm font-medium'}>
+                                        You have already placed an order for this product in the active purchase pool.
+                                    </p>
+                                    {/* Optional: Link to view their order */}
+                                    <Link href={route('orders.index')} className={'text-sm link mt-1'}>View My Orders</Link>
+                                </div>
+                            ) : (
                                 <form className="flex flex-col justify-start space-y-4" onSubmit={submit}>
                                     <div className="grid grid-cols-1 gap-2">
                                         <Label htmlFor="quantity">Quantity ({productData.unit})</Label>
@@ -341,7 +356,6 @@ export default function Market(props: ProductProps) {
                                         {errors.quantity && <p className="text-sm text-red-500 mt-1">{errors.quantity}</p>}
                                     </div>
 
-                                     
                                     <div className="grid grid-cols-1 gap-2">
                                         <Label htmlFor="expected_delivery_date">Your Preferred Delivery Date (Optional)</Label>
                                         <Input
@@ -356,8 +370,6 @@ export default function Market(props: ProductProps) {
                                         />
                                         {errors.expected_delivery_date && <p className="text-sm text-red-500 mt-1">{errors.expected_delivery_date}</p>}
                                     </div>
-                                     
-
 
                                     <Separator />
 
@@ -366,27 +378,23 @@ export default function Market(props: ProductProps) {
                                         <span className="text-xl font-bold text-foreground">
                                             ${total.toFixed(2)}
                                             {activePurchasePool && currentDiscountPercent > 0 && (
-                                                 <Badge variant="secondary" className="ml-2 align-middle text-primary">{currentDiscountPercent}% off applied</Badge>
+                                                <Badge variant="secondary" className="ml-2 align-middle text-primary">{currentDiscountPercent}% off applied</Badge>
                                             )}
                                         </span>
                                     </div>
 
                                     {/* Hidden fields (already in useForm) */}
                                     <input type="hidden" name="product_id" value={productData.id} />
-                                    <input type="hidden" name="purchase_pool_id" value={activePurchasePool?.id} />
+                                    {/* Ensure purchase_pool_id is only sent if activePurchasePool exists */}
+                                    {activePurchasePool && <input type="hidden" name="purchase_pool_pool_id" value={activePurchasePool.id} />} {/* Corrected name */}
 
-                                     <div className="mt-auto pt-4">
-                                         {getFormButton()}
+
+                                    <div className="mt-auto pt-4">
+                                        {getFormButton()} {/* This will render the submit button if applicable */}
                                     </div>
-
                                 </form>
                             )}
 
-                            {hasPurchasePoolRequest && (
-                                <div className="mt-auto pt-4">
-                                     {getFormButton()}
-                                </div>
-                            )}
 
                         </CardContent>
                     </Card>
