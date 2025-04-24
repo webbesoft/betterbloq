@@ -69,6 +69,8 @@ class PurchasePool extends Model
     const STATUS_CLOSED = 'closed';
 
     protected $fillable = [
+        'name',
+        'description',
         'start_date',
         'end_date',
         'target_delivery_date',

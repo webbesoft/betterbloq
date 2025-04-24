@@ -41,11 +41,14 @@ class PurchasePoolTemplateResource extends Resource
                     ->numeric()
                     ->default(null)
                     ->helperText('The maximum number of orders allowed in the purchase pool'),
-                Forms\Components\TextInput::make('status')
+                Forms\Components\Select::make('status')
                     ->label('Status')
                     ->required()
-                    ->maxLength(255)
-                    ->default('pending')
+                    ->options([
+                        'pending' => 'Pending',
+                        'active' => 'Active',
+                        'closed' => 'Closed',
+                    ])
                     ->helperText('The status of the purchase pool template'),
                 Forms\Components\TextInput::make('target_volume')
                     ->label('Target Volume')

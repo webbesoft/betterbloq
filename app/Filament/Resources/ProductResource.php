@@ -55,11 +55,13 @@ class ProductResource extends Resource
                     ->helperText('The number of days needed for delivery after vendor preparation'),
                 Forms\Components\Select::make('category_id')
                     ->options(Category::all()->pluck('name', 'id'))
+                    ->label('Category')
                     ->required()
                     ->searchable()
                     ->helperText('The category the product belongs to'),
                 Forms\Components\Select::make('vendor_id')
                     ->options(Vendor::all()->pluck('name', 'id'))
+                    ->label('Vendor')
                     ->required()
                     ->searchable()
                     ->helperText('The vendor who supplies the product'),
@@ -71,53 +73,40 @@ class ProductResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('id')
-                    ->searchable()
-                    ->helperText('The ID of the product'),
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable()
-                    ->helperText('The name of the product'),
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('stripe_product_id')
-                    ->searchable()
-                    ->helperText('The Stripe product ID'),
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('stripe_price_id')
-                    ->searchable()
-                    ->helperText('The Stripe price ID'),
-                Tables\Columns\ImageColumn::make('image')
-                    ->helperText('The image of the product'),
+                    ->searchable(),
+                Tables\Columns\ImageColumn::make('image'),
                 Tables\Columns\TextColumn::make('price')
                     ->money()
-                    ->sortable()
-                    ->helperText('The price of the product in dollars'),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('unit')
-                    ->searchable()
-                    ->helperText('The unit of measurement for the product'),
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('delivery_time')
                     ->label('Delivery Time (Days)')
-                    ->sortable()
-                    ->helperText('The number of days needed for delivery after vendor preparation'),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('category_id')
                     ->numeric()
-                    ->sortable()
-                    ->helperText('The category the product belongs to'),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('vendor_id')
                     ->numeric()
-                    ->sortable()
-                    ->helperText('The vendor who supplies the product'),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->helperText('The date and time the product was deleted'),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->helperText('The date and time the product was created'),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->helperText('The date and time the product was last updated'),
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),

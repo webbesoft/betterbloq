@@ -42,9 +42,10 @@ class PurchasePoolTierResource extends Resource
                     ->numeric()
                     ->helperText('The discount percentage of the tier'),
                 Forms\Components\Select::make('purchase_pool_id')
+                    ->label('Purchase Pool')
                     ->required()
                     ->options(
-                        PurchasePool::all()->pluck('', 'id')
+                        PurchasePool::all()->pluck('name', 'id')
                     )
                     ->searchable()
                     ->helperText('The purchase pool the tier belongs to'),
