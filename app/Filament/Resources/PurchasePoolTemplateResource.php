@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PurchasePoolTemplateResource\Pages;
 use App\Filament\Resources\PurchasePoolTemplateResource\RelationManagers\TiersRelationManager;
 use App\Models\PurchasePoolTemplate;
+use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -56,17 +57,36 @@ class PurchasePoolTemplateResource extends Resource
                     ->numeric()
                     ->default(0.00)
                     ->helperText('The target volume of the purchase pool'),
-                Forms\Components\Select::make('vendor_id')
-                    ->label('Vendor')
-                    ->relationship('vendor', 'name')
-                    ->required()
-                    ->helperText('The vendor associated with the purchase pool template'),
                 Forms\Components\Select::make('product_id')
                     ->label('Product')
-                    ->relationship('product', 'name')
+                    ->options(
+                        Product::with('vendor')
+                            ->get()
+                            ->mapWithKeys(function (Product $product) {
+                                $vendorName = $product->vendor?->name ?? 'No Vendor Assigned';
+
+                                return [$product->id => $product->name.' - '.$vendorName];
+                            })
+                            ->all()
+                    )
                     ->required()
-                    ->helperText('The product associated with the purchase pool template'),
+                    ->searchable()
+                    ->helperText('Select the product. The vendor will be associated automatically.'),
+
             ]);
+    }
+
+    protected static function mutateFormDataBeforeCreate(array $data): array
+    {
+        if (isset($data['product_id'])) {
+            $product = Product::find($data['product_id']);
+            if ($product) {
+                $data['vendor_id'] = $product->vendor_id;
+            } else {
+            }
+        }
+
+        return $data;
     }
 
     public static function table(Table $table): Table
