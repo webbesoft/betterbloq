@@ -126,10 +126,10 @@ class ProductController extends Controller
             'product' => new ProductResource($product),
             'hasPurchasePoolRequest' => $hasPurchasePoolRequest,
             'activePurchasePool' => $poolData,
-            'hasOrder' => Order::where('user_id', $request->user()->id)
+            'hasOrder' => $request->user() ? Order::where('user_id', $request->user()->id)
                 ->where('product_id', $product->id)
                 ->where('purchase_pool_id', $poolData['id'] ?? null)
-                ->exists(),
+                ->exists() : false,
         ]);
     }
 

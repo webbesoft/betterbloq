@@ -112,6 +112,7 @@ export default function OrderView(props: ShowOrderProps) {
                     </Card>
 
                     {/* Product Details */}
+                    {/* Product Details */}
                     <Card className={'shadow-sm rounded-sm p-4 bg-background'}>
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                             <PackageIcon className="h-5 w-5" /> Product Details
@@ -131,10 +132,50 @@ export default function OrderView(props: ShowOrderProps) {
                                     <span className="font-medium text-gray-700 dark:text-gray-300">Category:</span>
                                     <Badge variant="secondary">{data.product?.category}</Badge>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-700 dark:text-gray-300">Price:</span>
-                                    <p className="text-gray-900 dark:text-gray-100">${data.product?.price} / {data.product?.unit}</p>
-                                </div>
+                                {/* {orderItem?.quantity !== undefined && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-gray-700 dark:text-gray-300">Quantity:</span>
+                                        <p className="text-gray-900 dark:text-gray-100">{orderItem.quantity} {productData?.unit}</p>
+                                    </div>
+                                )} */}
+                                {/* Display the actual price paid per unit from the order item */}
+                                {/* Assuming orderItem is available and has price_per_unit */}
+                                {/* {orderItem?.price_per_unit !== undefined && data.product?.price !== undefined && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-gray-700 dark:text-gray-300">Price per Unit:</span>
+                                        {data.purchase_pool && orderItem.price_per_unit < data.product.price ? (
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-lg font-semibold text-muted-foreground line-through">
+                                                    ${data.product.price.toFixed(2)}
+                                                </p>
+                                                <p className="text-xl font-bold text-primary">
+                                                    ${orderItem.price_per_unit.toFixed(2)}
+                                                </p>
+                                                {(() => {
+                                                    const discountAmount = productData.price - orderItem.price_per_unit;
+                                                    const discountPercent = (discountAmount / productData.price) * 100;
+                                                    return (
+                                                        <Badge variant="destructive" className="ml-1">-{discountPercent.toFixed(0)}%</Badge>
+                                                    );
+                                                })()}
+                                            </div>
+                                        ) : (
+                                            <p className="text-gray-900 dark:text-gray-100">
+                                                ${orderItem.price_per_unit.toFixed(2)}
+                                            </p>
+                                        )}
+                                    </div>
+                                )} */}
+
+                                {/* {orderItem?.total_price !== undefined && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-gray-700 dark:text-gray-300">Item Total:</span>
+                                        <p className="text-gray-900 dark:text-gray-100 font-bold text-lg">
+                                            ${orderItem.total_price.toFixed(2)}
+                                        </p>
+                                    </div>
+                                )} */}
+
                             </div>
                         </div>
                     </Card>

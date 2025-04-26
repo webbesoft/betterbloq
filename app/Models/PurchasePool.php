@@ -6,6 +6,7 @@ use Database\Factories\PurchasePoolFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -31,6 +32,10 @@ use Illuminate\Support\Collection;
  * @property Carbon|null $updated_at
  * @property-read Collection<int, PurchasePoolTier> $purchasePoolTiers
  * @property-read int $purchase_pool_tiers_count
+ * @property-read Product $product
+ * @property-read Vendor $vendor
+ * @property-read Collection<int, Order> $orders
+ * @property-read int $orders_count
  *
  * @method static Builder|PurchasePool query()
  * @method static Builder|PurchasePool newModelQuery()
@@ -98,6 +103,11 @@ class PurchasePool extends Model
     public function purchasePoolTiers(): HasMany
     {
         return $this->hasMany(PurchasePoolTier::class);
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
     }
 
     public function scopeWithinDeliveryRange(Builder $query, string $expectedDeliveryDate): Builder
