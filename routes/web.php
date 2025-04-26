@@ -8,6 +8,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\PurchasePoolController;
 use App\Http\Controllers\PurchasePoolRequestController;
+use App\Http\Controllers\UserSettingsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -40,6 +41,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('purchase-pool-requests', [PurchasePoolRequestController::class, 'store'])->name('purchase-pool-requests.store');
 
         Route::resource('projects', ProjectController::class);
+
+        Route::put('/user/settings/complete-guide', [UserSettingsController::class, 'markSetupGuideComplete'])
+            ->name('user.settings.completeGuide');
     });
 
     Route::prefix('')->group(function () {

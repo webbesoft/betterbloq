@@ -31,6 +31,7 @@ class ProductResource extends Resource
                 Forms\Components\FileUpload::make('image')
                     ->image()
                     ->required()
+                    ->disk('s3')
                     ->helperText('The image of the product'),
                 Forms\Components\Textarea::make('description')
                     ->required()
@@ -75,12 +76,18 @@ class ProductResource extends Resource
                 TextColumn::make('id')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Product Name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('stripe_product_id')
+                    ->label('Stripe Product ID')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('stripe_price_id')
+                    ->label('Stripe Price ID')
                     ->searchable(),
-                Tables\Columns\ImageColumn::make('image'),
+                Tables\Columns\ImageColumn::make('image')
+                    ->disk('s3')
+                    ->label('Image')
+                    ->size(50),
                 Tables\Columns\TextColumn::make('price')
                     ->money()
                     ->sortable(),

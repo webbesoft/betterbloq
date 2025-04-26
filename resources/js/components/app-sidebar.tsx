@@ -25,6 +25,7 @@ const mainNavItems: NavItem[] = [
         title: 'Home',
         url: '/',
         icon: House,
+        allowedPlans: []
     },
     {
         title: 'Dashboard',
@@ -41,7 +42,7 @@ const mainNavItems: NavItem[] = [
         title: 'Purchase Pools',
         url: '/purchase-pools',
         icon: TargetIcon,
-        allowedPlans: ['free'],
+        allowedPlans: [],
     },
     {
         title: 'Orders',
@@ -59,16 +60,16 @@ const mainNavItems: NavItem[] = [
         title: 'Upgrade Plan',
         url: '/shop/plans',
         icon: ShoppingBag,
-        allowedPlans: ['free', 'basic'],
+        allowedPlans: [],
     }
 ];
 
 const footerNavItems: NavItem[] = [
-    {
-        title: 'Documentation',
-        url: route('landing'),
-        icon: BookOpen,
-    },
+    // {
+    //     title: 'Documentation',
+    //     url: route('landing'),
+    //     icon: BookOpen,
+    // },
 ];
 
 export function AppSidebar() {

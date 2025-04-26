@@ -280,7 +280,7 @@ export default function Market(props: ProductProps) {
                         <CardContent className="flex flex-grow flex-col items-start justify-start p-6">
 
                             <div className="w-full aspect-video mb-4 overflow-hidden rounded-md border bg-muted">
-                                <img src={productData.image} alt={productData.name} className="h-full w-full object-contain" />
+                                <img src={productData.image === "" ? undefined : productData.image} alt={productData.name} className="h-full w-full object-contain" />
                             </div>
                             <p className={'text-base text-foreground mb-4'}>
                                 {productData.description}

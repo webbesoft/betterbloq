@@ -42,11 +42,13 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                     {/* Logo */}
                     <Link href="/" className="mr-4 flex items-center gap-2">
                         {' '}
-                        <img
-                            src="/images/betterbloq.png"
-                            alt="betterbloq logo"
-                            className="h-8 w-auto"
-                        />
+                        <div className='rounded-md'>
+                            <img
+                                src="/images/3.png"
+                                alt="betterbloq logo"
+                                className="h-10 w-auto bg-white"
+                            />
+                        </div>
                         <span className="text-foreground hidden font-bold sm:inline-block">BetterBloq</span>
                     </Link>
 
@@ -76,7 +78,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                                         </Avatar>
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-56" align="end" forceMount>
+                                <DropdownMenuContent className="w-56 z-100" align="end" forceMount>
                                     <DropdownMenuLabel className="font-normal">
                                         <div className="flex flex-col space-y-1">
                                             <p className="text-sm leading-none font-medium">{user.name}</p>

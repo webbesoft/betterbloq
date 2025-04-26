@@ -24,6 +24,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $id
  * @property string $name
  * @property string $email
+ * @property boolean $has_completed_guide
  * @property Carbon|null $email_verified_at
  *
  * @method static Builder|User newQuery()

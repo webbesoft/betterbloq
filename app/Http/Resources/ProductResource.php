@@ -13,7 +13,7 @@ class ProductResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'image' => $this->image,
+            'image' => env('AWS_URL') . '/' . $this->image,
             'price' => $this->price,
             'unit' => $this->unit,
             'vendor' => $this->vendor,

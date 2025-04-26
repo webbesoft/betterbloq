@@ -19,10 +19,12 @@ class DashboardController extends Controller
         $cacheKey = 'dashboard_data_'.$userId;
         $cacheDuration = 300; // 5 minutes (adjust as needed)
 
-        $dashboardData = Cache::remember($cacheKey, $cacheDuration, function () use ($request) {
+        $dashboardData = Cache::remember($cacheKey, $cacheDuration, function () use ($request, $userId) {
             $ongoingProjectsCount = Project::where('status', 'ongoing')->count();
 
-            $totalExpenses = 10;
+            $totalExpenses = Order::where('user_id', $userId)
+                ->where('status', 'completed')
+                ->sum('total_amount');
 
             $projectBudgetSpent = Project::withSum('orders', 'id')->get()->map(function ($project) {
                 return [
@@ -42,6 +44,28 @@ class DashboardController extends Controller
             });
 
             $watchedPurchasePools = $request->user()->watchedPurchasePools()->get();
+
+            $activeOrderPoolIds = Order::where('user_id', $userId)
+                ->where('status', 'completed')
+                ->whereNotNull('purchase_pool_id')
+                ->distinct()
+                ->pluck('purchase_pool_id');
+
+            $activePoolsProgress = [];
+            if ($activeOrderPoolIds->isNotEmpty()) {
+                $activePoolsProgress = PurchasePool::whereIn('id', $activeOrderPoolIds)
+                    ->with('product:id,name')
+                    ->get()
+                    ->map(function ($pool) {
+                        return [
+                            'id' => $pool->id,
+                            'name' => $pool->name,
+                            'product_id' => $pool->product->id ?? null,
+                            'current_volume' => $pool->current_volume ?? 0,
+                            'target_volume' => $pool->target_volume ?? 0,
+                        ];
+                    })->all();
+            }
 
             $frequentProducts = Order::where('user_id', $request->user()->id)
                 ->with('product')
@@ -74,6 +98,9 @@ class DashboardController extends Controller
                 });
 
             return [
+                'activeOrdersCount' => Order::where('user_id', $request->user()->id)->where('status', 'active')->count(),
+                'completedOrdersCount' => Order::where('user_id', $request->user()->id)->where('status', 'completed')->count(),
+                'activePoolsProgress' => $activePoolsProgress,
                 'ongoingProjectsCount' => $ongoingProjectsCount,
                 'totalExpenses' => $totalExpenses,
                 'projectBudgetSpent' => $projectBudgetSpent,
@@ -81,6 +108,7 @@ class DashboardController extends Controller
                 'watchedPurchasePools' => $watchedPurchasePools,
                 'frequentProducts' => $frequentProducts,
                 'regularVendors' => $regularVendors,
+                'hasCompletedGuide' => $request->user()->has_completed_guide
             ];
         });
 
