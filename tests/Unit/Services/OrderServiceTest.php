@@ -3,8 +3,8 @@
 namespace Tests\Unit\Services;
 
 use App\Models\Product;
-use App\Models\User;
 use App\Models\PurchasePool;
+use App\Models\User;
 use App\Models\Vendor;
 use App\Services\OrderService;
 

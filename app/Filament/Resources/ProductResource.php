@@ -26,28 +26,46 @@ class ProductResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
-                    ->required(),
+                    ->required()
+                    ->helperText('The name of the product'),
                 Forms\Components\FileUpload::make('image')
                     ->image()
-                    ->required(),
+                    ->required()
+                    ->disk('s3')
+                    ->helperText('The image of the product'),
                 Forms\Components\Textarea::make('description')
                     ->required()
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->helperText('The description of the product'),
                 Forms\Components\TextInput::make('price')
                     ->required()
                     ->numeric()
                     ->default(0)
-                    ->prefix('$'),
+                    ->prefix('$')
+                    ->helperText('The price of the product in dollars'),
                 Forms\Components\TextInput::make('unit')
-                    ->required(),
+                    ->required()
+                    ->helperText('The unit of measurement for the product. E.g. kg, lb, pcs'),
+                Forms\Components\TextInput::make('delivery_time')
+                    ->label('Delivery Time (Days)')
+                    ->numeric()
+                    ->integer()
+                    ->minValue(0)
+                    ->default(0)
+                    ->required()
+                    ->helperText('The number of days needed for delivery after vendor preparation'),
                 Forms\Components\Select::make('category_id')
                     ->options(Category::all()->pluck('name', 'id'))
+                    ->label('Category')
                     ->required()
-                    ->searchable(),
+                    ->searchable()
+                    ->helperText('The category the product belongs to'),
                 Forms\Components\Select::make('vendor_id')
                     ->options(Vendor::all()->pluck('name', 'id'))
+                    ->label('Vendor')
                     ->required()
-                    ->searchable(),
+                    ->searchable()
+                    ->helperText('The vendor who supplies the product'),
             ]);
     }
 
@@ -58,17 +76,26 @@ class ProductResource extends Resource
                 TextColumn::make('id')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Product Name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('stripe_product_id')
+                    ->label('Stripe Product ID')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('stripe_price_id')
+                    ->label('Stripe Price ID')
                     ->searchable(),
-                Tables\Columns\ImageColumn::make('image'),
+                Tables\Columns\ImageColumn::make('image')
+                    ->disk('s3')
+                    ->label('Image')
+                    ->size(50),
                 Tables\Columns\TextColumn::make('price')
                     ->money()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('unit')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('delivery_time')
+                    ->label('Delivery Time (Days)')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('category_id')
                     ->numeric()
                     ->sortable(),

@@ -2,29 +2,53 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
-import { Eye, ListChecks, MapPin, PieChart, ShoppingBag } from 'lucide-react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { DollarSign, Eye, HelpCircle, ListChecks, MapPin, PieChart, ShoppingBag } from 'lucide-react';
 import SetupGuide from '@/pages/shop/components/setup-guide';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Separator } from '@radix-ui/react-separator';
+import EmailVerificationNotice from '@/components/EmailVerificationNotice';
+import ActivePoolsProgress from './components/dashboard/active-pools-progress';
+import { Button } from '@/components/ui/button';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'BetterBuy Dashboard',
+        title: 'BetterBloq Dashboard',
         href: '/dashboard',
     },
 ];
 
+interface PoolProgressData {
+    id: number;
+    name: string;
+    product_id: number | null;
+    current_volume: number;
+    target_volume: number;
+}
+
+interface FrequentItem {
+    product_id?: number;
+    vendor_id?: number;
+    name: string;
+    frequency: number;
+}
+
+
 interface DashboardProps {
+    activeOrdersCount: number,
+    completedOrdersCount: number,
     ongoingProjectsCount: number,
     totalExpenses: number,
     projectBudgetSpent: any[],
     purchasePoolCompletion: any[],
     watchedPurchasePools: any[],
-    frequentProducts: any[],
-    regularVendors: any[],
-    hasCompletedGuide: boolean
+    frequentProducts: FrequentItem[],
+    regularVendors: FrequentItem[],
+    hasCompletedGuide: boolean,
+    activePoolsProgress: PoolProgressData[]
 }
+
+const LOCAL_STORAGE_DISMISSED_KEY = 'setupGuideDismissed';
 
 export default function Dashboard({
     ongoingProjectsCount,
@@ -32,149 +56,147 @@ export default function Dashboard({
     projectBudgetSpent,
     purchasePoolCompletion,
     watchedPurchasePools,
+    activePoolsProgress,
     frequentProducts,
     regularVendors,
-    hasCompletedGuide
+    hasCompletedGuide,
+    activeOrdersCount,
+    completedOrdersCount
 }: DashboardProps) {
-    const [setupGuideVisible, setSetupGuideVisible] = useState<boolean>(true);
+    const [isGuideCompletedInDb, setIsGuideCompletedInDb] = useState<boolean>(Boolean(hasCompletedGuide) ?? false);
+    const [isGuideDismissed, setIsGuideDismissed] = useState<boolean>(false);
+    const { props } = usePage<{
+        ziggy: {
+            appEnvironment: string;
+        };
+    }>();
+    const { appEnvironment } = props.ziggy;
+
+    useEffect(() => {
+        const dismissed = localStorage.getItem(LOCAL_STORAGE_DISMISSED_KEY) === 'true';
+        setIsGuideDismissed(dismissed);
+    }, []);
+
+    useEffect(() => {
+        setIsGuideCompletedInDb(hasCompletedGuide);
+        if (hasCompletedGuide) {
+            localStorage.removeItem(LOCAL_STORAGE_DISMISSED_KEY);
+            setIsGuideDismissed(false);
+        }
+    }, [hasCompletedGuide]);
+
+    const handleUpdateGuideVisibility = (visible: boolean) => {
+        if (!visible) {
+            localStorage.setItem(LOCAL_STORAGE_DISMISSED_KEY, 'true');
+            setIsGuideDismissed(true);
+        }
+    };
+
+    const handleReinstateGuide = () => {
+        localStorage.removeItem(LOCAL_STORAGE_DISMISSED_KEY);
+        setIsGuideDismissed(false);
+    };
+
+    const shouldShowGuide = !isGuideCompletedInDb && !isGuideDismissed;
+
+    const shouldShowReinstateButton = !isGuideCompletedInDb && isGuideDismissed;
+
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+                {/*email verification banner*/}
+                <EmailVerificationNotice />
                 {/* setup guide */}
-                {(!hasCompletedGuide && setupGuideVisible) && <SetupGuide visibility={setupGuideVisible} onUpdateVisibility={setSetupGuideVisible} />}
+                <SetupGuide
+                    visibility={shouldShowGuide} // Control visibility based on state
+                    onUpdateVisibility={handleUpdateGuideVisibility}
+                />
+                {!shouldShowGuide && shouldShowReinstateButton && (
+                    <div className="my-1 flex justify-end">
+                        <Button variant="outline" size="sm" onClick={handleReinstateGuide}>
+                            <HelpCircle className="mr-2 h-4 w-4" /> Show Setup Guide
+                        </Button>
+                    </div>
+                )}
+                {!shouldShowGuide && !shouldShowReinstateButton && <Separator className="my-4" />}
+
                 <Separator />
                 <div className="grid auto-rows-min gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {/* Ongoing Projects Overview */}
+                    {/* Completed Orders */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <ListChecks className="h-4 w-4" /> Ongoing Projects
+                            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                <ListChecks className="h-4 w-4" /> Completed orders
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            {ongoingProjectsCount !== null ? (
-                                <p className="text-2xl font-bold">{ongoingProjectsCount}</p>
-                            ) : (
-                                <PlaceholderPattern className="h-6 w-12" />
-                            )}
+                            <p className="text-2xl font-bold">{completedOrdersCount ?? '...'}</p>
                         </CardContent>
                     </Card>
-
-                    {/* Total Expenses Overview */}
+                    {/* Active Orders */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <ShoppingBag className="h-4 w-4" /> Total Expenses
+                            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                <ShoppingBag className="h-4 w-4" /> Active Orders
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            {totalExpenses !== null ? (
-                                <p className="text-2xl font-bold">${totalExpenses?.toLocaleString()}</p>
-                            ) : (
-                                <PlaceholderPattern className="h-6 w-24" />
-                            )}
+                            <p className="text-2xl font-bold">{activeOrdersCount ?? '...'}</p>
                         </CardContent>
                     </Card>
-
-                    {/* Placeholder for another key metric */}
+                    {/* Total Expenses */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Key Metric 3</CardTitle>
+                            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                <DollarSign className="h-4 w-4" /> Total Expenses
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <PlaceholderPattern className="h-10 w-full" />
+                            <p className="text-2xl font-bold">
+                                ${totalExpenses?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? '0.00'}
+                            </p>
                         </CardContent>
                     </Card>
                 </div>
 
-                <div className="grid auto-rows-min gap-4 md:grid-cols-1 lg:grid-cols-2">
-                    {/* Project Budget Spent Chart */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <PieChart className="h-4 w-4" /> Project Budget Overview
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {projectBudgetSpent.length > 0 ? (
-                                // You'll integrate a charting library here (e.g., Recharts, Chart.js)
-                                <div className="flex h-64 w-full items-center justify-center">
-                                    {/* Placeholder for your chart */}
-                                    <PlaceholderPattern className="h-48 w-48" />
-                                </div>
-                            ) : (
-                                <p className="text-muted-foreground text-sm">No project budget data available.</p>
-                            )}
-                        </CardContent>
-                    </Card>
+                <div className="grid auto-rows-min grid-cols-1 gap-4 lg:grid-cols-2">
 
-                    {/* Purchase Pool Completion Rundown */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Purchase Pool Completion Status</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {purchasePoolCompletion.length > 0 ? (
-                                <div className="space-y-4">
-                                    {purchasePoolCompletion.map((pool) => (
-                                        <div key={pool.id}>
-                                            <h3 className="text-sm font-semibold">{pool.name}</h3>
-                                            <div className="relative h-4 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                                                <div
-                                                    className="bg-primary absolute top-0 left-0 h-full rounded-full"
-                                                    style={{ width: `${(pool.current_amount / pool.target_amount) * 100}%` }}
-                                                ></div>
-                                                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                                    {((pool.current_amount / pool.target_amount) * 100).toFixed(0)}%
-                                                </span>
-                                            </div>
-                                            <p className="text-muted-foreground mt-1 text-xs">
-                                                ${pool.current_amount.toLocaleString()} / ${pool.target_amount.toLocaleString()}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-muted-foreground text-sm">No purchase pool completion data.</p>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
+                    {/* Active Pools Progress Card - Spanning full width */}
+                    <div className="lg:col-span-2">
+                        {/* Pass the activePoolsProgress data */}
+                        {/* Ensure the component file is renamed/updated if needed */}
+                        <ActivePoolsProgress pools={activePoolsProgress} />
+                    </div>
 
-                <div className="grid auto-rows-min gap-4 md:grid-cols-1 lg:grid-cols-1">
-                    {/* Project Location Map (Placeholder) */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <MapPin className="h-4 w-4" /> Project Locations
-                            </CardTitle>
+                    {/* Frequent Products */}
+                    <Card className="flex flex-col">
+                        {/* Card Header/Content same as previous suggestion */}
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-base font-semibold">Frequently Bought</CardTitle>
+                            <span className="text-muted-foreground text-xs">
+                                {`(${frequentProducts.length} products)`}
+                            </span>
                         </CardHeader>
-                        <CardContent className="h-[400px]">
-                            <div className="flex h-full w-full items-center justify-center rounded-md bg-gray-100 dark:bg-gray-800">
-                                <PlaceholderPattern className="h-32 w-32" />
-                                <p className="text-muted-foreground text-lg">Map Placeholder</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <div className="grid auto-rows-min gap-4 md:grid-cols-1 lg:grid-cols-2">
-                    {/* Frequently Bought Products */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Frequently Bought Products</CardTitle>
-                        </CardHeader>
-                        <CardContent>
+                        <CardContent className="flex flex-col gap-2 pt-2">
                             {frequentProducts.length > 0 ? (
-                                <ol className="list-decimal pl-4">
+                                <ul className="space-y-1">
                                     {frequentProducts.map((product) => (
-                                        <li key={product.product_id} className="text-sm">
-                                            {product.name} (Bought {product.frequency} times)
+                                        <li key={product.product_id} className="text-sm flex justify-between items-center">
+                                            {product.product_id ? (
+                                                <Link href={`/market/product/${product.product_id}`} className="hover:underline truncate pr-2" title={product.name}>
+                                                    {product.name}
+                                                </Link>
+                                            ) : (
+                                                <span className='pr-2 truncate'>{product.name}</span> // Handle case if ID is missing
+                                            )}
+                                            <span className="text-muted-foreground text-xs whitespace-nowrap">
+                                                ({product.frequency} times)
+                                            </span>
                                         </li>
                                     ))}
-                                </ol>
+                                </ul>
                             ) : (
                                 <p className="text-muted-foreground text-sm">No frequent purchase history yet.</p>
                             )}
@@ -182,19 +204,32 @@ export default function Dashboard({
                     </Card>
 
                     {/* Regular Vendors */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Regular Vendors</CardTitle>
+                    <Card className="flex flex-col">
+                        {/* Card Header/Content same as previous suggestion */}
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-base font-semibold">Regular Vendors</CardTitle>
+                            <span className="text-muted-foreground text-xs">
+                                {`(${regularVendors.length} vendors)`}
+                            </span>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="flex flex-col gap-2 pt-2">
                             {regularVendors.length > 0 ? (
-                                <ol className="list-decimal pl-4">
+                                <ul className="space-y-1">
                                     {regularVendors.map((vendor) => (
-                                        <li key={vendor.vendor_id} className="text-sm">
-                                            {vendor.name} (Bought {vendor.frequency} times)
+                                        <li key={vendor.vendor_id} className="text-sm flex justify-between items-center">
+                                            {vendor.vendor_id ? (
+                                                <Link href={`/vendor/${vendor.vendor_id}`} className="hover:underline truncate pr-2" title={vendor.name}>
+                                                    {vendor.name}
+                                                </Link>
+                                            ) : (
+                                                <span className='pr-2 truncate'>{vendor.name}</span> // Handle case if ID is missing
+                                            )}
+                                            <span className="text-muted-foreground text-xs whitespace-nowrap">
+                                                ({vendor.frequency} times)
+                                            </span>
                                         </li>
                                     ))}
-                                </ol>
+                                </ul>
                             ) : (
                                 <p className="text-muted-foreground text-sm">No regular vendors yet.</p>
                             )}
@@ -204,7 +239,6 @@ export default function Dashboard({
 
                 {watchedPurchasePools.length > 0 && (
                     <div className="grid auto-rows-min gap-4 md:grid-cols-1 lg:grid-cols-1">
-                        {/* Watched Purchase Pools */}
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">

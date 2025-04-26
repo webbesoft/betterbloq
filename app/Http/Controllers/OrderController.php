@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Services\OrderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,12 +17,18 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $ordersQuery = Order::query();
+        $userId = $request->user()->id;
+        $cacheKey = 'user_orders_'.$userId.'_page_'.$request->query('page', 1);
+        $cacheDuration = 600;
 
-        $orders = $ordersQuery
-            ->where('user_id', $request->user()->id)
-            ->with(['product', 'purchasePool', 'vendor'])
-            ->paginate(10);
+        $orders = Cache::remember($cacheKey, $cacheDuration, function () use ($request) {
+            $ordersQuery = Order::query();
+
+            return $ordersQuery
+                ->where('user_id', $request->user()->id)
+                ->with(['product', 'purchasePool', 'vendor', 'product.category', 'purchasePool.purchasePoolTiers'])
+                ->paginate(10);
+        });
 
         return Inertia::render('shop/orders/index', [
             'orders' => OrderResource::collection($orders),
@@ -30,7 +37,7 @@ class OrderController extends Controller
 
     public function show(Request $request, Order $order)
     {
-        $order->load(['product', 'purchasePool', 'vendor']);
+        $order->load(['product', 'purchasePool', 'vendor', 'purchasePool.purchasePoolTiers']);
 
         return Inertia::render('shop/orders/show', [
             'order' => new OrderResource($order),

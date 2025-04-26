@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://*.localhost:8000', 'https://checkout.stripe.com'],
+    'allowed_origins' => ['http://*.localhost:8000', env('APP_URL'), 'https://checkout.stripe.com', '*'],
 
     'allowed_origins_patterns' => [],
 

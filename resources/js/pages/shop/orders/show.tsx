@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -34,17 +34,17 @@ export default function OrderView(props: ShowOrderProps) {
     const { data } = props.order;
 
     const purchasePoolProgress = data.purchase_pool
-        ? (parseFloat(data.purchase_pool.current_amount) / parseFloat(data.purchase_pool.target_amount)) * 100
+        ? (parseFloat(data.purchase_pool.current_volume) / parseFloat(data.purchase_pool.target_volume)) * 100
         : 0;
 
-    const getOrderStatusBadge = (status) => {
+    const getOrderStatusBadge = (status: string) => {
         switch (status.toLowerCase()) {
             case 'pending':
                 return <Badge variant="secondary">{status}</Badge>;
             case 'processing':
                 return <Badge variant="default">{status}</Badge>;
             case 'completed':
-                return <Badge variant="success">{status}</Badge>;
+                return <Badge variant="outline">{status}</Badge>;
             case 'cancelled':
                 return <Badge variant="destructive">{status}</Badge>;
             default:
@@ -72,10 +72,11 @@ export default function OrderView(props: ShowOrderProps) {
             title: 'Orders',
             href: route('orders.index')
         }]}>
+            <Head title={"Order #" + data.id} />
             <div className="mb-2 flex justify-between items-center p-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Order Details</h1>
-                    <p className="text-gray-500 dark:text-gray-400">Order ID: {data.id}</p>
+                    <p className="text-gray-500 dark:text-gray-400">Order ID: #{data.id}</p>
                 </div>
             </div>
 
@@ -98,8 +99,8 @@ export default function OrderView(props: ShowOrderProps) {
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="font-medium text-gray-700 dark:text-gray-300">Payment:</span>
-                                <Badge variant="success" className="flex items-center gap-1">
-                                    <CheckCircleIcon className="h-4 w-4" /> Paid {/* Replace with actual status */}
+                                <Badge variant="outline" className="flex items-center gap-1">
+                                    <CheckCircleIcon className="h-4 w-4" /> Paid
                                 </Badge>
                             </div>
                             {/* Add created_at if you include it in the resource */}
@@ -110,6 +111,7 @@ export default function OrderView(props: ShowOrderProps) {
                         </div>
                     </Card>
 
+                    {/* Product Details */}
                     {/* Product Details */}
                     <Card className={'shadow-sm rounded-sm p-4 bg-background'}>
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
@@ -130,10 +132,50 @@ export default function OrderView(props: ShowOrderProps) {
                                     <span className="font-medium text-gray-700 dark:text-gray-300">Category:</span>
                                     <Badge variant="secondary">{data.product?.category}</Badge>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-700 dark:text-gray-300">Price:</span>
-                                    <p className="text-gray-900 dark:text-gray-100">${data.product?.price} / {data.product?.unit}</p>
-                                </div>
+                                {/* {orderItem?.quantity !== undefined && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-gray-700 dark:text-gray-300">Quantity:</span>
+                                        <p className="text-gray-900 dark:text-gray-100">{orderItem.quantity} {productData?.unit}</p>
+                                    </div>
+                                )} */}
+                                {/* Display the actual price paid per unit from the order item */}
+                                {/* Assuming orderItem is available and has price_per_unit */}
+                                {/* {orderItem?.price_per_unit !== undefined && data.product?.price !== undefined && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-gray-700 dark:text-gray-300">Price per Unit:</span>
+                                        {data.purchase_pool && orderItem.price_per_unit < data.product.price ? (
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-lg font-semibold text-muted-foreground line-through">
+                                                    ${data.product.price.toFixed(2)}
+                                                </p>
+                                                <p className="text-xl font-bold text-primary">
+                                                    ${orderItem.price_per_unit.toFixed(2)}
+                                                </p>
+                                                {(() => {
+                                                    const discountAmount = productData.price - orderItem.price_per_unit;
+                                                    const discountPercent = (discountAmount / productData.price) * 100;
+                                                    return (
+                                                        <Badge variant="destructive" className="ml-1">-{discountPercent.toFixed(0)}%</Badge>
+                                                    );
+                                                })()}
+                                            </div>
+                                        ) : (
+                                            <p className="text-gray-900 dark:text-gray-100">
+                                                ${orderItem.price_per_unit.toFixed(2)}
+                                            </p>
+                                        )}
+                                    </div>
+                                )} */}
+
+                                {/* {orderItem?.total_price !== undefined && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-gray-700 dark:text-gray-300">Item Total:</span>
+                                        <p className="text-gray-900 dark:text-gray-100 font-bold text-lg">
+                                            ${orderItem.total_price.toFixed(2)}
+                                        </p>
+                                    </div>
+                                )} */}
+
                             </div>
                         </div>
                     </Card>
@@ -145,7 +187,7 @@ export default function OrderView(props: ShowOrderProps) {
                                 <ShoppingCartIcon className="h-5 w-5" /> Purchase Pool Details
                             </div>
                             <Button variant={'default'}>
-                                <Link href={route('purchase-pools.show', data.purchase_pool!.id)} as="button" variant="outline">
+                                <Link href={route('purchase-pools.show', data.purchase_pool!.id)} variant="outline">
                                     View Purchase Pool
                                 </Link>
                             </Button>
@@ -162,9 +204,7 @@ export default function OrderView(props: ShowOrderProps) {
                                 <p className="text-gray-900 dark:text-gray-100">{format(new Date(data.purchase_pool!.target_delivery_date), 'MM/dd/yyyy')}</p>
                             </div>
                             <div className="col-span-full flex justify-center items-center h-32">
-                                {/* Round Chart Placeholder */}
                                 <div className="w-24 h-24 relative">
-                                    {/* Replace this with your round chart component */}
                                     <svg viewBox="0 0 100 100">
                                         <circle cx="50" cy="50" r="45" stroke="#e5e7eb" strokeWidth="10" fill="transparent" />
                                         <circle
@@ -186,7 +226,7 @@ export default function OrderView(props: ShowOrderProps) {
                                 </div>
                             </div>
                             <div className="col-span-full flex justify-center text-sm text-gray-500 dark:text-gray-400">
-                                ${data.purchase_pool?.current_amount} / ${data.purchase_pool?.target_amount}
+                                {data.purchase_pool?.current_volume} / {data.purchase_pool?.target_volume}
                             </div>
                             {data.purchase_pool?.min_orders_for_discount > 0 && (
                                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
@@ -194,7 +234,12 @@ export default function OrderView(props: ShowOrderProps) {
                                     {data.purchase_pool?.min_orders_for_discount}
                                 </div>
                             )}
-                            {data.purchase_pool?.max_orders && (
+                            {data.purchase_pool?.max_orders === 0 ? (
+                                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                                    <span className="font-medium">Max Orders:</span>
+                                    <Badge variant="secondary">Unlimited</Badge>
+                                </div>
+                            ) : (
                                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                                     <span className="font-medium">Max Orders:</span>
                                     {data.purchase_pool?.max_orders}

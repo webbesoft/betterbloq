@@ -4,7 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PurchasePoolResource\Pages;
 use App\Filament\Resources\PurchasePoolResource\RelationManagers\PurchasePoolTiersRelationManager;
+use App\Models\Product;
 use App\Models\PurchasePool;
+use App\Models\Vendor;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -23,39 +25,56 @@ class PurchasePoolResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\TextInput::make('name'),
                 Forms\Components\DatePicker::make('start_date')
                     ->required(),
                 Forms\Components\DatePicker::make('end_date')
                     ->required(),
                 Forms\Components\DatePicker::make('target_delivery_date')
-                    ->required(),
+                    ->label('Calculated Target Delivery Date')
+                    ->disabled()
+                    ->dehydrated(true)
+                    ->helperText('Calculated based on End Date + Vendor Prep Time + Product Delivery Time.'),
                 Forms\Components\TextInput::make('min_orders_for_discount')
                     ->required()
                     ->numeric()
-                    ->default(0),
+                    ->default(0)
+                    ->helperText('The minimum number of orders required to apply the discount'),
                 Forms\Components\TextInput::make('max_orders')
                     ->numeric()
-                    ->default(0),
+                    ->default(0)
+                    ->helperText('The maximum number of orders allowed in the purchase pool'),
                 Forms\Components\Select::make('status')
                     ->options([
                         'pending' => 'Pending',
                         'active' => 'Active',
                         'closed' => 'Closed',
                     ]),
-                Forms\Components\TextInput::make('target_amount')
+                Forms\Components\TextInput::make('target_volume')
+                    ->required()
+                    ->numeric()
+                    ->default(0)
+                    ->helperText('The target volume of the purchase pool'),
+                Forms\Components\TextInput::make('current_volume')
                     ->required()
                     ->numeric()
                     ->default(0),
-                Forms\Components\TextInput::make('current_amount')
+                Forms\Components\Select::make('product_id')
+                    ->label('Product')
+                    ->options(
+                        Product::with('vendor')
+                            ->get()
+                            ->mapWithKeys(function (Product $product) {
+                                $vendorName = $product->vendor?->name ?? 'No Vendor Assigned';
+
+                                return [$product->id => $product->name.' - '.$vendorName];
+                            })
+                            ->all() 
+                    )
                     ->required()
-                    ->numeric()
-                    ->default(0),
-                Forms\Components\TextInput::make('vendor_id')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('product_id')
-                    ->required()
-                    ->numeric(),
+                    ->searchable()
+                    ->helperText('Select the product. The vendor will be associated automatically.'),
+
             ]);
     }
 
@@ -63,6 +82,11 @@ class PurchasePoolResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('start_date')
                     ->date()
                     ->sortable(),

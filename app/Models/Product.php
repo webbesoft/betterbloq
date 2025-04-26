@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Services\LogService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
+use Stripe\Exception\ApiErrorException;
 use Stripe\Stripe;
 
 /**
@@ -23,20 +25,17 @@ use Stripe\Stripe;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- *
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Category> $category
  *
  * @method static \Illuminate\Database\Eloquent\Builder|Product newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Product newQuery()
  * @method static Builder|Product filterByName(string $name)
  * @method static Builder|Product filterByPrice(int $price)
- *
  * @method static Builder|Product whereId($value)
  * @method static Builder|Product whereName($value)
  * @method static Builder|Product wherePrice($value)
  * @method static Builder|Product whereVendor($value)
  * @method static Builder|Product whereCategory($value)
- *
  *
  * @mixin Eloquent
  */
@@ -47,6 +46,7 @@ class Product extends Model
 
     protected $fillable = [
         'name',
+        'delivery_time',
         'stripe_price_id',
         'stripe_product_id',
         'description',
@@ -59,6 +59,13 @@ class Product extends Model
         'amount',
     ];
 
+    public function casts(): array
+    {
+        return [
+            'price' => 'float',
+        ];
+    }
+
     protected $table = 'products';
 
     protected static function boot()
@@ -69,7 +76,7 @@ class Product extends Model
             try {
                 $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
                 $stripeProduct = $stripe->products->create([
-                    'name' => $product->name.' '.$product->vendor->name,
+                    'name' => $product->name.' from '.$product->vendor->name,
                     'description' => $product->description ?? null,
                 ]);
 
@@ -85,10 +92,9 @@ class Product extends Model
                     'stripe_product_id' => $stripeProduct->id,
                     'stripe_price_id' => $stripePrice->id,
                 ]);
-            } catch (\Stripe\Exception\ApiErrorException $e) {
-                // Handle Stripe API errors
+            } catch (ApiErrorException $e) {
+                (new LogService)->createLog('error', $e->getMessage(), Product::class, 'boot::created');
                 Log::error('Error creating Stripe product: '.$e->getMessage());
-                // Optionally, you might want to handle this differently, like setting a flag on the product
             }
         });
 
@@ -128,6 +134,7 @@ class Product extends Model
             [$min, $max] = explode(':', $value);
             $query->whereBetween('price', [floatval($min), floatval($max)]);
         }
+
         return $query;
     }
 

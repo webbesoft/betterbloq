@@ -8,6 +8,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\PurchasePoolController;
 use App\Http\Controllers\PurchasePoolRequestController;
+use App\Http\Controllers\UserSettingsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -15,15 +16,16 @@ Route::get('/', function () {
     return Inertia::render('shop/landing');
 })->name('landing');
 
+// market
+Route::get('market', [ProductController::class, 'index'])->name('market');
+//        products
+Route::get('market/product/{product}', [ProductController::class, 'show'])->name('product.show');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     // BulkBuy app routes
     Route::middleware(['subscribed'])->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // market
-        Route::get('market', [ProductController::class, 'index'])->name('market');
-        //        products
-        Route::get('market/product/{product}', [ProductController::class, 'show'])->name('product.show');
         // orders
         Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
@@ -31,13 +33,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
         //        Route::get('orders', [OrderController::class, 'create'])->name('orders.create');
         // purchase pools
+        Route::get('purchase-pools/{purchasePool}', [PurchasePoolController::class, 'show'])->name('purchase-pools.show');
         Route::get('purchase-pools', [PurchasePoolController::class, 'index'])->name('purchase-pools.index');
-        Route::get('purchase-pools/{purchase-pool}', [PurchasePoolController::class, 'show'])->name('purchase-pools.show');
         Route::post('purchase-pools', [PurchasePoolController::class, 'store'])->name('purchase-pools.store');
         // purchase pool requests
+        Route::post('purchase-pool-requests', [PurchasePoolRequestController::class, 'index'])->name('purchase-pool-requests.index');
         Route::post('purchase-pool-requests', [PurchasePoolRequestController::class, 'store'])->name('purchase-pool-requests.store');
 
         Route::resource('projects', ProjectController::class);
+
+        Route::put('/user/settings/complete-guide', [UserSettingsController::class, 'markSetupGuideComplete'])
+            ->name('user.settings.completeGuide');
     });
 
     Route::prefix('')->group(function () {

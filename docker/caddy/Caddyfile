@@ -1,0 +1,26 @@
+# Caddyfile Reference: https://caddyserver.com/docs/caddyfile
+
+{
+    email cobuildhub@gmail.com
+}
+
+# Staging Site Configuration
+staging.betterbloq.com {
+    root * /var/www/public
+    encode zstd gzip
+    php_fastcgi php-fpm-staging:9000
+    file_server
+}
+
+# Production Site Configuration
+betterbloq.com { # Replace with your actual production domain
+    root * /var/www/public
+    encode zstd gzip
+    php_fastcgi php-fpm-prod:8080
+    file_server
+}
+
+# Optional: Redirect www to non-www (or vice versa) for production
+# www.betterbloq.com {
+#     redir https://betterbloq.com{uri} permanent
+# }

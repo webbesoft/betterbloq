@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PurchasePoolTierResource\Pages;
+use App\Models\PurchasePool;
 use App\Models\PurchasePoolTier;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -22,22 +23,32 @@ class PurchasePoolTierResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->helperText('The name of the tier'),
                 Forms\Components\TextInput::make('description')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->helperText('The description of the tier'),
                 Forms\Components\TextInput::make('min_volume')
                     ->numeric()
-                    ->default(null),
+                    ->default(null)
+                    ->helperText('The minimum volume of the tier'),
                 Forms\Components\TextInput::make('max_volume')
                     ->numeric()
-                    ->default(null),
+                    ->default(null)
+                    ->helperText('The maximum volume of the tier'),
                 Forms\Components\TextInput::make('discount_percentage')
                     ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('purchase_pool_id')
+                    ->numeric()
+                    ->helperText('The discount percentage of the tier'),
+                Forms\Components\Select::make('purchase_pool_id')
+                    ->label('Purchase Pool')
                     ->required()
-                    ->numeric(),
+                    ->options(
+                        PurchasePool::all()->pluck('name', 'id')
+                    )
+                    ->searchable()
+                    ->helperText('The purchase pool the tier belongs to'),
             ]);
     }
 

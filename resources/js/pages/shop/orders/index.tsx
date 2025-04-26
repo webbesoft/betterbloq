@@ -166,9 +166,9 @@ export default function Index({ orders: initialOrders }: Props) {
                             </DropdownMenuContent>
                         </DropdownMenu>
 
-                        <Link href={route('orders.create')}>
-                            <Button>Create New</Button>
-                        </Link>
+                        {/*<Link href={route('orders.create')}>*/}
+                        {/*    <Button>Create New</Button>*/}
+                        {/*</Link>*/}
                     </div>
                 </div>
 

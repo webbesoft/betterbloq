@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-use Database\Factories\Apps\BulkBuy\OrderFactory;
+use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * App\Models\Order
@@ -22,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property int user_id
  * @property int purchase_pool_id
  * @property string status
+ * @property float total_amount
  * @property Carbon|null deleted_at
  *
  * @method static Builder|Order newQuery()
@@ -46,6 +48,7 @@ class Order extends Model
         'stripe_session_id',
         'project_id',
         'vendor_id',
+        'total_amount',
     ];
 
     public function casts(): array
@@ -59,6 +62,19 @@ class Order extends Model
             'shipping_address' => 'object',
             'quantity' => 'integer',
         ];
+    }
+
+    public static function boot(): void
+    {
+        parent::boot();
+
+        static::created(function ($model) {
+            $userId = $model->user_id;
+            $cacheKeyPrefix = 'user_orders_'.$userId.'_page_';
+
+            // Invalidate all pages of the user's orders cache
+            Cache::forget($cacheKeyPrefix.'1');
+        });
     }
 
     public function name(): string

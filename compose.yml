@@ -6,8 +6,31 @@ services:
       - 3306:3306
     environment:
       MARIADB_ROOT_PASSWORD: example
+      MARIADB_USER: ${DB_USERNAME}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_DATABASE: ${DB_DATABASE}
     volumes:
       - db_data:/var/lib/mysql:Z
 
+  adminer:
+    image: adminer
+    restart: on-failure
+    ports:
+      - 8080:8080
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      MINIO_ROOT_USER: betterbloq
+      MINIO_ROOT_PASSWORD: example123
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+
 volumes:
   db_data:
+  minio_data:

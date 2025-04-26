@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * App\Models\PurchasePoolRequest
  *
  * @property int id
+ * @property int quantity
  * @property int product_id
  * @property int vendor_id
  * @property int user_id

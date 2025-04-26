@@ -1,0 +1,17 @@
+.git
+.github
+.env
+.env.backup
+.env.example
+storage/framework/sessions/*
+storage/framework/views/*
+storage/framework/cache/data/*
+storage/logs/*.log
+storage/app/public/* # If you use symbolic links, manage storage links differently
+bootstrap/cache/*.php
+node_modules
+vendor
+public/storage # If linked from storage/app/public
+public/hot
+*.DS_Store
+docker-compose.yml
