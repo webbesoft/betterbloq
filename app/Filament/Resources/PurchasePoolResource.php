@@ -59,18 +59,22 @@ class PurchasePoolResource extends Resource
                     ->required()
                     ->numeric()
                     ->default(0),
-                Forms\Components\Select::make('vendor_id')
-                    ->label('Vendor')
-                    ->options(Vendor::all()->pluck('name', 'id'))
-                    ->required()
-                    ->searchable()
-                    ->helperText('The vendor associated with the purchase pool template'),
                 Forms\Components\Select::make('product_id')
                     ->label('Product')
-                    ->options(Product::all()->pluck('name', 'id'))
+                    ->options(
+                        Product::with('vendor')
+                            ->get()
+                            ->mapWithKeys(function (Product $product) {
+                                $vendorName = $product->vendor?->name ?? 'No Vendor Assigned';
+
+                                return [$product->id => $product->name.' - '.$vendorName];
+                            })
+                            ->all() 
+                    )
                     ->required()
                     ->searchable()
-                    ->helperText('The product associated with the purchase pool template'),
+                    ->helperText('Select the product. The vendor will be associated automatically.'),
+
             ]);
     }
 
