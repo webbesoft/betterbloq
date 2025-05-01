@@ -7,6 +7,7 @@ export interface Product {
     unit: string;
     vendor: Vendor;
     category: string;
+    preparation_time?: number;
 }
 
 export interface Vendor {

@@ -9,6 +9,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\PurchasePoolController;
 use App\Http\Controllers\PurchasePoolRequestController;
 use App\Http\Controllers\UserSettingsController;
+use App\Http\Controllers\CartController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -44,6 +45,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::put('/user/settings/complete-guide', [UserSettingsController::class, 'markSetupGuideComplete'])
             ->name('user.settings.completeGuide');
+
+        Route::get('cart', [CartController::class, 'index'])->name('cart.view');
     });
 
     Route::prefix('')->group(function () {
