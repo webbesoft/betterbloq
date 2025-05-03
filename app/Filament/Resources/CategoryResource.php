@@ -23,6 +23,15 @@ class CategoryResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->required(),
+                Forms\Components\FileUpload::make('image')
+                    ->label('Category Image')
+                    ->disk('s3')
+                    ->directory('category_images')
+                    ->image()
+                    ->imageEditor()
+                    ->visibility('public')
+                    ->nullable()
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -30,6 +39,13 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('image')
+                    ->label('Image')
+                    ->disk('s3')
+                    ->visibility('public')
+                    ->width(80)
+                    ->height(80)
+                    ->defaultImageUrl(url('/images/category_placeholder.png')),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('deleted_at')

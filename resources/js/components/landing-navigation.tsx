@@ -13,6 +13,7 @@ import {
 } from './ui/dropdown-menu';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from './ui/navigation-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
+import { CartDropdown } from '@/pages/shop/components/cart-dropdown';
 
 // Helper to get initials from name
 const getInitials = (name = '') => {
@@ -68,6 +69,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
 
                     {/* Auth Area */}
                     <div className="flex items-center gap-3">
+                        <CartDropdown />
                         {user ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>

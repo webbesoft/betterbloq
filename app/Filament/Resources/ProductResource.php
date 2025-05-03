@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
+use App\Filament\Resources\ProductResource\RelationManagers\ImagesRelationManager;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Vendor;
@@ -33,7 +34,7 @@ class ProductResource extends Resource
                     ->required()
                     ->disk('s3')
                     ->helperText('The image of the product'),
-                Forms\Components\Textarea::make('description')
+                Forms\Components\MarkdownEditor::make('description')
                     ->required()
                     ->columnSpanFull()
                     ->helperText('The description of the product'),
@@ -134,6 +135,7 @@ class ProductResource extends Resource
     {
         return [
             //
+            ImagesRelationManager::class,
         ];
     }
 
