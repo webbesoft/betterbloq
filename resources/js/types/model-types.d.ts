@@ -8,6 +8,14 @@ export interface Product {
     vendor: Vendor;
     category: string;
     preparation_time?: number;
+    additional_images: any[];
+    average_rating: number;
+    ratings_count: number;
+}
+
+export interface UserRating {
+    rating: number;
+    comment: string;
 }
 
 export interface Vendor {

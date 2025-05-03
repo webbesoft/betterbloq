@@ -20,11 +20,16 @@ import { formatDate } from '@/lib/helpers';
 import { useCartStore } from '@/stores/use-cart-store';
 import { Auth } from '@/types';
 import { CartItem } from '@/types/cart';
-import { Product } from '@/types/model-types';
+import { Product, UserRating } from '@/types/model-types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Calendar, CheckCircle, Info, ShoppingCart, Tag, Users } from 'lucide-react';
-import { FormEventHandler, useMemo, useState } from 'react';
+import { Calendar, CheckCircle, Info, ShoppingCart, Star, Tag, Users } from 'lucide-react';
+import { FormEventHandler, useEffect, useMemo, useState } from 'react';
 import { CountdownTimer } from './components/countdown-timer';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { Textarea } from '@headlessui/react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { RatingStars } from './components/rating-stars';
 
 const breadcrumbs = [
     { title: 'Market', href: route('market') },
@@ -48,6 +53,8 @@ interface ProductProps {
     activePurchasePool: ActivePurchasePoolData | null;
     auth: Auth;
     hasOrder: boolean;
+    canRate: boolean;
+    userRating: UserRating;
 }
 
 interface PurchasePoolTierData {
@@ -85,7 +92,7 @@ type OrderForm = {
 };
 
 export default function ProductPage(props: ProductProps) {
-    const { product, flash, activePurchasePool, hasOrder } = props;
+    const { product, flash, activePurchasePool, hasOrder, canRate, userRating } = props;
 
     const { data: productData } = product;
 
@@ -111,6 +118,17 @@ export default function ProductPage(props: ProductProps) {
         quantity: 1,
         expected_delivery_date: '',
     });
+
+    const [currentImage, setCurrentImage] = useState(productData.image || '');
+
+    useEffect(() => {
+        setCurrentImage(productData.image || '');
+    }, [productData.image]);
+
+    const allImages = [
+        ...(productData.image ? [{ id: 'primary', url: productData.image }] : []),
+        ...productData.additional_images,
+    ];
 
     const getSubmitRoute = () => {
         return activePurchasePool ? route('orders.store') : route('purchase-pool-requests.store');
@@ -149,6 +167,30 @@ export default function ProductPage(props: ProductProps) {
         });
     };
 
+    const { data: ratingData, setData: setRatingData, post: postRating, processing: processingRating, errors: ratingErrors, reset: resetRating } = useForm({
+        rating: userRating?.rating || 0,
+        comment: userRating?.comment || '',
+    });
+
+    const [hoverRating, setHoverRating] = useState(0);
+
+    const handleRatingSubmit: FormEventHandler = (e) => {
+        e.preventDefault();
+        if (ratingData.rating > 0) {
+            postRating(route('products.ratings.store', productData.id), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    resetRating('comment');
+                },
+                onError: (errs) => {
+                    console.error("Rating submission error:", errs);
+                }
+            });
+        } else {
+            console.error("Please select a star rating.");
+        }
+    };
+
     const handleAddToCartClick = () => {
         const cartProduct: CartItem = {
             ...productData,
@@ -160,29 +202,29 @@ export default function ProductPage(props: ProductProps) {
             quantity: formdata.quantity,
         };
 
-            if (cartVendorId !== null && cartVendorId !== cartProduct.vendor.id) {
-                setProductToAdd(cartProduct);
-                setShowConfirmDialog(true);
-            } else {
-                const quantityToAdd = Math.max(1, Number(formdata.quantity));
-                for (let i = 0; i < quantityToAdd; i++) {
-                    addItemToCart(cartProduct);
-                }
-                console.log(`${cartProduct.name} (x${quantityToAdd}) added to cart.`);
+        if (cartVendorId !== null && cartVendorId !== cartProduct.vendor.id) {
+            setProductToAdd(cartProduct);
+            setShowConfirmDialog(true);
+        } else {
+            const quantityToAdd = Math.max(1, Number(formdata.quantity));
+            for (let i = 0; i < quantityToAdd; i++) {
+                addItemToCart(cartProduct);
             }
+            console.log(`${cartProduct.name} (x${quantityToAdd}) added to cart.`);
+        }
     };
 
     const handleConfirmClearAndAdd = () => {
         if (!productToAdd) return;
 
-            clearCart();
-            const quantityToAdd = Math.max(1, Number(formdata.quantity));
-            for (let i = 0; i < quantityToAdd; i++) {
-                addItemToCart(productToAdd);
-            }
-            setShowConfirmDialog(false);
-            setProductToAdd(null);
-            console.log(`Cart cleared and ${productToAdd.name} (x${quantityToAdd}) added.`);
+        clearCart();
+        const quantityToAdd = Math.max(1, Number(formdata.quantity));
+        for (let i = 0; i < quantityToAdd; i++) {
+            addItemToCart(productToAdd);
+        }
+        setShowConfirmDialog(false);
+        setProductToAdd(null);
+        console.log(`Cart cleared and ${productToAdd.name} (x${quantityToAdd}) added.`);
     };
 
     const getFormButton = () => {
@@ -346,16 +388,61 @@ export default function ProductPage(props: ProductProps) {
                                 )}
                             </div>
                             <CardDescription className="text-muted-foreground">{productData.vendor.name}</CardDescription>
+                            <div className="mt-1 flex items-center gap-2">
+                                <RatingStars rating={productData.average_rating} />
+                                {productData.ratings_count > 0 ? (
+                                    <span className="text-sm text-muted-foreground">
+                                        ({productData.ratings_count} {productData.ratings_count === 1 ? 'rating' : 'ratings'})
+                                    </span>
+                                ) : (
+                                    <span className="text-sm text-muted-foreground">No ratings yet</span>
+                                )}
+                            </div>
                         </CardHeader>
                         <CardContent className="flex flex-grow flex-col items-start justify-start p-6">
                             <div className="bg-muted mb-4 aspect-video w-full overflow-hidden rounded-md border">
                                 <img
-                                    src={productData.image === '' ? undefined : productData.image}
+                                    src={currentImage}
                                     alt={productData.name}
                                     className="h-full w-full object-contain"
                                 />
                             </div>
-                            <p className={'text-foreground mb-4 text-base'}>{productData.description}</p>
+
+                            {allImages.length > 1 && (
+                                <div className="mb-4 w-full">
+                                    <Carousel
+                                        opts={{
+                                            align: "start",
+                                            loop: false,
+                                        }}
+                                        className="w-full max-w-full"
+                                    >
+                                        <CarouselContent className="-ml-2">
+                                            {allImages.map((image, index) => (
+                                                <CarouselItem key={image.id || index} className="basis-1/4 pl-2 md:basis-1/5 lg:basis-1/6">
+                                                    <div className="aspect-square overflow-hidden rounded border">
+                                                        <img
+                                                            src={image.url}
+                                                            alt={`Thumbnail ${index + 1}`}
+                                                            className={`h-full w-full cursor-pointer object-cover transition-opacity hover:opacity-75 ${currentImage === image.url ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                                                            onClick={() => setCurrentImage(image.url)}
+                                                        // onError={(e) => { e.target.src = '/placeholder.png'; }}
+                                                        />
+                                                    </div>
+                                                </CarouselItem>
+                                            ))}
+                                        </CarouselContent>
+                                        <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
+                                        <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
+                                    </Carousel>
+                                </div>
+                            )}
+
+                            <div className={'prose prose-sm sm:prose lg:prose-lg dark:prose-invert max-w-none text-foreground mb-4 text-base'}>
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {productData.description}
+                                </ReactMarkdown>
+                            </div>
 
                             <div className="mt-auto w-full text-right">
                                 {activePurchasePool && currentDiscountPercent > 0 ? (
@@ -376,13 +463,66 @@ export default function ProductPage(props: ProductProps) {
                                     </p>
                                 )}
                             </div>
+
+                            {canRate && (
+                                <form onSubmit={handleRatingSubmit} className="mt-6 border-t pt-4 w-full">
+                                    <h3 className="mb-2 text-lg font-medium">Rate this product</h3>
+                                    {/* {props.flash?.success && (
+                                        <div className="mb-4 rounded border border-green-300 bg-green-100 p-2 text-sm text-green-700">
+                                            {props.flash.success}
+                                        </div>
+                                    )} */}
+                                    <div className="mb-3">
+                                        <Label htmlFor="rating" className="mb-1 block">Your Rating</Label>
+                                        <div className="flex items-center">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <Star
+                                                    key={star}
+                                                    className={`cursor-pointer ${(hoverRating || ratingData.rating) >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                    fill={(hoverRating || ratingData.rating) >= star ? 'currentColor' : 'none'}
+                                                    size={24}
+                                                    onClick={() => setRatingData('rating', star)}
+                                                    onMouseEnter={() => setHoverRating(star)}
+                                                    onMouseLeave={() => setHoverRating(0)}
+                                                />
+                                            ))}
+                                        </div>
+                                        {ratingErrors.rating && <p className="mt-1 text-sm text-red-600">{ratingErrors.rating}</p>}
+                                    </div>
+                                    <div className="mb-3 flex flex-col">
+                                        <Label htmlFor="comment">Your Comment (Optional)</Label>
+                                        <Textarea
+                                            id="comment"
+                                            value={ratingData.comment}
+                                            onChange={(e) => setRatingData('comment', e.target.value)}
+                                            className="mt-1 border-grey-600 border rounded-md"
+                                            rows={3}
+                                        />
+                                        {ratingErrors.comment && <p className="mt-1 text-sm text-red-600">{ratingErrors.comment}</p>}
+                                    </div>
+                                    <Button type="submit" disabled={processing || ratingData.rating === 0}>
+                                        {processing ? 'Submitting...' : 'Submit Rating'}
+                                    </Button>
+                                </form>
+                            )}
+
+                            {!canRate && userRating && (
+                                <div className="mt-6 border-t pt-4 w-full">
+                                    <h3 className="mb-2 text-lg font-medium">Your Rating</h3>
+                                    <RatingStars rating={userRating.rating} />
+                                    {userRating.comment && (
+                                        <p className="text-muted-foreground mt-2 text-sm italic">"{userRating.comment}"</p>
+                                    )}
+                                    {/* Optionally add an "Edit Rating" button here */}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
                     {/* Order/Pool Info Card (Right) */}
                     <Card className="flex h-full flex-col justify-between rounded-lg shadow-md md:order-2">
                         <CardHeader>
-                            <CardTitle>Order {activePurchasePool && '& Purchase Pool'}</CardTitle> {/* Adjust title based on pool presence */}
+                            <CardTitle>Order {activePurchasePool && '& Purchase Pool'}</CardTitle> 
                             <CardDescription>
                                 {activePurchasePool ? 'Join the active purchase pool below to get a discount on your order of ' : 'Order '}
                                 {productData.name}.
@@ -398,11 +538,8 @@ export default function ProductPage(props: ProductProps) {
                         </CardHeader>
                         <CardContent className="flex-grow space-y-4">
                             {activePurchasePool ? renderPurchasePoolInfo() : renderPurchasePoolInfo()}{' '}
-                            {/* Render pool info always, it handles the no-pool case */}
                             {activePurchasePool && <Separator className="my-6" />}
-                            {/* Conditional rendering of the form or the "already ordered" message */}
                             {activePurchasePool && hasOrder ? (
-                                // Display message if user has already ordered in the active pool
                                 <div
                                     className={
                                         'flex flex-col items-center justify-start gap-2 rounded-md border bg-green-100 p-4 text-center text-green-700 dark:bg-green-900 dark:text-green-300'
@@ -412,7 +549,6 @@ export default function ProductPage(props: ProductProps) {
                                     <p className={'text-sm font-medium'}>
                                         You have already placed an order for this product in the active purchase pool.
                                     </p>
-                                    {/* Optional: Link to view their order */}
                                     <Link href={route('orders.index')} className={'link mt-1 text-sm'}>
                                         View My Orders
                                     </Link>
@@ -461,11 +597,8 @@ export default function ProductPage(props: ProductProps) {
                                             )}
                                         </span>
                                     </div>
-                                    {/* Hidden fields (already in useForm) */}
                                     <input type="hidden" name="product_id" value={productData.id} />
-                                    {/* Ensure purchase_pool_id is only sent if activePurchasePool exists */}
                                     {activePurchasePool && <input type="hidden" name="purchase_pool_pool_id" value={activePurchasePool.id} />}{' '}
-                                    {/* Corrected name */}
                                     <div className="mt-auto pt-4">
                                         <Button
                                             type="button"
