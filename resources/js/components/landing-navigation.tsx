@@ -145,13 +145,13 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                                             <Menu className="h-4 w-4" />
                                         </Button>
                                     </SheetTrigger>
-                                    <SheetContent className="pr-4 sm:pr-6 lg:pr-8 bg-background">
+                                    <SheetContent className="pr-4 sm:pr-6 lg:pr-8 bg-[var(--custom-background)] z-1000">
                                         <SheetHeader>
                                             <SheetTitle>Menu</SheetTitle>
                                         </SheetHeader>
                                         <div className="grid gap-4 py-4">
                                             {items.map((item) => (
-                                                <Link key={item.title} href={item.url} className="hover:underline">
+                                                <Link key={item.title} href={item.url} className="hover:underline px-4">
                                                     {item.title}
                                                 </Link>
                                             ))}
@@ -167,7 +167,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                                                                 <span>{user.name || 'User'}</span>
                                                             </Button>
                                                         </DropdownMenuTrigger>
-                                                        <DropdownMenuContent className="w-56" align="start" forceMount>
+                                                        <DropdownMenuContent className="w-56 p-4" align="start" forceMount>
                                                             <DropdownMenuItem>
                                                                 <Link href={route('dashboard')}>
                                                                     <LayoutDashboard className="mr-2 h-4 w-4" />
