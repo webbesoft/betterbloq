@@ -13,6 +13,7 @@ import {
 } from './ui/dropdown-menu';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from './ui/navigation-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
+import { CartDropdown } from '@/pages/shop/components/cart-dropdown';
 
 // Helper to get initials from name
 const getInitials = (name = '') => {
@@ -68,6 +69,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
 
                     {/* Auth Area */}
                     <div className="flex items-center gap-3">
+                        <CartDropdown />
                         {user ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -143,13 +145,13 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                                             <Menu className="h-4 w-4" />
                                         </Button>
                                     </SheetTrigger>
-                                    <SheetContent className="pr-4 sm:pr-6 lg:pr-8 bg-background">
+                                    <SheetContent className="pr-4 sm:pr-6 lg:pr-8 bg-[var(--custom-background)] z-1000">
                                         <SheetHeader>
                                             <SheetTitle>Menu</SheetTitle>
                                         </SheetHeader>
                                         <div className="grid gap-4 py-4">
                                             {items.map((item) => (
-                                                <Link key={item.title} href={item.url} className="hover:underline">
+                                                <Link key={item.title} href={item.url} className="hover:underline px-4">
                                                     {item.title}
                                                 </Link>
                                             ))}
@@ -165,7 +167,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                                                                 <span>{user.name || 'User'}</span>
                                                             </Button>
                                                         </DropdownMenuTrigger>
-                                                        <DropdownMenuContent className="w-56" align="start" forceMount>
+                                                        <DropdownMenuContent className="w-56 p-4" align="start" forceMount>
                                                             <DropdownMenuItem>
                                                                 <Link href={route('dashboard')}>
                                                                     <LayoutDashboard className="mr-2 h-4 w-4" />

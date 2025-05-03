@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
 import {
     CalendarIcon,
-    CheckCircleIcon, Flag,
+    CheckCircleIcon, DownloadIcon, Flag,
     HomeIcon,
     PackageIcon,
     ShoppingCartIcon,
@@ -18,11 +18,6 @@ import {
 import { Order } from '@/types/model-types';
 import AppLayout from '@/layouts/app-layout';
 import { Card } from '@/components/ui/card';
-// Import for the round chart (you might need to install this: npm install react-chartjs-2 chart.js)
-// import { PieChart } from 'react-chartjs-2';
-// import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-
-// ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface ShowOrderProps {
     order: {
@@ -78,6 +73,19 @@ export default function OrderView(props: ShowOrderProps) {
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Order Details</h1>
                     <p className="text-gray-500 dark:text-gray-400">Order ID: #{data.id}</p>
                 </div>
+
+                <div>
+                    <a
+                        href={route('invoice.orders.download', data.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <Button variant="outline" size="sm">
+                            <DownloadIcon className="mr-2 h-4 w-4" />
+                            Download & Email Invoice
+                        </Button>
+                    </a>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-4">
@@ -111,7 +119,6 @@ export default function OrderView(props: ShowOrderProps) {
                         </div>
                     </Card>
 
-                    {/* Product Details */}
                     {/* Product Details */}
                     <Card className={'shadow-sm rounded-sm p-4 bg-background'}>
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">

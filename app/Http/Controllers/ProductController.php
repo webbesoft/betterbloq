@@ -53,7 +53,7 @@ class ProductController extends Controller
                 'price',
                 'name',
             ])
-            ->with(['category', 'vendor'])
+            ->with(['category', 'vendor', 'images'])
             ->paginate(10)
             ->withQueryString();
 
@@ -66,7 +66,9 @@ class ProductController extends Controller
 
     public function show(Request $request, Product $product)
     {
-        $product->load('vendor');
+        $product->load(['vendor', 'images'])
+            ->loadAvg('ratings', 'rating')
+            ->loadCount('ratings');
 
         $now = Carbon::now();
         $activePool = PurchasePool::with(['purchasePoolTiers' => function ($query) {
@@ -130,6 +132,8 @@ class ProductController extends Controller
                 ->where('product_id', $product->id)
                 ->where('purchase_pool_id', $poolData['id'] ?? null)
                 ->exists() : false,
+            'canRate' => auth()->check() && auth()->user()->hasVerifiedEmail() && ! $product->ratings()->where('user_id', auth()->id())->exists(),
+            'userRating' => auth()->check() ? $product->ratings()->where('user_id', auth()->id())->first() : null,
         ]);
     }
 
@@ -138,17 +142,12 @@ class ProductController extends Controller
         $applicableTier = null;
         foreach ($pool->purchasePoolTiers as $tier) {
             if ($currentVolume >= $tier->min_volume) {
-                // This tier is potentially applicable. Check if it's better than the previous.
-                // Since they are sorted by min_volume, the last one that matches is the highest achieved tier.
                 if ($tier->max_volume === null || $currentVolume <= $tier->max_volume) {
                     $applicableTier = $tier;
                 } elseif ($tier->max_volume !== null && $currentVolume > $tier->max_volume) {
-                    // Volume exceeds this tier's max, continue checking higher tiers
                     continue;
                 }
             } else {
-                // Volume is less than this tier's minimum, and since tiers are sorted,
-                // no further tiers will match.
                 break;
             }
         }
