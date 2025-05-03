@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\ProductController;
@@ -9,7 +11,6 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\PurchasePoolController;
 use App\Http\Controllers\PurchasePoolRequestController;
 use App\Http\Controllers\UserSettingsController;
-use App\Http\Controllers\CartController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -47,6 +48,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('user.settings.completeGuide');
 
         Route::get('cart', [CartController::class, 'index'])->name('cart.view');
+
+        // invoicing
+        Route::get('/invoice/orders/{order}/download', [InvoiceController::class, 'show'])
+            ->name('invoice.orders.download');
     });
 
     Route::prefix('')->group(function () {
