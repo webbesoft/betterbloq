@@ -117,11 +117,15 @@ class ProductController extends Controller
         }
 
         $hasPurchasePoolRequest = false;
-        if (Auth::check()) {
-            $hasPurchasePoolRequest = (PurchasePoolRequest::whereIsPending()
-                ->where('product_id', $product->id)
-                ->where('user_id', $request->user()->id)
-                ->count() > 0);
+        try {
+            if (Auth::check()) {
+                $hasPurchasePoolRequest = (PurchasePoolRequest::whereIsPending()
+                    ->where('product_id', $product->id)
+                    ->where('user_id', $request->user()->id)
+                    ->count() > 0);
+            }
+        } catch (\Exception $e) {
+            throw new Exception($e);
         }
 
         return Inertia::render('shop/product', [
@@ -132,8 +136,8 @@ class ProductController extends Controller
                 ->where('product_id', $product->id)
                 ->where('purchase_pool_id', $poolData['id'] ?? null)
                 ->exists() : false,
-            'canRate' => auth()->check() && auth()->user()->hasVerifiedEmail() && ! $product->ratings()->where('user_id', auth()->id())->exists(),
-            'userRating' => auth()->check() ? $product->ratings()->where('user_id', auth()->id())->first() : null,
+            'canRate' => request->user() && request->user()->hasVerifiedEmail() && ! $product->ratings()->where('user_id', request->user()->id())->exists(),
+            'userRating' => request->user() ? $product->ratings()->where('user_id', request->user()->id())->first() : null,
         ]);
     }
 
