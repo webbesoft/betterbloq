@@ -137,7 +137,7 @@ class ProductController extends Controller
                 ->where('purchase_pool_id', $poolData['id'] ?? null)
                 ->exists() : false,
             'canRate' => $request->user() && $request->user()->hasVerifiedEmail() && ! $product->ratings()->where('user_id', $request->user()->id())->exists(),
-            'userRating' => $request->user() ? $product->ratings()->where('user_id', $request->user()->id())->first() : null,
+            'userRating' => $request->user() ? $product->ratings()->where('user_id', $request->user()->id)->first() : null,
         ]);
     }
 
