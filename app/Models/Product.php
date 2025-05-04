@@ -119,20 +119,20 @@ class Product extends Model
         return $this->hasMany(ProductImage::class)->orderBy('order');
     }
 
-    // public function ratings(): HasMany
-    // {
-    //     return $this->hasMany(ProductRating::class);
-    // }
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(ProductRating::class);
+    }
 
-    // public function getAverageRatingAttribute(): ?float
-    // {
-    //     return $this->ratings()->avg('rating');
-    // }
+    public function getAverageRatingAttribute(): ?float
+    {
+        return $this->ratings()->avg('rating');
+    }
 
-    // public function getRatingsCountAttribute(): int
-    // {
-    //     return $this->ratings()->count();
-    // }
+    public function getRatingsCountAttribute(): int
+    {
+        return $this->ratings()->count();
+    }
 
     public function scopeFilterByName(Builder $query, string $name)
     {
