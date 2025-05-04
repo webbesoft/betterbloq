@@ -12,8 +12,8 @@ use App\Models\PurchasePoolTier;
 use App\Models\Vendor;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -67,7 +67,7 @@ class ProductController extends Controller
     public function show(Request $request, Product $product)
     {
         $product->load(['vendor', 'images', 'ratings'])
-            ->loadAvg('ratings', 'rating')
+            // ->loadAvg('ratings', 'rating')
             ->loadCount('ratings');
 
         $now = Carbon::now();
@@ -118,17 +118,17 @@ class ProductController extends Controller
 
         $hasPurchasePoolRequest = false;
         // try {
-            // if ($request->user()) {
-            //    $hasPurchasePoolRequest = (PurchasePoolRequest::whereIsPending()
-            //        ->where('product_id', $product->id)
-            //        ->where('user_id', $request->user()->id)
-            //        ->count() > 0);
-            // }
+        // if ($request->user()) {
+        //    $hasPurchasePoolRequest = (PurchasePoolRequest::whereIsPending()
+        //        ->where('product_id', $product->id)
+        //        ->where('user_id', $request->user()->id)
+        //        ->count() > 0);
+        // }
         // } catch (\Exception $e) {
-            // throw new Exception($e);
+        // throw new Exception($e);
         // }
 
-        return Inertia::render('shop/product', [
+        $response = Inertia::render('shop/product', [
             'product' => new ProductResource($product),
             'hasPurchasePoolRequest' => $hasPurchasePoolRequest,
             'activePurchasePool' => $poolData,
@@ -136,9 +136,20 @@ class ProductController extends Controller
                 ->where('product_id', $product->id)
                 ->where('purchase_pool_id', $poolData['id'] ?? null)
                 ->exists() : false,
-            // 'canRate' => $request->user() && $request->user()->hasVerifiedEmail() && ! $product->ratings()->where('user_id', $request->user()->id)->exists(),
-            // 'userRating' => $request->user() ? $product->ratings()->where('user_id', $request->user()->id)->first() : null,
+            'canRate' => $request->user() && $request->user()->hasVerifiedEmail() && ! $product->ratings()->where('user_id', $request->user()->id)->exists(),
+            'userRating' => $request->user() ? $product->ratings()->where('user_id', $request->user()->id)->first() : null,
         ]);
+
+        // Log all response headers before sending
+        if ($response instanceof \Symfony\Component\HttpFoundation\Response) {
+            Log::channel('stderr')->info('Outgoing Headers for /market/product/'.$productId, $response->headers->all());
+            // Use stderr channel if file logging might be problematic, or just use default log
+        } else {
+            Log::channel('stderr')->warning('Response object type mismatch, cannot log headers.');
+        }
+
+
+        return $response;
     }
 
     private function determineCurrentTier(PurchasePool $pool, int $currentVolume): ?PurchasePoolTier
