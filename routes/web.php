@@ -16,21 +16,24 @@ use App\Http\Controllers\UserSettingsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('shop/landing');
-})->name('landing');
+Route::middleware([])->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('shop/landing');
+    })
+    ->name('landing');
 
-// market
-Route::get('market', [ProductController::class, 'index'])->name('market');
-//        products
-Route::get('market/product/{product}', [ProductController::class, 'show'])->name('product.show');
+    // market
+    Route::get('market', [ProductController::class, 'index'])->name('market');
+    //        products
+    Route::get('market/product/{product}', [ProductController::class, 'show'])->name('product.show');
 
-// categories
-Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    // categories
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 
-// product ratings
-Route::post('/products/{product}/ratings', ProductRatingController::class)
-    ->name('products.ratings.store');
+    // product ratings
+    Route::post('/products/{product}/ratings', ProductRatingController::class)
+        ->name('products.ratings.store');
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // BulkBuy app routes
