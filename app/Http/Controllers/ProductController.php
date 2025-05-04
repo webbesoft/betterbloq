@@ -65,7 +65,11 @@ class ProductController extends Controller
 
     public function show(Request $request, Product $product)
     {
-        $product->load(['vendor', 'images', 'ratings'])
+        $product->load([
+                'vendor', 
+                'images', 
+            //    'ratings'
+            ])
             ->loadAvg('ratings', 'rating')
             ->loadCount('ratings');
 
