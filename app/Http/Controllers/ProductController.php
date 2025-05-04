@@ -69,9 +69,9 @@ class ProductController extends Controller
                 'vendor', 
                 'images', 
             //    'ratings'
-            ])
-            ->loadAvg('ratings', 'rating')
-            ->loadCount('ratings');
+        ]);
+            // ->loadAvg('ratings', 'rating')
+            // ->loadCount('ratings');
 
         $now = Carbon::now();
         $activePool = PurchasePool::with(['purchasePoolTiers' => function ($query) {
