@@ -10,6 +10,7 @@ use App\Models\PurchasePool;
 use App\Models\PurchasePoolRequest;
 use App\Models\PurchasePoolTier;
 use App\Models\Vendor;
+use App\Services\LogService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -154,7 +155,7 @@ class ProductController extends Controller
                 $headersToLog[$key] = $truncatedValues;
             }
 
-            \App\Models\LogService::createLog(
+            LogService::createLog(
                 'info',
                 'Headers prepared before sending',
                 __CLASS__,
