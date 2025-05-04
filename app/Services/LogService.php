@@ -13,7 +13,7 @@ class LogService
     public function createLog(string $level, string $message, ?string $class = null, ?string $method = null, array $context = []): Log
     {
         return Log::create([
-            'user_id' => Auth::id(), // Automatically get the authenticated user's ID if available
+            'user_id' => Auth::id(),
             'level' => $level,
             'class' => $class,
             'method' => $method,

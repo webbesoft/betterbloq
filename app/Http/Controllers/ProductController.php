@@ -140,15 +140,28 @@ class ProductController extends Controller
             'userRating' => $request->user() ? $product->ratings()->where('user_id', $request->user()->id)->first() : null,
         ]);
 
-        // Log all response headers before sending
-        if ($response instanceof \Symfony\Component\HttpFoundation\Response) {
-            Log::channel('stderr')->info('Outgoing Headers for /market/product/'.$productId, $response->headers->all());
-            // Use stderr channel if file logging might be problematic, or just use default log
-        } else {
-            Log::channel('stderr')->warning('Response object type mismatch, cannot log headers.');
-        }
+        try {
+            $headersToLog = [];
+            // Iterate through headers and truncate potentially large ones
+            foreach ($response->headers->allPreserveCase() as $key => $values) {
+                $truncatedValues = [];
+                foreach ($values as $value) {
+                    $truncatedValues[] = (strlen($value) > 500) ? substr($value, 0, 500) . '...[TRUNCATED]' : $value;
+                }
+                $headersToLog[$key] = $truncatedValues;
+            }
 
-        dd($response);
+            \App\Models\LogService::createLog(
+                'info',
+                'Headers prepared before sending',
+                __CLASS__,
+                __METHOD__,
+                $headersToLog,
+            );
+        } catch (\Throwable $logException) {
+            // If logging itself fails, try logging to stderr if possible
+            error_log("Failed to log headers to DB: " . $logException->getMessage());
+        }
 
         return $response;
     }
