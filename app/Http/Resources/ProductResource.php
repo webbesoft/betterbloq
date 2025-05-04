@@ -14,13 +14,7 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'image' => env('AWS_URL').'/'.$this->image,
-            'additional_images' => $this->images->map(function ($image) {
-                return [
-                    'id' => $image->id,
-                    'url' => $image->url,
-                    'order' => $image->order,
-                ];
-            })->all(),
+            'additional_images' => [],
             'ratings_count' => $this->ratings_count,
             'price' => $this->price,
             'unit' => $this->unit,

@@ -66,7 +66,7 @@ class ProductController extends Controller
 
     public function show(Request $request, Product $product)
     {
-        $product->load(['vendor', 'images'])
+        $product->load(['vendor', 'images', 'ratings'])
             ->loadAvg('ratings', 'rating')
             ->loadCount('ratings');
 
@@ -136,8 +136,8 @@ class ProductController extends Controller
                 ->where('product_id', $product->id)
                 ->where('purchase_pool_id', $poolData['id'] ?? null)
                 ->exists() : false,
-            'canRate' => $request->user() && $request->user()->hasVerifiedEmail() && ! $product->ratings()->where('user_id', $request->user()->id)->exists(),
-            'userRating' => $request->user() ? $product->ratings()->where('user_id', $request->user()->id)->first() : null,
+            // 'canRate' => $request->user() && $request->user()->hasVerifiedEmail() && ! $product->ratings()->where('user_id', $request->user()->id)->exists(),
+            // 'userRating' => $request->user() ? $product->ratings()->where('user_id', $request->user()->id)->first() : null,
         ]);
     }
 
