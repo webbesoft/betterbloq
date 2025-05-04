@@ -69,10 +69,21 @@ class ProductController extends Controller
         $product->load([
             'vendor',
             'images',
-            'ratings',
+            'category'
         ])
             ->loadAvg('ratings', 'rating')
             ->loadCount('ratings');
+
+        $userRating = null;
+        if ($request->user()) {
+            $userRating = $product->ratings()
+                                ->where('user_id', $request->user()->id)
+                                ->first();
+        }
+
+        $canRate = $request->user()
+               && $request->user()->hasVerifiedEmail()
+               && is_null($userRating);
 
         $now = Carbon::now();
         $activePool = PurchasePool::with(['purchasePoolTiers' => function ($query) {
@@ -132,7 +143,7 @@ class ProductController extends Controller
         // throw new Exception($e);
         // }
 
-        $response = Inertia::render('shop/product', [
+        return Inertia::render('shop/product', [
             'product' => new ProductResource($product),
             'hasPurchasePoolRequest' => $hasPurchasePoolRequest,
             'activePurchasePool' => $poolData,
@@ -140,34 +151,9 @@ class ProductController extends Controller
                 ->where('product_id', $product->id)
                 ->where('purchase_pool_id', $poolData['id'] ?? null)
                 ->exists() : false,
-            'canRate' => $request->user() && $request->user()->hasVerifiedEmail() && ! $product->ratings()->where('user_id', $request->user()->id)->exists(),
-            'userRating' => $request->user() ? $product->ratings()->where('user_id', $request->user()->id)->first() : null,
+            'canRate' => $canRate,
+            'userRating' => $userRating,
         ]);
-
-        try {
-            $headersToLog = [];
-            // Iterate through headers and truncate potentially large ones
-            foreach ($response->headers->allPreserveCase() as $key => $values) {
-                $truncatedValues = [];
-                foreach ($values as $value) {
-                    $truncatedValues[] = (strlen($value) > 500) ? substr($value, 0, 500).'...[TRUNCATED]' : $value;
-                }
-                $headersToLog[$key] = $truncatedValues;
-            }
-
-            LogService::createLog(
-                'info',
-                'Headers prepared before sending',
-                __CLASS__,
-                __METHOD__,
-                $headersToLog,
-            );
-        } catch (\Throwable $logException) {
-            // If logging itself fails, try logging to stderr if possible
-            error_log('Failed to log headers to DB: '.$logException->getMessage());
-        }
-
-        return $response;
     }
 
     private function determineCurrentTier(PurchasePool $pool, int $currentVolume): ?PurchasePoolTier
