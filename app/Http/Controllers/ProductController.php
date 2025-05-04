@@ -13,7 +13,6 @@ use App\Models\Vendor;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -146,7 +145,7 @@ class ProductController extends Controller
             foreach ($response->headers->allPreserveCase() as $key => $values) {
                 $truncatedValues = [];
                 foreach ($values as $value) {
-                    $truncatedValues[] = (strlen($value) > 500) ? substr($value, 0, 500) . '...[TRUNCATED]' : $value;
+                    $truncatedValues[] = (strlen($value) > 500) ? substr($value, 0, 500).'...[TRUNCATED]' : $value;
                 }
                 $headersToLog[$key] = $truncatedValues;
             }
@@ -160,7 +159,7 @@ class ProductController extends Controller
             );
         } catch (\Throwable $logException) {
             // If logging itself fails, try logging to stderr if possible
-            error_log("Failed to log headers to DB: " . $logException->getMessage());
+            error_log('Failed to log headers to DB: '.$logException->getMessage());
         }
 
         return $response;
