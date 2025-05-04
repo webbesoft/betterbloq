@@ -67,7 +67,7 @@ class ProductController extends Controller
     public function show(Request $request, Product $product)
     {
         $product->load(['vendor', 'images', 'ratings'])
-            // ->loadAvg('ratings', 'rating')
+            ->loadAvg('ratings', 'rating')
             ->loadCount('ratings');
 
         $now = Carbon::now();
@@ -148,6 +148,7 @@ class ProductController extends Controller
             Log::channel('stderr')->warning('Response object type mismatch, cannot log headers.');
         }
 
+        dd($response);
 
         return $response;
     }
