@@ -4,13 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\ProductResource;
 use App\Models\Category;
-use App\Models\Order;
 use App\Models\Product;
 use App\Models\PurchasePool;
 use App\Models\PurchasePoolRequest;
 use App\Models\PurchasePoolTier;
 use App\Models\Vendor;
-use App\Services\LogService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -66,23 +64,23 @@ class ProductController extends Controller
 
     public function show(Request $request, Product $product)
     {
-        // $product->load([
-        //     'vendor',
-        //     'images',
-        //     'category'
-        // ])
-        //     ->loadAvg('ratings', 'rating');
+        $product->load([
+            'vendor',
+            'images',
+            'category',
+        ])
+            ->loadAvg('ratings', 'rating');
 
         $request->user()?->load('orders');
 
-        // $userRating = null;
+        $userRating = null;
         if ($request->user()) {
             $userRating = $request->user()->product_ratings;
         }
 
-        // $canRate = $request->user()
-        //        && $request->user()->hasVerifiedEmail()
-        //        && is_null($userRating);
+        $canRate = $request->user()
+               && $request->user()->hasVerifiedEmail()
+               && is_null($userRating);
 
         $now = Carbon::now();
         $activePool = PurchasePool::with(['purchasePoolTiers' => function ($query) {
@@ -147,10 +145,8 @@ class ProductController extends Controller
             'hasPurchasePoolRequest' => $hasPurchasePoolRequest,
             'activePurchasePool' => $poolData,
             'hasOrder' => $request->user() ? $request->user()->orders()->exists() : false,
-            // 'canRate' => $canRate,
-            // 'userRating' => $userRating,
-            'canRate' => false,
-            'userRating' => null,
+            'canRate' => $canRate,
+            'userRating' => $userRating,
         ]);
     }
 
