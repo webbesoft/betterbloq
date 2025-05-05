@@ -25,7 +25,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $id
  * @property string $name
  * @property string $email
- * @property boolean $has_completed_guide
+ * @property bool $has_completed_guide
  * @property Carbon|null $email_verified_at
  *
  * @method static Builder|User newQuery()
@@ -53,6 +53,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'name',
         'email',
         'password',
+        'email_verified_at',
+        'has_completed_guide',
     ];
 
     /**
