@@ -21,7 +21,8 @@ class ProductResource extends JsonResource
                     'order' => $image->order,
                 ];
             })->all(),
-            'ratings_count' => $this->ratings_count ?? 0,
+            // 'ratings_count' => $this->ratings_count ?? 0,
+            'ratings_count' => 0,
             'price' => $this->price,
             'unit' => $this->unit,
             'vendor' => $this->vendor,
