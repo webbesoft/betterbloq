@@ -71,8 +71,7 @@ class ProductController extends Controller
             'images',
             'category'
         ])
-            ->loadAvg('ratings', 'rating')
-            ->loadCount('ratings');
+            ->loadAvg('ratings', 'rating');
 
         $request->user()?->load('orders');
 
