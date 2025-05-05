@@ -439,9 +439,12 @@ export default function ProductPage(props: ProductProps) {
                             )}
 
                             <div className={'prose prose-sm sm:prose lg:prose-lg dark:prose-invert max-w-none text-foreground mb-4 text-base'}>
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {/* <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                     {productData.description}
-                                </ReactMarkdown>
+                                </ReactMarkdown> */}
+                                <p>
+                                    {productData.description}
+                                </p>
                             </div>
 
                             <div className="mt-auto w-full text-right">
@@ -522,7 +525,7 @@ export default function ProductPage(props: ProductProps) {
                     {/* Order/Pool Info Card (Right) */}
                     <Card className="flex h-full flex-col justify-between rounded-lg shadow-md md:order-2">
                         <CardHeader>
-                            <CardTitle>Order {activePurchasePool && '& Purchase Pool'}</CardTitle> 
+                            <CardTitle>Order {activePurchasePool && '& Purchase Pool'}</CardTitle>
                             <CardDescription>
                                 {activePurchasePool ? 'Join the active purchase pool below to get a discount on your order of ' : 'Order '}
                                 {productData.name}.
