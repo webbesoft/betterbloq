@@ -66,12 +66,12 @@ class ProductController extends Controller
 
     public function show(Request $request, Product $product)
     {
-        $product->load([
-            'vendor',
-            'images',
-            'category'
-        ])
-            ->loadAvg('ratings', 'rating');
+        // $product->load([
+        //     'vendor',
+        //     'images',
+        //     'category'
+        // ])
+        //     ->loadAvg('ratings', 'rating');
 
         $request->user()?->load('orders');
 
