@@ -439,12 +439,9 @@ export default function ProductPage(props: ProductProps) {
                             )}
 
                             <div className={'prose prose-sm sm:prose lg:prose-lg dark:prose-invert max-w-none text-foreground mb-4 text-base'}>
-                                {/* <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                     {productData.description}
-                                </ReactMarkdown> */}
-                                <p>
-                                    {productData.description}
-                                </p>
+                                </ReactMarkdown>
                             </div>
 
                             <div className="mt-auto w-full text-right">

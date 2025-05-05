@@ -149,8 +149,10 @@ class ProductController extends Controller
             'hasPurchasePoolRequest' => $hasPurchasePoolRequest,
             'activePurchasePool' => $poolData,
             'hasOrder' => $request->user() ? $request->user()->orders()->exists() : false,
-            'canRate' => $canRate,
-            'userRating' => $userRating,
+            // 'canRate' => $canRate,
+            // 'userRating' => $userRating,
+            'canRate' => false,
+            'userRating' => null,
         ]);
     }
 
