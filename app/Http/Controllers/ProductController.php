@@ -75,16 +75,14 @@ class ProductController extends Controller
 
         $request->user()?->load('orders');
 
-        $userRating = null;
+        // $userRating = null;
         if ($request->user()) {
-            $userRating = $product->ratings()
-                                ->where('user_id', $request->user()->id)
-                                ->first();
+            $userRating = $request->user()->product_ratings;
         }
 
-        $canRate = $request->user()
-               && $request->user()->hasVerifiedEmail()
-               && is_null($userRating);
+        // $canRate = $request->user()
+        //        && $request->user()->hasVerifiedEmail()
+        //        && is_null($userRating);
 
         $now = Carbon::now();
         $activePool = PurchasePool::with(['purchasePoolTiers' => function ($query) {
