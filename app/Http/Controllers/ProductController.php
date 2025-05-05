@@ -74,6 +74,8 @@ class ProductController extends Controller
             ->loadAvg('ratings', 'rating')
             ->loadCount('ratings');
 
+        $request->user()?->load('orders');
+
         $userRating = null;
         if ($request->user()) {
             $userRating = $product->ratings()
@@ -147,10 +149,7 @@ class ProductController extends Controller
             'product' => new ProductResource($product),
             'hasPurchasePoolRequest' => $hasPurchasePoolRequest,
             'activePurchasePool' => $poolData,
-            'hasOrder' => $request->user() ? Order::where('user_id', $request->user()->id)
-                ->where('product_id', $product->id)
-                ->where('purchase_pool_id', $poolData['id'] ?? null)
-                ->exists() : false,
+            'hasOrder' => $request->user() ? $request->user()->orders()->exists() : false,
             'canRate' => $canRate,
             'userRating' => $userRating,
         ]);
