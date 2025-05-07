@@ -10,8 +10,6 @@ npm run build
 # Clear cache
 php artisan optimize:clear
 
-sleep 3000
-
 # Cache the various components of the Laravel application
 php artisan config:cache
 php artisan event:cache
