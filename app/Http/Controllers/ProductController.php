@@ -68,8 +68,8 @@ class ProductController extends Controller
             'vendor',
             'images',
             'category',
-        ]);
-            // ->loadAvg('ratings', 'rating');
+        ])
+            ->loadAvg('ratings', 'rating');
 
         $request->user()?->load('orders');
 
@@ -145,8 +145,8 @@ class ProductController extends Controller
             // 'hasPurchasePoolRequest' => $hasPurchasePoolRequest,
             'activePurchasePool' => $poolData,
             'hasOrder' => $request->user() ? $request->user()->orders()->exists() : false,
-            // 'canRate' => $canRate,
-            // 'userRating' => $userRating,
+            'canRate' => $canRate,
+            'userRating' => $userRating,
         ]);
 
         return $response;
