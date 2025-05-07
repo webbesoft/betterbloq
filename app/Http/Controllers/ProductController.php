@@ -75,7 +75,7 @@ class ProductController extends Controller
 
         $userRating = null;
         if ($request->user()) {
-            $userRating = $request->user()->product_ratings;
+            $userRating = $request->user()->product_ratings()->where('id', $product->id)->first();
         }
 
         $canRate = $request->user()
