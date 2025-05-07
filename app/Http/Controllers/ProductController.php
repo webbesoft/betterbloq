@@ -83,20 +83,22 @@ class ProductController extends Controller
                && is_null($userRating);
 
         $now = Carbon::now();
-        $activePool = PurchasePool::with(['purchasePoolTiers' => function ($query) {
-            $query->orderBy('min_volume', 'asc');
-        }])
-            ->where('product_id', $product->id)
-            ->where('status', PurchasePool::STATUS_ACTIVE)
-            ->where(function ($query) use ($now) {
-                $query->whereNull('start_date')
-                    ->orWhere('start_date', '<=', $now);
-            })
-            ->where(function ($query) use ($now) {
-                $query->whereNull('end_date')
-                    ->orWhere('end_date', '>=', $now);
-            })
-            ->first();
+        $activePool = Cache::remember("pool_{$product->id}", 600, function () use ($product, $now) {
+            return PurchasePool::with(['purchasePoolTiers' => function ($query) {
+                $query->orderBy('min_volume', 'asc');
+            }])
+                ->where('product_id', $product->id)
+                ->where('status', PurchasePool::STATUS_ACTIVE)
+                ->where(function ($query) use ($now) {
+                    $query->whereNull('start_date')
+                        ->orWhere('start_date', '<=', $now);
+                })
+                ->where(function ($query) use ($now) {
+                    $query->whereNull('end_date')
+                        ->orWhere('end_date', '>=', $now);
+                })
+                ->first();    
+        });
 
         $poolData = null;
         if ($activePool) {
