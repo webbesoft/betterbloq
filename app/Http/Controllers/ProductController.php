@@ -68,8 +68,8 @@ class ProductController extends Controller
             'vendor',
             'images',
             'category',
-        ])
-            ->loadAvg('ratings', 'rating');
+        ]);
+            // ->loadAvg('ratings', 'rating');
 
         $request->user()?->load('orders');
 
@@ -128,7 +128,7 @@ class ProductController extends Controller
             ];
         }
 
-        $hasPurchasePoolRequest = false;
+        // $hasPurchasePoolRequest = false;
         // try {
         // if ($request->user()) {
         //    $hasPurchasePoolRequest = (PurchasePoolRequest::whereIsPending()
@@ -140,14 +140,16 @@ class ProductController extends Controller
         // throw new Exception($e);
         // }
 
-        return Inertia::render('shop/product', [
+        $response = Inertia::render('shop/product', [
             'product' => new ProductResource($product),
-            'hasPurchasePoolRequest' => $hasPurchasePoolRequest,
+            // 'hasPurchasePoolRequest' => $hasPurchasePoolRequest,
             'activePurchasePool' => $poolData,
             'hasOrder' => $request->user() ? $request->user()->orders()->exists() : false,
-            'canRate' => $canRate,
-            'userRating' => $userRating,
+            // 'canRate' => $canRate,
+            // 'userRating' => $userRating,
         ]);
+
+        return $response;
     }
 
     private function determineCurrentTier(PurchasePool $pool, int $currentVolume): ?PurchasePoolTier
