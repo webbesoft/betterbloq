@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import laravel from 'laravel-vite-plugin';
 import { resolve } from 'node:path';
 import { defineConfig, loadEnv } from 'vite';
-const env = loadEnv('', '')
+const env = loadEnv('', '');
 
 console.log(env.VITE_APP_URL);
 
@@ -29,7 +29,7 @@ export default defineConfig({
         host: true,
         port: 5173,
         hmr: {
-            host: 'localhost', 
+            host: 'localhost',
         },
         cors: {
             origin: '*',
