@@ -37,6 +37,7 @@ ARG TZ=UTC
 ARG APP_DIR=/var/www/html
 ARG APP_ENV
 ARG APP_HOST
+ARG DUMMY
 
 ENV TERM=xterm-color \
     OCTANE_SERVER=frankenphp \
