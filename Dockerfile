@@ -38,6 +38,7 @@ ARG TZ=UTC
 ARG APP_DIR=/var/www/html
 ARG APP_ENV
 ARG APP_HOST
+ARG APP_URL
 
 ENV TERM=xterm-color \
     OCTANE_SERVER=frankenphp \
@@ -49,7 +50,8 @@ ENV TERM=xterm-color \
     COMPOSER_MAX_PARALLEL_HTTP=24 \
     XDG_CONFIG_HOME=${APP_DIR}/.config \
     XDG_DATA_HOME=${APP_DIR}/.data \
-    SERVER_NAME=${APP_HOST}
+    SERVER_NAME=${APP_HOST} \
+    VITE_APP_URL=${APP_URL}
 
 WORKDIR ${ROOT}
 
