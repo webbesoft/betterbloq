@@ -25,17 +25,17 @@ export default defineConfig({
             'ziggy-js': resolve(__dirname, 'vendor/tightenco/ziggy'),
         },
     },
-    server: {
-        host: true,
-        port: 5173,
-        hmr: {
-            host: 'localhost',
-        },
-        cors: {
-            origin: '*',
-            methods: 'GET,HEAD,PUT,POST,DELETE',
-            preflightContinue: false,
-            optionsSuccessStatus: 204,
-        },
-    },
+    // server: {
+    //     host: true,
+    //     port: 5173,
+    //     hmr: {
+    //         host: 'localhost',
+    //     },
+    //     cors: {
+    //         origin: '*',
+    //         methods: 'GET,HEAD,PUT,POST,DELETE',
+    //         preflightContinue: false,
+    //         optionsSuccessStatus: 204,
+    //     },
+    // },
 });
