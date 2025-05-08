@@ -160,10 +160,13 @@ RUN composer install \
 FROM oven/bun:${BUN_VERSION} AS build
 
 ARG APP_ENV
+ARG APP_URL
+ARG VITE_APP_URL
 
 ENV ROOT=/var/www/html \
     APP_ENV=${APP_ENV} \
-    NODE_ENV=${APP_ENV:-production}
+    NODE_ENV=${APP_ENV:-production} \
+    VITE_APP_URL=${VITE_APP_URL}
 
 WORKDIR ${ROOT}
 
