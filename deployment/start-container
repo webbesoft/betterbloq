@@ -3,7 +3,7 @@ set -e
 
 container_mode=${CONTAINER_MODE:-"http"}
 octane_server=${OCTANE_SERVER}
-running_migrations_and_seeders=${RUNNING_MIGRATIONS_AND_SEEDERS:-"false"}
+running_migrations_and_seeders=${RUNNING_MIGRATIONS_AND_SEEDERS:-"true"}
 
 initialStuff() {
     echo "Container mode: $container_mode"
@@ -15,7 +15,11 @@ initialStuff() {
 	
     php artisan storage:link; \
     php artisan optimize:clear; \
-    php artisan optimize;
+    php artisan optimize; \
+    php artisan config:cache; \
+    php artisan event:cache; \
+    php artisan route:cache; \
+    php artisan view:cache;
 }
 
 if [ "$1" != "" ]; then
