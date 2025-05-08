@@ -30,6 +30,7 @@ LABEL org.opencontainers.image.title="Laravel Octane Dockerfile"
 LABEL org.opencontainers.image.description="Production-ready Dockerfile for Laravel Octane"
 LABEL org.opencontainers.image.source=https://github.com/exaco/laravel-octane-dockerfile
 LABEL org.opencontainers.image.licenses=MIT
+
 ARG DUMMY
 ARG WWWUSER=1000
 ARG WWWGROUP=1000
