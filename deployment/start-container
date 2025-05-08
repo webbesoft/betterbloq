@@ -8,18 +8,14 @@ running_migrations_and_seeders=${RUNNING_MIGRATIONS_AND_SEEDERS:-"true"}
 initialStuff() {
     echo "Container mode: $container_mode"
     
-    if [ "${running_migrations_and_seeders}" = "true" ]; then
+    if [ "${running_migrations_and_seeders}" = "false" ]; then
         echo "Running migrations and seeding database ..."
         php artisan migrate --isolated --seed --force || php artisan migrate --seed --force
     fi
 	
     php artisan storage:link; \
     php artisan optimize:clear; \
-    php artisan optimize; \
-    php artisan config:cache; \
-    php artisan event:cache; \
-    php artisan route:cache; \
-    php artisan view:cache;
+    php artisan optimize;
 }
 
 if [ "$1" != "" ]; then
