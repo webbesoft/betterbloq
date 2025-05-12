@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
+use App\Filament\Resources\UserResource\RelationManagers\AddressRelationManager;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -14,7 +15,7 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-user';
 
     public static function form(Form $form): Form
     {
@@ -71,6 +72,7 @@ class UserResource extends Resource
     {
         return [
             //
+            AddressRelationManager::class,
         ];
     }
 

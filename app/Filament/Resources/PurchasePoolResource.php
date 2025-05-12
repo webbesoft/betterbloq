@@ -6,7 +6,6 @@ use App\Filament\Resources\PurchasePoolResource\Pages;
 use App\Filament\Resources\PurchasePoolResource\RelationManagers\PurchasePoolTiersRelationManager;
 use App\Models\Product;
 use App\Models\PurchasePool;
-use App\Models\Vendor;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -69,7 +68,7 @@ class PurchasePoolResource extends Resource
 
                                 return [$product->id => $product->name.' - '.$vendorName];
                             })
-                            ->all() 
+                            ->all()
                     )
                     ->required()
                     ->searchable()
@@ -96,9 +95,9 @@ class PurchasePoolResource extends Resource
                 Tables\Columns\TextColumn::make('target_delivery_date')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('target_amount')
+                Tables\Columns\TextColumn::make('target_volume')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('current_amount')
+                Tables\Columns\TextColumn::make('current_volume')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('min_orders_for_discount')
                     ->numeric()
@@ -131,6 +130,7 @@ class PurchasePoolResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
@@ -155,6 +155,7 @@ class PurchasePoolResource extends Resource
         return [
             'index' => Pages\ListPurchasePools::route('/'),
             'create' => Pages\CreatePurchasePool::route('/create'),
+            'view' => Pages\ViewPurchasePool::route('/{record}'),
             'edit' => Pages\EditPurchasePool::route('/{record}/edit'),
         ];
     }

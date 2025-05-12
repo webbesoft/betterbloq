@@ -15,7 +15,7 @@ class PurchasePoolTierResource extends Resource
 {
     protected static ?string $model = PurchasePoolTier::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
 
     public static function form(Form $form): Form
     {
