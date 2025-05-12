@@ -118,4 +118,21 @@ class PurchasePool extends Model
 
         return $query->whereBetween('target_delivery_date', [$startDate, $endDate]);
     }
+
+    /**
+     * Get the applicable discount tier based on the current volume.
+     */
+    public function getApplicableTier(): ?PurchasePoolTier
+    {
+        $tiers = $this->purchasePoolTiers()->orderBy('min_volume', 'desc')->get();
+        foreach ($tiers as $tier) {
+            if ($this->current_volume >= $tier->min_volume) {
+                if (is_null($tier->max_volume) || $this->current_volume <= $tier->max_volume) {
+                    return $tier;
+                }
+            }
+        }
+
+        return null;
+    }
 }

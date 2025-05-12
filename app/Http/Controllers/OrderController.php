@@ -46,18 +46,56 @@ class OrderController extends Controller
 
     public function store(StoreOrderRequest $request): RedirectResponse|Response
     {
+        $user = $request->user();
+
+        if (! $user) {
+            Session::flash('message', ['error' => 'You must be logged in to place an order.']);
+
+            return redirect()->route('login');
+        }
+
         $validated = $request->validated();
 
-        $order = OrderService::createOrder($request->user(), $validated);
+        $serviceData = [];
 
-        if (! data_get($order, 'error')) {
+        // #! Order from cart has multiple items
+        if (isset($validated['items']) && is_array($validated['items'])) {
+            $serviceData['items'] = $validated['items'];
+            foreach ($serviceData['items'] as $cartItem) {
+                if (empty($cartItem['product_id']) || empty($cartItem['quantity'])) {
+                    Session::flash('message', ['error' => 'Invalid cart item data. Each item must have a product ID and quantity.']);
+
+                    return back()->withInput()->with('error', 'Invalid cart item data.');
+                }
+            }
+            $serviceData['expected_delivery_date'] = $validated['expected_delivery_date'] ?? null;
+        }
+        // #! scenario 2: single product order
+        elseif (isset($validated['product_id'])) {
+            $serviceData['items'] = [
+                [
+                    'product_id' => $validated['product_id'],
+                    'quantity' => $validated['quantity'],
+                    'purchase_pool_id' => $validated['purchase_pool_id'] ?? null,
+                ],
+            ];
+            $serviceData['expected_delivery_date'] = $validated['expected_delivery_date'] ?? null;
+        } else {
+            Session::flash('message', ['error' => 'Invalid order data submitted.']);
+
+            return back()->withInput()->with('error', 'Invalid order data submitted.');
+        }
+
+        $orderResponse = OrderService::createOrder($user, $serviceData);
+
+        if (! data_get($orderResponse, 'error')) {
             return Inertia::render('shop/payment-pending', [
-                'url' => data_get($order, 'url'),
+                'url' => data_get($orderResponse, 'url'),
             ]);
         }
 
-        Session::flash('message', ['error' => data_get($order, 'error')]);
+        Session::flash('message', ['error' => data_get($orderResponse, 'error')]);
 
-        return back()->with('error', data_get($order, 'error'));
+        return back()->with('error', data_get($orderResponse, 'error'));
     }
 }

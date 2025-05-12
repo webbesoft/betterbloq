@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\VendorResource\Pages;
+use App\Filament\Resources\VendorResource\RelationManagers\AddressRelationManager;
 use App\Models\User;
 use App\Models\Vendor;
 use Filament\Forms;
@@ -18,6 +19,8 @@ class VendorResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
 
+    protected static ?string $navigationGroup = 'Entity Management';
+
     public static function form(Form $form): Form
     {
         return $form
@@ -27,6 +30,34 @@ class VendorResource extends Resource
                 Forms\Components\TextInput::make('phone')
                     ->tel()
                     ->required(),
+                Forms\Components\Section::make('Address')
+                    ->relationship('address')
+                    ->schema([
+                        Forms\Components\TextInput::make('address_line_1')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('address_line_2')
+                            ->maxLength(255)
+                            ->default(null),
+                        Forms\Components\TextInput::make('city')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\Select::make('state')
+                            ->options([
+                                'texas' => 'Texas',
+                            ])
+                            ->default('texas')
+                            ->required(),
+                        Forms\Components\TextInput::make('postal_code')
+                            ->maxLength(255)
+                            ->default(null),
+                        Forms\Components\Select::make('country_code')
+                            ->required()
+                            ->options([
+                                'usa' => 'USA',
+                            ])
+                            ->default('usa'),
+                    ]),
                 Forms\Components\TextInput::make('prep_time')
                     ->label('Preparation Time (Days)')
                     ->numeric()
@@ -84,6 +115,7 @@ class VendorResource extends Resource
     {
         return [
             //
+            // AddressRelationManager::class,
         ];
     }
 

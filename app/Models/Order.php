@@ -46,6 +46,9 @@ class Order extends Model
         'product_id',
         'user_id',
         'stripe_session_id',
+        'payment_intent_id',
+        'initial_amount',
+        'final_amount',
         'project_id',
         'vendor_id',
         'total_amount',
@@ -54,9 +57,6 @@ class Order extends Model
     public function casts(): array
     {
         return [
-            // Casting address to 'array' or 'object' automatically handles
-            // JSON encoding/decoding when saving/retrieving the model.
-            // Choose 'array' (associative array) or 'object' (stdClass object).
             'address' => 'object',
             'billing_address' => 'object',
             'shipping_address' => 'object',

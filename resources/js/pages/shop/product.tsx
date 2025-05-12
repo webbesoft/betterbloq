@@ -11,24 +11,24 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import LandingLayout from '@/layouts/landing-layout';
-import { formatDate } from '@/lib/helpers';
+import { formatDate, parseAndCompareDates } from '@/lib/helpers';
 import { useCartStore } from '@/stores/use-cart-store';
 import { Auth } from '@/types';
 import { CartItem } from '@/types/cart';
 import { Product, UserRating } from '@/types/model-types';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { Calendar, CheckCircle, Info, ShoppingCart, Star, Tag, Users } from 'lucide-react';
-import { FormEventHandler, useEffect, useMemo, useState } from 'react';
-import { CountdownTimer } from './components/countdown-timer';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Textarea } from '@headlessui/react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { Calendar, CheckCircle, Info, PackageSearch, ShoppingCart, Star, Tag, Users } from 'lucide-react';
+import { FormEventHandler, useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { CountdownTimer } from './components/countdown-timer';
 import { RatingStars } from './components/rating-stars';
 
 const breadcrumbs = [
@@ -55,6 +55,7 @@ interface ProductProps {
     hasOrder: boolean;
     canRate: boolean;
     userRating: UserRating;
+    defaultStorageRateMessage: string;
 }
 
 interface PurchasePoolTierData {
@@ -89,20 +90,22 @@ type OrderForm = {
     quantity: number;
     expected_delivery_date: string;
     purchase_pool_id?: number | null;
+    requires_storage_acknowledged?: boolean;
 };
 
 export default function ProductPage(props: ProductProps) {
-    const { product, flash, activePurchasePool, hasOrder, canRate, userRating } = props;
+    const { product, flash, activePurchasePool, hasOrder, canRate, userRating, defaultStorageRateMessage } = props;
 
     const { data: productData } = product;
 
     const addItemToCart = useCartStore((state) => state.addItem);
     const clearCart = useCartStore((state) => state.clearCart);
     const cartVendorId = useCartStore((state) => state.currentVendorId);
-    const cartVendorName = useCartStore((state) => state.currentVendorName)
+    const cartVendorName = useCartStore((state) => state.currentVendorName);
 
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [productToAdd, setProductToAdd] = useState<Product | null>(null);
+    const [showStorageInfoMessage, setShowStorageInfoMessage] = useState(false);
 
     const {
         data: formdata,
@@ -119,16 +122,22 @@ export default function ProductPage(props: ProductProps) {
         expected_delivery_date: '',
     });
 
+    useEffect(() => {
+        if (formdata.expected_delivery_date && activePurchasePool?.target_delivery_date) {
+            const comparison = parseAndCompareDates(formdata.expected_delivery_date, activePurchasePool.target_delivery_date, 3);
+            setShowStorageInfoMessage(comparison.needsStorage);
+        } else {
+            setShowStorageInfoMessage(false);
+        }
+    }, [formdata.expected_delivery_date, activePurchasePool?.target_delivery_date]);
+
     const [currentImage, setCurrentImage] = useState(productData.image || '');
 
     useEffect(() => {
         setCurrentImage(productData.image || '');
     }, [productData.image]);
 
-    const allImages = [
-        ...(productData.image ? [{ id: 'primary', url: productData.image }] : []),
-        ...productData.additional_images,
-    ];
+    const allImages = [...(productData.image ? [{ id: 'primary', url: productData.image }] : []), ...productData.additional_images];
 
     const getSubmitRoute = () => {
         return activePurchasePool ? route('orders.store') : route('purchase-pool-requests.store');
@@ -142,14 +151,14 @@ export default function ProductPage(props: ProductProps) {
 
         const dataToSend: Partial<OrderForm> = activePurchasePool
             ? {
-                product_id: formdata.product_id,
-                quantity: formdata.quantity,
-                expected_delivery_date: formdata.expected_delivery_date,
-                purchase_pool_id: activePurchasePool.id,
-            }
+                  product_id: formdata.product_id,
+                  quantity: formdata.quantity,
+                  expected_delivery_date: formdata.expected_delivery_date,
+                  purchase_pool_id: activePurchasePool.id,
+              }
             : {
-                product_id: formdata.product_id,
-            };
+                  product_id: formdata.product_id,
+              };
 
         post(targetRoute, {
             preserveScroll: true,
@@ -167,7 +176,14 @@ export default function ProductPage(props: ProductProps) {
         });
     };
 
-    const { data: ratingData, setData: setRatingData, post: postRating, processing: processingRating, errors: ratingErrors, reset: resetRating } = useForm({
+    const {
+        data: ratingData,
+        setData: setRatingData,
+        post: postRating,
+        processing: processingRating,
+        errors: ratingErrors,
+        reset: resetRating,
+    } = useForm({
         rating: userRating?.rating || 0,
         comment: userRating?.comment || '',
     });
@@ -183,11 +199,11 @@ export default function ProductPage(props: ProductProps) {
                     resetRating('comment');
                 },
                 onError: (errs) => {
-                    console.error("Rating submission error:", errs);
-                }
+                    console.error('Rating submission error:', errs);
+                },
             });
         } else {
-            console.error("Please select a star rating.");
+            console.error('Please select a star rating.');
         }
     };
 
@@ -264,6 +280,9 @@ export default function ProductPage(props: ProductProps) {
                     <CheckCircle className="mr-2 h-4 w-4" />
                     {processing ? 'Placing Order...' : `Order Now & Join Pool (${currentDiscountPercent}% Off)`}
                 </Button>
+                {!formdata.expected_delivery_date && activePurchasePool && (
+                    <p className="text-destructive mt-1 text-xs">Please select your preferred delivery date to order.</p>
+                )}
             </div>
         );
     };
@@ -290,7 +309,7 @@ export default function ProductPage(props: ProductProps) {
 
         const { current_volume, tiers, current_tier, end_date, max_orders, target_delivery_date, target_volume } = activePurchasePool;
         const nextTier = tiers.find((tier) => tier.min_volume > current_volume);
-        const progressPercent = max_orders ? Math.min(100, (current_volume / max_orders) * 100) : 0;
+        const progressPercent = max_orders && max_orders > 0 ? Math.min(100, (current_volume / max_orders) * 100) : 0;
 
         return (
             <div className="from-background to-secondary/30 mt-4 space-y-4 rounded-md border bg-gradient-to-br p-4">
@@ -375,6 +394,13 @@ export default function ProductPage(props: ProductProps) {
         <LandingLayout breadcrumbs={breadcrumbs}>
             <Head title={productData.name} />
             <div className="container mx-auto h-full py-8">
+                {flash.message && (flash.message.success || flash.message.error || flash.message.message) && (
+                    <div
+                        className={`mb-4 rounded-md p-4 text-sm ${flash.message.success ? 'border border-green-300 bg-green-100 text-green-700' : flash.message.error ? 'border border-red-300 bg-red-100 text-red-700' : 'border border-blue-300 bg-blue-100 text-blue-700'}`}
+                    >
+                        {flash.message.success || flash.message.error || flash.message.message}
+                    </div>
+                )}
                 <div className="grid h-full grid-cols-1 gap-6 lg:grid-cols-2">
                     {/* Product Info Card (Left) */}
                     <Card className="flex h-full flex-col justify-between rounded-lg shadow-md md:order-1">
@@ -391,29 +417,25 @@ export default function ProductPage(props: ProductProps) {
                             <div className="mt-1 flex items-center gap-2">
                                 <RatingStars rating={productData.average_rating} />
                                 {productData.ratings_count > 0 ? (
-                                    <span className="text-sm text-muted-foreground">
+                                    <span className="text-muted-foreground text-sm">
                                         ({productData.ratings_count} {productData.ratings_count === 1 ? 'rating' : 'ratings'})
                                     </span>
                                 ) : (
-                                    <span className="text-sm text-muted-foreground">No ratings yet</span>
+                                    <span className="text-muted-foreground text-sm">No ratings yet</span>
                                 )}
                             </div>
                         </CardHeader>
                         <CardContent className="flex flex-grow flex-col items-start justify-start p-6">
                             <div className="bg-muted mb-4 aspect-video w-full overflow-hidden rounded-md border">
-                                <img
-                                    src={currentImage}
-                                    alt={productData.name}
-                                    className="h-full w-full object-contain"
-                                />
+                                <img src={currentImage} alt={productData.name} className="h-full w-full object-contain" />
                             </div>
 
                             {allImages.length > 1 && (
                                 <div className="mb-4 w-full">
                                     <Carousel
                                         opts={{
-                                            align: "start",
-                                            loop: false,
+                                            align: 'start',
+                                            loop: allImages.length > 5,
                                         }}
                                         className="w-full max-w-full"
                                     >
@@ -424,24 +446,22 @@ export default function ProductPage(props: ProductProps) {
                                                         <img
                                                             src={image.url}
                                                             alt={`Thumbnail ${index + 1}`}
-                                                            className={`h-full w-full cursor-pointer object-cover transition-opacity hover:opacity-75 ${currentImage === image.url ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                                                            className={`h-full w-full cursor-pointer object-cover transition-opacity hover:opacity-75 ${currentImage === image.url ? 'ring-primary ring-2 ring-offset-2' : ''}`}
                                                             onClick={() => setCurrentImage(image.url)}
-                                                        // onError={(e) => { e.target.src = '/placeholder.png'; }}
+                                                            // onError={(e) => { e.target.src = '/placeholder.png'; }}
                                                         />
                                                     </div>
                                                 </CarouselItem>
                                             ))}
                                         </CarouselContent>
-                                        <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
-                                        <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
+                                        <CarouselPrevious className="absolute top-1/2 left-2 -translate-y-1/2" />
+                                        <CarouselNext className="absolute top-1/2 right-2 -translate-y-1/2" />
                                     </Carousel>
                                 </div>
                             )}
 
-                            <div className={'prose prose-sm sm:prose lg:prose-lg dark:prose-invert max-w-none text-foreground mb-4 text-base'}>
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                    {productData.description}
-                                </ReactMarkdown>
+                            <div className={'prose prose-sm sm:prose lg:prose-lg dark:prose-invert text-foreground mb-4 max-w-none text-base'}>
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{productData.description}</ReactMarkdown>
                             </div>
 
                             <div className="mt-auto w-full text-right">
@@ -465,7 +485,7 @@ export default function ProductPage(props: ProductProps) {
                             </div>
 
                             {canRate && (
-                                <form onSubmit={handleRatingSubmit} className="mt-6 border-t pt-4 w-full">
+                                <form onSubmit={handleRatingSubmit} className="mt-6 w-full border-t pt-4">
                                     <h3 className="mb-2 text-lg font-medium">Rate this product</h3>
                                     {/* {props.flash?.success && (
                                         <div className="mb-4 rounded border border-green-300 bg-green-100 p-2 text-sm text-green-700">
@@ -473,7 +493,9 @@ export default function ProductPage(props: ProductProps) {
                                         </div>
                                     )} */}
                                     <div className="mb-3">
-                                        <Label htmlFor="rating" className="mb-1 block">Your Rating</Label>
+                                        <Label htmlFor="rating" className="mb-1 block">
+                                            Your Rating
+                                        </Label>
                                         <div className="flex items-center">
                                             {[1, 2, 3, 4, 5].map((star) => (
                                                 <Star
@@ -495,7 +517,7 @@ export default function ProductPage(props: ProductProps) {
                                             id="comment"
                                             value={ratingData.comment}
                                             onChange={(e) => setRatingData('comment', e.target.value)}
-                                            className="mt-1 border-grey-600 border rounded-md"
+                                            className="border-grey-600 mt-1 rounded-md border"
                                             rows={3}
                                         />
                                         {ratingErrors.comment && <p className="mt-1 text-sm text-red-600">{ratingErrors.comment}</p>}
@@ -507,12 +529,10 @@ export default function ProductPage(props: ProductProps) {
                             )}
 
                             {!canRate && userRating && (
-                                <div className="mt-6 border-t pt-4 w-full">
+                                <div className="mt-6 w-full border-t pt-4">
                                     <h3 className="mb-2 text-lg font-medium">Your Rating</h3>
                                     <RatingStars rating={userRating.rating} />
-                                    {userRating.comment && (
-                                        <p className="text-muted-foreground mt-2 text-sm italic">"{userRating.comment}"</p>
-                                    )}
+                                    {userRating.comment && <p className="text-muted-foreground mt-2 text-sm italic">"{userRating.comment}"</p>}
                                     {/* Optionally add an "Edit Rating" button here */}
                                 </div>
                             )}
@@ -570,7 +590,7 @@ export default function ProductPage(props: ProductProps) {
                                         {errors.quantity && <p className="mt-1 text-sm text-red-500">{errors.quantity}</p>}
                                     </div>
                                     <div className="grid grid-cols-1 gap-2">
-                                        <Label htmlFor="expected_delivery_date">Your Preferred Delivery Date (Optional)</Label>
+                                        <Label htmlFor="expected_delivery_date">Your Preferred Delivery Date</Label>
                                         <Input
                                             type="date"
                                             id="expected_delivery_date"
@@ -580,11 +600,31 @@ export default function ProductPage(props: ProductProps) {
                                             value={formdata.expected_delivery_date}
                                             min={new Date().toISOString().split('T')[0]}
                                             disabled={processing}
+                                            required
                                         />
                                         {errors.expected_delivery_date && (
                                             <p className="mt-1 text-sm text-red-500">{errors.expected_delivery_date}</p>
                                         )}
                                     </div>
+                                    {showStorageInfoMessage && activePurchasePool && (
+                                        <div className="border-primary/50 bg-primary/10 text-primary flex items-start gap-2 rounded-md border p-3 text-sm">
+                                            <PackageSearch className="mt-0.5 h-5 w-5 flex-shrink-0" />
+                                            <div>
+                                                <p className="font-semibold">Storage Information</p>
+                                                <p>
+                                                    Your selected delivery date is significantly after the pool's target delivery date (
+                                                    {formatDate(activePurchasePool.target_delivery_date)}). This may require storage for your items.
+                                                </p>
+                                                <p className="mt-1">
+                                                    {defaultStorageRateMessage
+                                                        ? `Storage is typically charged at ${defaultStorageRateMessage}. `
+                                                        : 'Storage fees may apply. '}
+                                                    Final storage costs, if applicable, will be confirmed after your order and are based on actual
+                                                    space used. Shipping costs (if any) will also be calculated and confirmed separately.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
                                     <Separator />
                                     <div className="flex items-center justify-between">
                                         <p className="font-semibold">Order Total</p>
@@ -623,8 +663,8 @@ export default function ProductPage(props: ProductProps) {
                         <AlertDialogHeader>
                             <AlertDialogTitle>Different Vendor Alert</AlertDialogTitle>
                             <AlertDialogDescription>
-                                Your cart contains items from a different vendor ({cartVendorName}). Adding this item will clear your current cart.
-                                Do you want to proceed?
+                                Your cart contains items from a different vendor ({cartVendorName}). Adding this item will clear your current cart. Do
+                                you want to proceed?
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>

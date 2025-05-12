@@ -4,8 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PurchasePoolTemplateResource\Pages;
 use App\Filament\Resources\PurchasePoolTemplateResource\RelationManagers\TiersRelationManager;
-use App\Models\PurchasePoolTemplate;
 use App\Models\Product;
+use App\Models\PurchasePoolTemplate;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -17,6 +17,8 @@ class PurchasePoolTemplateResource extends Resource
     protected static ?string $model = PurchasePoolTemplate::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static ?string $navigationGroup = 'Order Management';
 
     public static function form(Form $form): Form
     {

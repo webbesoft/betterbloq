@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\LogResource\Pages;
 
 use App\Filament\Resources\LogResource;
-use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListLogs extends ListRecords
@@ -13,7 +12,6 @@ class ListLogs extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
         ];
     }
 }

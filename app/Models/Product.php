@@ -58,6 +58,15 @@ class Product extends Model
         'price',
         'unit',
         'amount',
+        'storable',
+        'storage_unit_of_measure',
+        'default_length',
+        'default_width',
+        'default_height',
+        'is_stackable',
+        'max_stack_height_units',
+        'storage_conditions_required',
+        'storage_handling_notes',
     ];
 
     public function casts(): array

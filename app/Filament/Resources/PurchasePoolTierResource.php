@@ -17,6 +17,8 @@ class PurchasePoolTierResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
 
+    protected static ?string $navigationGroup = 'Order Management';
+
     public static function form(Form $form): Form
     {
         return $form
