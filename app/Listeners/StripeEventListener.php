@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Mail\NewOrderConfirmation;
 use App\Models\Log;
 use App\Models\Order;
+use App\Models\OrderLineItem;
 use App\Models\Product;
 use App\Models\PurchasePool;
 use App\Models\StorageOrder;
@@ -41,6 +42,12 @@ class StripeEventListener
             $stripeCustomerId = data_get($session, 'customer');
 
             $user = User::whereStripeCustomerId($stripeCustomerId)->first();
+
+            $isSubscription = data_get($session, 'mode') === 'subscription';
+
+            if ($isSubscription){
+                return;
+            }
 
             if ($user) {
                 try {

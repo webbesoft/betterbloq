@@ -28,7 +28,7 @@ class CheckoutController extends Controller
                 ]);
             } catch (\Exception $e) {
                 info('exception in checkout', [$e]);
-                Session::flash('message', 'Could not initiate checkout.');
+                Session::flash('message.error', 'Could not initiate checkout.');
 
                 return back();
             }

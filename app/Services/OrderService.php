@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\PurchasePool;
 use App\Models\StorageOrder;
 use App\Models\User;
+use App\Models\Warehouse;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -52,7 +53,6 @@ class OrderService
         }
 
         if ($storageNeeded) {
-            // Find a default warehouse or implement logic to select one
             $defaultWarehouse = Warehouse::where('is_active', true)->orderBy('id')->first();
             if (! $defaultWarehouse) {
                 Log::error('No active default warehouse found for creating storage order.', ['product_id' => $productId]);
