@@ -45,7 +45,7 @@ class StripeEventListener
 
             $isSubscription = data_get($session, 'mode') === 'subscription';
 
-            if ($isSubscription){
+            if ($isSubscription) {
                 return;
             }
 
