@@ -36,7 +36,8 @@ class LogService
             'exception_type' => get_class($exception),
             'exception_message' => $exception->getMessage(),
             'exception_trace' => $exception->getTraceAsString(),
-            'context' => $context,
+            // TODO: add context
+            // 'context' => $context,
         ]);
     }
 }

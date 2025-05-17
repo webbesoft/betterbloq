@@ -20,9 +20,10 @@ class StoreOrderRequest extends FormRequest
          * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
          */
         return [
-            'product_id' => 'required|integer|exists:products,id',
+            'product_id' => 'sometimes',
             'quantity' => 'required|integer',
             'expected_delivery_date' => 'required|date',
+            'purchase_pool_id' => 'sometimes|integer',
         ];
     }
 }

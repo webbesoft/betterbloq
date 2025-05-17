@@ -75,7 +75,6 @@ class PurchasePoolResource extends Resource
                     ->required()
                     ->searchable()
                     ->helperText('Select the product. The vendor will be associated automatically.'),
-
             ]);
     }
 

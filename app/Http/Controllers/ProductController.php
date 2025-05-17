@@ -80,7 +80,9 @@ class ProductController extends Controller
         $canRate = $request->user()
                && $request->user()->hasVerifiedEmail()
                && is_null($userRating)
-               && $request->user()->orders()->where('product_id', $product->id)->exists();
+                && $request->user()->orders()->whereHas('lineItems', function ($query) use ($product) {
+                    $query->where('product_id', $product->id);
+                })->exists();
 
         $now = Carbon::now();
         $activePool = Cache::remember("pool_{$product->id}", 600, function () use ($product, $now) {

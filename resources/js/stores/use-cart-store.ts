@@ -38,7 +38,7 @@ export const useCartStore = create<CartState & CartActions>()(
 
                 if (!productVendorId) {
                     console.error('Product is missing Vendor ID', product);
-                    return; // Or handle error appropriately
+                    return;
                 }
 
                 const existingItemIndex = items.findIndex((item) => item.id === product.id);
@@ -75,7 +75,7 @@ export const useCartStore = create<CartState & CartActions>()(
                 let vendorName: string | null = null;
                 set((state) => {
                     const newItems = state.items.filter((item) => item.id !== productId);
-                    // If items remain, keep the current vendor info from the first remaining item
+
                     if (newItems.length > 0) {
                         vendorId = newItems[0].vendor_id ?? newItems[0].vendor.id; // Adjust based on your type
                         vendorName = newItems[0].vendor_name ?? newItems[0].vendor.name; // Adjust based on your type
@@ -86,13 +86,13 @@ export const useCartStore = create<CartState & CartActions>()(
                         currentVendorName: vendorName,
                     };
                 });
-                // Recalculate date (will become null if items are empty)
+
                 get()._recalculateDeliveryDate();
             },
 
             updateQuantity: (productId, quantity) => {
                 if (quantity < 1) {
-                    get().removeItem(productId); // removeItem now handles clearing vendor info if needed
+                    get().removeItem(productId);
                     return;
                 }
 
@@ -106,22 +106,15 @@ export const useCartStore = create<CartState & CartActions>()(
                 set({
                     items: [],
                     currentVendorId: null,
-                    currentVendorName: null, // Clear vendor name too
+                    currentVendorName: null,
                     expectedDeliveryDate: null,
                 });
             },
         }),
         // --- PERSISTENCE CONFIGURATION ---
         {
-            name: 'shopping-cart-storage', // Key name in localStorage
-            storage: createJSONStorage(() => localStorage), // Use localStorage adapter
-            // Optional: You can choose which parts of the state to persist
-            // partialize: (state) => ({ items: state.items, currentVendorId: state.currentVendorId, /* ... */ }),
-            // Optional: Handle migration if your state shape changes over time
-            // version: 1, // State version number
-            // migrate: (persistedState, version) => { /* ... migration logic ... */ },
-            // Note: The default JSON storage handles Date -> ISO string conversion,
-            // but reading requires parsing back to Date object where needed (e.g., in components).
+            name: 'shopping-cart-storage',
+            storage: createJSONStorage(() => localStorage),
         },
-    ), // End persist middleware
-); // End create call
+    ),
+);

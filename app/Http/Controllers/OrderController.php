@@ -26,7 +26,7 @@ class OrderController extends Controller
 
             return $ordersQuery
                 ->where('user_id', $request->user()->id)
-                ->with(['product', 'purchasePool', 'vendor', 'product.category', 'purchasePool.purchasePoolTiers'])
+                ->with(['lineItems', 'vendor', 'lineItems.product.category', 'lineItems.purchasePool.purchasePoolTiers'])
                 ->paginate(10);
         });
 
@@ -37,7 +37,7 @@ class OrderController extends Controller
 
     public function show(Request $request, Order $order)
     {
-        $order->load(['product', 'purchasePool', 'vendor', 'purchasePool.purchasePoolTiers']);
+        $order->load(['lineItems', 'lineItems.product', 'vendor', 'lineItems.purchasePool.purchasePoolTiers']);
 
         return Inertia::render('shop/orders/show', [
             'order' => new OrderResource($order),
@@ -88,7 +88,7 @@ class OrderController extends Controller
 
         $orderResponse = OrderService::createOrder($user, $serviceData);
 
-        if (! data_get($orderResponse, 'error')) {
+        if (! data_get($orderResponse, 'error') && ! is_null($orderResponse)) {
             return Inertia::render('shop/payment-pending', [
                 'url' => data_get($orderResponse, 'url'),
             ]);

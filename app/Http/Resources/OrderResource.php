@@ -27,8 +27,8 @@ class OrderResource extends JsonResource
             //            'created_at' => $this->created_at?->toIso8601String(), // Format timestamp
             //            'updated_at' => $this->updated_at?->toIso8601String(), // Format timestamp
 
-            'product' => new ProductResource($this->whenLoaded('product')),
-            'purchase_pool' => new PurchasePoolResource($this->whenLoaded('purchasePool')),
+            'product' => new ProductResource($this->whenLoaded('lineItems.product')) ?? null,
+            'purchase_pool' => new PurchasePoolResource($this->whenLoaded('lineItems.purchasePool')),
             'vendor' => new VendorResource($this->whenLoaded('vendor')),
         ];
     }

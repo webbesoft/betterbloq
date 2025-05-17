@@ -14,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import LandingLayout from '@/layouts/landing-layout';
 import { formatDate, parseAndCompareDates } from '@/lib/helpers';
@@ -22,13 +21,13 @@ import { useCartStore } from '@/stores/use-cart-store';
 import { Auth } from '@/types';
 import { CartItem } from '@/types/cart';
 import { Product, UserRating } from '@/types/model-types';
-import { Textarea } from '@headlessui/react';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Calendar, CheckCircle, ExternalLink, Info, PackageSearch, ShoppingCart, Star, Tag, Users } from 'lucide-react';
+import { CheckCircle, ExternalLink, Info, PackageSearch, ShoppingCart } from 'lucide-react';
 import { FormEventHandler, useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { CountdownTimer } from './components/countdown-timer';
+import { PurchasePoolInfo } from './components/product/purchase-pool-info';
+import { ProductRating } from './components/product/ratings/product-rating';
 import { RatingStars } from './components/rating-stars';
 
 const breadcrumbs = [
@@ -36,7 +35,7 @@ const breadcrumbs = [
     { title: 'Product Details', href: '#' },
 ];
 
-interface ProductData {
+export interface ProductData {
     data: Product;
 }
 
@@ -67,7 +66,7 @@ interface PurchasePoolTierData {
     max_volume?: number | null;
 }
 
-interface ActivePurchasePoolData {
+export interface ActivePurchasePoolData {
     id: number;
     status: string;
     end_date?: string | null;
@@ -149,17 +148,6 @@ export default function ProductPage(props: ProductProps) {
 
         const targetRoute = getSubmitRoute();
 
-        const dataToSend: Partial<OrderForm> = activePurchasePool
-            ? {
-                  product_id: formdata.product_id,
-                  quantity: formdata.quantity,
-                  expected_delivery_date: formdata.expected_delivery_date,
-                  purchase_pool_id: activePurchasePool.id,
-              }
-            : {
-                  product_id: formdata.product_id,
-              };
-
         post(targetRoute, {
             preserveScroll: true,
             preserveState: true,
@@ -174,37 +162,6 @@ export default function ProductPage(props: ProductProps) {
                 console.error('Form submission error:', formErrors);
             },
         });
-    };
-
-    const {
-        data: ratingData,
-        setData: setRatingData,
-        post: postRating,
-        processing: processingRating,
-        errors: ratingErrors,
-        reset: resetRating,
-    } = useForm({
-        rating: userRating?.rating || 0,
-        comment: userRating?.comment || '',
-    });
-
-    const [hoverRating, setHoverRating] = useState(0);
-
-    const handleRatingSubmit: FormEventHandler = (e) => {
-        e.preventDefault();
-        if (ratingData.rating > 0) {
-            postRating(route('products.ratings.store', productData.id), {
-                preserveScroll: true,
-                onSuccess: () => {
-                    resetRating('comment');
-                },
-                onError: (errs) => {
-                    console.error('Rating submission error:', errs);
-                },
-            });
-        } else {
-            console.error('Please select a star rating.');
-        }
     };
 
     const handleAddToCartClick = () => {
@@ -226,7 +183,6 @@ export default function ProductPage(props: ProductProps) {
             for (let i = 0; i < quantityToAdd; i++) {
                 addItemToCart(cartProduct);
             }
-            console.log(`${cartProduct.name} (x${quantityToAdd}) added to cart.`);
         }
     };
 
@@ -240,7 +196,6 @@ export default function ProductPage(props: ProductProps) {
         }
         setShowConfirmDialog(false);
         setProductToAdd(null);
-        console.log(`Cart cleared and ${productToAdd.name} (x${quantityToAdd}) added.`);
     };
 
     const getFormButtonText = () => {
@@ -249,48 +204,6 @@ export default function ProductPage(props: ProductProps) {
             return `Order Now & Join Pool (${currentDiscountPercent}% Off)`;
         }
         return 'Place Order';
-    };
-
-    const getFormButton = () => {
-        // 0. if no user
-        if (!props.auth?.user) {
-            return (
-                <div className={'bg-secondary/50 flex flex-col items-center justify-start gap-2 rounded-md border p-4 text-center'}>
-                    <p className={'text-foreground/80 text-sm font-medium'}>
-                        <Info className="mr-1 inline h-4 w-4" />
-                        You must be logged in to place an order.
-                    </p>
-                    <Link href={route('login')} className={'link text-sm'}>
-                        Login
-                    </Link>
-                </div>
-            );
-        }
-
-        if (activePurchasePool && hasOrder) {
-            return (
-                <div
-                    className={
-                        'flex flex-col items-center justify-start gap-2 rounded-md border bg-green-100 p-4 text-center text-green-700 dark:bg-green-900 dark:text-green-300'
-                    }
-                >
-                    <CheckCircle className="mb-2 inline h-6 w-6" />
-                    <p className={'text-sm font-medium'}>You have already placed an order for this product in the active purchase pool.</p>
-                </div>
-            );
-        }
-
-        return (
-            <div className={'flex flex-col items-center justify-start gap-2 rounded-md p-4 text-center'}>
-                <Button type="submit" className="mt-auto w-full" disabled={processing || !activePurchasePool}>
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    {processing ? 'Placing Order...' : `Order Now & Join Pool (${currentDiscountPercent}% Off)`}
-                </Button>
-                {!formdata.expected_delivery_date && activePurchasePool && (
-                    <p className="text-destructive mt-1 text-xs">Please select your preferred delivery date to order.</p>
-                )}
-            </div>
-        );
     };
 
     const currentDiscountPercent = activePurchasePool?.current_tier?.discount_percentage ?? 0;
@@ -303,125 +216,6 @@ export default function ProductPage(props: ProductProps) {
         return discountedPricePerUnit * formdata.quantity;
     }, [discountedPricePerUnit, formdata.quantity]);
 
-    const renderPurchasePoolInfo = () => {
-        if (!activePurchasePool) {
-            return (
-                <div className="border-border mt-6 rounded-md border border-dashed p-6 text-center">
-                    <Info className="text-muted-foreground mx-auto mb-3 h-8 w-8" />
-                    <p className="text-muted-foreground text-base">No active purchase pool currently available for this product.</p>
-                </div>
-            );
-        }
-
-        const { current_volume, tiers, current_tier, end_date, max_orders, target_delivery_date, target_volume } = activePurchasePool;
-        const progressPercent = target_volume > 0 ? Math.min(100, (current_volume / target_volume) * 100) : 0;
-        const nextTier = tiers.find((tier) => tier.min_volume > current_volume && tier.id !== current_tier?.id);
-
-        return (
-            <div className="from-background to-secondary/20 mt-6 space-y-6 rounded-lg border bg-gradient-to-br p-6 shadow-sm">
-                <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
-                    <h2 className="flex items-center gap-3 text-xl font-semibold lg:text-2xl">
-                        <Users className="text-primary h-6 w-6" /> Active Purchase Pool
-                    </h2>
-                    <Badge variant="default" className="text-sm">
-                        Active
-                    </Badge>
-                </div>
-
-                {end_date && (
-                    <div className="bg-primary/10 text-primary-foreground rounded-md p-4 text-center">
-                        <p className="text-primary mb-1 text-sm font-medium">Pool Closes In:</p>
-                        <CountdownTimer endDate={end_date} />
-                    </div>
-                )}
-
-                {target_volume > 0 && (
-                    <div className="space-y-2">
-                        <div className="text-muted-foreground mb-1 flex justify-between text-sm font-medium">
-                            <span>
-                                Current Volume: {current_volume} / {target_volume} {productData.unit}s
-                            </span>
-                            {nextTier && (
-                                <span>
-                                    Next Tier at {nextTier.min_volume} {productData.unit}s
-                                </span>
-                            )}
-                        </div>
-                        <Progress value={progressPercent} className="h-3 w-full" />
-                        {nextTier && (
-                            <p className="text-muted-foreground mt-1 text-right text-xs">
-                                {Math.max(0, nextTier.min_volume - current_volume)} more {productData.unit}s needed for {nextTier.discount_percentage}
-                                % discount
-                            </p>
-                        )}
-                        {current_tier && !nextTier && progressPercent === 100 && (
-                            <p className="text-primary mt-1 text-right text-sm font-semibold">Target volume reached! Discount locked in.</p>
-                        )}
-                    </div>
-                )}
-                {!target_volume && ( // Fallback if target_volume is not set, though it should be for progress
-                    <p className="text-muted-foreground text-sm">
-                        Current Volume: {current_volume} {productData.unit}s
-                    </p>
-                )}
-
-                <div className="space-y-3">
-                    <p className="text-foreground text-md font-semibold">Discount Tiers:</p>
-                    <ul className="list-none space-y-2">
-                        {tiers.map((tier) => (
-                            <li
-                                key={tier.id}
-                                className={`flex items-start gap-3 rounded-md border p-3 transition-all ${current_tier?.id === tier.id ? 'border-primary bg-primary/5 shadow-md' : 'border-border hover:bg-muted/50'}`}
-                            >
-                                {current_tier?.id === tier.id ? (
-                                    <CheckCircle className="text-primary mt-0.5 h-5 w-5 flex-shrink-0" />
-                                ) : (
-                                    <Tag className="text-muted-foreground mt-0.5 h-5 w-5 flex-shrink-0" />
-                                )}
-                                <div className="flex-grow">
-                                    <span className={`font-medium ${current_tier?.id === tier.id ? 'text-primary' : 'text-foreground'}`}>
-                                        {tier.discount_percentage}% off
-                                    </span>
-                                    <span className="text-muted-foreground block text-sm">
-                                        at {Number(tier.min_volume).toFixed(0)}
-                                        {tier.max_volume ? ` - ${Number(tier.max_volume).toFixed(0)} ${productData.unit}s` : `+ ${productData.unit}s`}
-                                    </span>
-                                    {tier.description && <p className="text-muted-foreground/80 mt-1 text-xs">{tier.description}</p>}
-                                </div>
-                                {current_tier?.id === tier.id && (
-                                    <Badge variant="outline" className="border-primary text-primary ml-auto self-center whitespace-nowrap">
-                                        Current Tier
-                                    </Badge>
-                                )}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-
-                <div className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-                    {target_delivery_date && (
-                        <div className="text-muted-foreground flex items-center gap-2">
-                            <Calendar className="h-4 w-4 flex-shrink-0" />
-                            <div>
-                                <span>Target Delivery: </span>
-                                <span className="text-foreground font-medium">{formatDate(target_delivery_date)}</span>
-                            </div>
-                        </div>
-                    )}
-                    {activePurchasePool.min_orders_for_discount > 0 && ( // Example of another piece of info
-                        <div className="text-muted-foreground flex items-center gap-2">
-                            <Users className="h-4 w-4 flex-shrink-0" />
-                            <div>
-                                <span>Min Orders for Discount: </span>
-                                <span className="text-foreground font-medium">{activePurchasePool.min_orders_for_discount}</span>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    };
-
     const isActionAreaDisabled = !props.auth?.user || (activePurchasePool && hasOrder);
 
     return (
@@ -430,22 +224,6 @@ export default function ProductPage(props: ProductProps) {
             {/* Pass auth to LandingLayout */}
             <Head title={productData.name} />
             <div className="container mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-                {/* Flash Messages */}
-                {flash.message && (flash.message.success || flash.message.error || flash.message.message) && (
-                    <div
-                        className={`mb-6 rounded-md p-4 text-sm font-medium ${
-                            flash.message.success
-                                ? 'border border-green-300 bg-green-100 text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300'
-                                : flash.message.error
-                                  ? 'border border-red-300 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300'
-                                  : 'border border-blue-300 bg-blue-100 text-blue-700 dark:border-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                        }`}
-                        role="alert"
-                    >
-                        {flash.message.success || flash.message.error || flash.message.message}
-                    </div>
-                )}
-
                 {/* Main Product Section */}
                 <div className="space-y-8">
                     {/* Product Images & Key Info */}
@@ -548,6 +326,16 @@ export default function ProductPage(props: ProductProps) {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Purchase Pool Details (Full) */}
+                        {activePurchasePool && (
+                            <section aria-labelledby="purchase-pool-details-heading" className="pt-6">
+                                <h2 id="purchase-pool-details-heading" className="sr-only">
+                                    Purchase Pool Details
+                                </h2>{' '}
+                                <PurchasePoolInfo activePurchasePool={activePurchasePool} product={productData} />
+                            </section>
+                        )}
                     </section>
 
                     <Separator />
@@ -718,16 +506,6 @@ export default function ProductPage(props: ProductProps) {
                         </Card>
                     </section>
 
-                    {/* Purchase Pool Details (Full) */}
-                    {activePurchasePool && (
-                        <section aria-labelledby="purchase-pool-details-heading" className="pt-6">
-                            <h2 id="purchase-pool-details-heading" className="sr-only">
-                                Purchase Pool Details
-                            </h2>{' '}
-                            {/* Screen reader only heading as renderPurchasePoolInfo has its own title */}
-                            {renderPurchasePoolInfo()}
-                        </section>
-                    )}
                     {!activePurchasePool &&
                         props.auth?.user && ( // Show if no active pool and user is logged in
                             <section aria-labelledby="request-pool-heading" className="pt-6">
@@ -745,57 +523,7 @@ export default function ProductPage(props: ProductProps) {
                         <h2 id="ratings-reviews-heading" className="text-xl font-semibold text-gray-900 lg:text-2xl dark:text-gray-50">
                             Ratings & Reviews
                         </h2>
-                        {canRate && (
-                            <Card className="shadow-md">
-                                <CardHeader>
-                                    <CardTitle className="text-lg">Rate this product</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <form onSubmit={handleRatingSubmit} className="space-y-4">
-                                        <div>
-                                            <Label htmlFor="rating" className="mb-1 block text-sm font-medium">
-                                                Your Rating
-                                            </Label>
-                                            <div className="flex items-center">
-                                                {[1, 2, 3, 4, 5].map((star) => (
-                                                    <Star
-                                                        key={star}
-                                                        className={`cursor-pointer transition-colors ${(hoverRating || ratingData.rating) >= star ? 'text-yellow-400 hover:text-yellow-500' : 'text-gray-300 hover:text-gray-400'}`}
-                                                        fill={(hoverRating || ratingData.rating) >= star ? 'currentColor' : 'none'}
-                                                        size={28}
-                                                        onClick={() => setRatingData('rating', star)}
-                                                        onMouseEnter={() => setHoverRating(star)}
-                                                        onMouseLeave={() => setHoverRating(0)}
-                                                        aria-label={`Rate ${star} out of 5 stars`}
-                                                    />
-                                                ))}
-                                            </div>
-                                            {ratingErrors.rating && (
-                                                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{ratingErrors.rating}</p>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="comment" className="text-sm font-medium">
-                                                Your Comment (Optional)
-                                            </Label>
-                                            <Textarea
-                                                id="comment"
-                                                value={ratingData.comment}
-                                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setRatingData('comment', e.target.value)}
-                                                className="border-input focus:border-primary focus:ring-primary mt-1 block w-full rounded-md border p-2 shadow-sm sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-50"
-                                                rows={4}
-                                            />
-                                            {ratingErrors.comment && (
-                                                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{ratingErrors.comment}</p>
-                                            )}
-                                        </div>
-                                        <Button type="submit" disabled={processingRating || ratingData.rating === 0}>
-                                            {processingRating ? 'Submitting...' : 'Submit Rating'}
-                                        </Button>
-                                    </form>
-                                </CardContent>
-                            </Card>
-                        )}
+                        {canRate && <ProductRating product={productData} userRating={userRating} />}
 
                         {!canRate && userRating && (
                             <Card className="shadow-md">
@@ -809,13 +537,10 @@ export default function ProductPage(props: ProductProps) {
                                             "{userRating.comment}"
                                         </p>
                                     )}
-                                    {/* Optionally add an "Edit Rating" button here if functionality exists */}
                                 </CardContent>
                             </Card>
                         )}
 
-                        {/* Display existing reviews if available (not in original code structure but good for a product page) */}
-                        {/* This would typically come from productData.reviews or similar */}
                         {productData.ratings_count > 0 && !userRating && !canRate && (
                             <p className="text-muted-foreground">
                                 Product has {productData.ratings_count} ratings. Login to see if you can rate it or view your past rating.

@@ -59,7 +59,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/user/settings/complete-guide', [UserSettingsController::class, 'markSetupGuideComplete'])
             ->name('user.settings.completeGuide');
 
-        Route::get('cart', [CartController::class, 'index'])->name('cart.view');
+        Route::get('cart', [CartController::class, 'index'])->name('cart.show');
 
         // invoicing
         Route::get('/invoice/orders/{order}/download', [InvoiceController::class, 'show'])

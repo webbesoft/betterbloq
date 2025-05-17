@@ -48,8 +48,7 @@ class DashboardController extends Controller
             $activeOrderPoolIds = Order::where('user_id', $userId)
                 ->where('status', 'completed')
                 ->whereNotNull('purchase_pool_id')
-                ->distinct()
-                ->pluck('purchase_pool_id');
+                ->distinct();
 
             $activePoolsProgress = [];
             if ($activeOrderPoolIds->isNotEmpty()) {

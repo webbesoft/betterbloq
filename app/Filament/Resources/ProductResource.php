@@ -7,6 +7,7 @@ use App\Filament\Resources\ProductResource\RelationManagers\ImagesRelationManage
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Vendor;
+use BulkCreatePurchasePoolsAction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -127,6 +128,7 @@ class ProductResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                     Tables\Actions\ForceDeleteBulkAction::make(),
                     Tables\Actions\RestoreBulkAction::make(),
+                    BulkCreatePurchasePoolsAction::make(),
                 ]),
             ]);
     }

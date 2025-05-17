@@ -135,4 +135,38 @@ class PurchasePool extends Model
 
         return null;
     }
+
+    /**
+     * Calculate the target delivery date based on end date, product, and vendor.
+     *
+     * @param  string|Carbon  $endDateInput  The end date of the purchase pool.
+     * @param  int|Product  $productOrProductId  The Product model instance or its ID.
+     * @return Carbon|null The calculated target delivery date as a Carbon instance, or null on failure.
+     */
+    public static function calculateTargetDeliveryDate($endDateInput, $productOrProductId): ?Carbon
+    {
+        try {
+            $endDate = Carbon::parse($endDateInput);
+        } catch (\Exception $e) {
+            return null;
+        }
+
+        $product = $productOrProductId instanceof Product ? $productOrProductId : Product::find($productOrProductId);
+
+        if (! $product) {
+            return null;
+        }
+
+        $vendor = $product->vendor;
+
+        if (! $vendor) {
+            return null;
+        }
+
+        $prepTimeDays = $vendor->prep_time ?? 0;
+        $deliveryTimeDays = $product->delivery_time ?? 0;
+
+        // Calculate the target delivery date
+        return $endDate->addDays((int) $prepTimeDays + (int) $deliveryTimeDays);
+    }
 }

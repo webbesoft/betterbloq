@@ -16,6 +16,7 @@ class StorageOrder extends Model
         'user_id',
         'warehouse_id',
         'order_id',
+        'payment_intent_id',
         'requested_storage_start_date',
         'requested_storage_duration_estimate',
         'preliminary_storage_cost_estimate',

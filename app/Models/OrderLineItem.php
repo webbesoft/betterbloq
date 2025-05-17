@@ -17,6 +17,7 @@ class OrderLineItem extends Model
         'purchase_pool_id',
         'price_per_unit',
         'total_price',
+        'quantity',
     ];
 
     public function order(): BelongsTo
@@ -29,7 +30,7 @@ class OrderLineItem extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function puchasePool(): BelongsTo
+    public function purchasePool(): BelongsTo
     {
         return $this->belongsTo(PurchasePool::class);
     }
