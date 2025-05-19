@@ -10,13 +10,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { getOrderPaymentStatusText } from '@/helpers/orders-helper';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Order } from '@/types/model-types';
+import { Head, Link, router } from '@inertiajs/react';
 import { ChevronDown, ChevronDownSquare, EyeIcon } from 'lucide-react';
 import React, { useState } from 'react';
-import { Order, PurchasePool } from '@/types/model-types';
-
-
 
 interface Props {
     orders: {
@@ -29,8 +28,7 @@ interface Props {
     };
 }
 
-export default function Index({ orders: initialOrders }: Props) {
-    const { props } = usePage();
+export default function Index(props: Props) {
     const { orders } = props;
 
     const [search, setSearch] = useState('');
@@ -39,15 +37,7 @@ export default function Index({ orders: initialOrders }: Props) {
         status?: string;
         purchase_pool_id?: string;
     }>({});
-    const [columns, setColumns] = useState([
-        'id',
-        'name',
-        'email',
-        'phone',
-        'status',
-        'purchase_pool',
-        'actions',
-    ]);
+    const [columns, setColumns] = useState(['id', 'name', 'email', 'phone', 'status', 'purchase_pool', 'actions']);
 
     const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(event.target.value);
@@ -67,9 +57,7 @@ export default function Index({ orders: initialOrders }: Props) {
     };
 
     const toggleColumn = (column: string) => {
-        setColumns((prevColumns) =>
-            prevColumns.includes(column) ? prevColumns.filter((c) => c !== column) : [...prevColumns, column]
-        );
+        setColumns((prevColumns) => (prevColumns.includes(column) ? prevColumns.filter((c) => c !== column) : [...prevColumns, column]));
     };
 
     const paginationLinks = () => {
@@ -80,7 +68,7 @@ export default function Index({ orders: initialOrders }: Props) {
                 links.push(
                     <PaginationItem key={i} active={link.active}>
                         <Link href={link.url}>{link.label}</Link>
-                    </PaginationItem>
+                    </PaginationItem>,
                 );
             } else if (link.label === '...') {
                 links.push(<span key={i}>...</span>);
@@ -160,7 +148,10 @@ export default function Index({ orders: initialOrders }: Props) {
                                 <DropdownMenuCheckboxItem checked={columns.includes('status')} onCheckedChange={() => toggleColumn('status')}>
                                     Status
                                 </DropdownMenuCheckboxItem>
-                                <DropdownMenuCheckboxItem checked={columns.includes('purchase_pool')} onCheckedChange={() => toggleColumn('purchase_pool')}>
+                                <DropdownMenuCheckboxItem
+                                    checked={columns.includes('purchase_pool')}
+                                    onCheckedChange={() => toggleColumn('purchase_pool')}
+                                >
                                     Purchase Pool
                                 </DropdownMenuCheckboxItem>
                             </DropdownMenuContent>
@@ -175,11 +166,6 @@ export default function Index({ orders: initialOrders }: Props) {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            {columns.includes('id') && (
-                                <TableHead className="cursor-pointer" onClick={() => handleSort('id')}>
-                                    ID {sort === 'id' ? '↑' : sort === '-id' ? '↓' : ''}
-                                </TableHead>
-                            )}
                             {columns.includes('name') && (
                                 <TableHead className="cursor-pointer" onClick={() => handleSort('name')}>
                                     Name {sort === 'name' ? '↑' : sort === '-name' ? '↓' : ''}
@@ -187,12 +173,12 @@ export default function Index({ orders: initialOrders }: Props) {
                             )}
                             {columns.includes('email') && (
                                 <TableHead className="cursor-pointer" onClick={() => handleSort('email')}>
-                                    Email {sort === 'email' ? '↑' : sort === '-email' ? '↓' : ''}
+                                    Customer Email {sort === 'email' ? '↑' : sort === '-email' ? '↓' : ''}
                                 </TableHead>
                             )}
                             {columns.includes('phone') && (
                                 <TableHead className="cursor-pointer" onClick={() => handleSort('phone')}>
-                                    Phone {sort === 'phone' ? '↑' : sort === '-phone' ? '↓' : ''}
+                                    Customer Phone {sort === 'phone' ? '↑' : sort === '-phone' ? '↓' : ''}
                                 </TableHead>
                             )}
                             {columns.includes('status') && (
@@ -200,23 +186,16 @@ export default function Index({ orders: initialOrders }: Props) {
                                     Status {sort === 'status' ? '↑' : sort === '-status' ? '↓' : ''}
                                 </TableHead>
                             )}
-                            {columns.includes('purchase_pool') && <TableHead>Purchase Pool</TableHead>}
                             {columns.includes('actions') && <TableHead>Actions</TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {orders.data.map((order: Order) => (
                             <TableRow key={order.id}>
-                                {columns.includes('id') && <TableCell>{order.id}</TableCell>}
-                                {columns.includes('name') && <TableCell>{order.name}</TableCell>}
+                                {columns.includes('name') && <TableCell>#{order.id}</TableCell>}
                                 {columns.includes('email') && <TableCell>{order.email}</TableCell>}
                                 {columns.includes('phone') && <TableCell>{order.phone}</TableCell>}
-                                {columns.includes('status') && <TableCell>{order.status}</TableCell>}
-                                {columns.includes('purchase_pool') && (
-                                    <TableCell>
-                                        {order.purchase_pool?.id || 'N/A'}
-                                    </TableCell>
-                                )}
+                                {columns.includes('status') && <TableCell>{getOrderPaymentStatusText(order.status)}</TableCell>}
                                 {columns.includes('actions') && (
                                     <TableCell>
                                         <div className="flex items-center space-x-2">

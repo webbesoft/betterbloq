@@ -1,23 +1,25 @@
-import { Head, Link, usePage } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
-import { format } from 'date-fns';
-import {
-    CalendarIcon,
-    CheckCircleIcon, DownloadIcon, Flag,
-    HomeIcon,
-    PackageIcon,
-    ShoppingCartIcon,
-    StoreIcon,
-    TagIcon,
-    TruckIcon,
-    UserIcon
-} from 'lucide-react';
-import { Order } from '@/types/model-types';
-import AppLayout from '@/layouts/app-layout';
 import { Card } from '@/components/ui/card';
+import { formatPrice, getOrderPaymentStatusText } from '@/helpers/orders-helper';
+import AppLayout from '@/layouts/app-layout';
+import { Order } from '@/types/model-types';
+import { Head } from '@inertiajs/react';
+import {
+    Ban,
+    CheckCircle,
+    CheckCircleIcon,
+    CircleDot,
+    CreditCard,
+    DownloadIcon,
+    HomeIcon,
+    Hourglass,
+    Loader,
+    TagIcon,
+    UserIcon,
+    XCircle,
+} from 'lucide-react';
+import OrderLineItemsList from '../components/order/order-line-items';
 
 interface ShowOrderProps {
     order: {
@@ -28,22 +30,72 @@ interface ShowOrderProps {
 export default function OrderView(props: ShowOrderProps) {
     const { data } = props.order;
 
-    const purchasePoolProgress = data.purchase_pool
-        ? (parseFloat(data.purchase_pool.current_volume) / parseFloat(data.purchase_pool.target_volume)) * 100
-        : 0;
+    // const purchasePoolProgress = data.purchase_pool
+    //     ? (parseFloat(data.purchase_pool.current_volume) / parseFloat(data.purchase_pool.target_volume)) * 100
+    //     : 0;
 
     const getOrderStatusBadge = (status: string) => {
+        // options: 'created', 'payment_authorized', 'pending_finalization', 'processing_capture', 'completed', 'capture_failed', 'cancelled'
         switch (status.toLowerCase()) {
-            case 'pending':
-                return <Badge variant="secondary">{status}</Badge>;
-            case 'processing':
-                return <Badge variant="default">{status}</Badge>;
+            case 'created':
+                return (
+                    <Badge variant="default">
+                        <CircleDot className="mr-1 h-3 w-3" />
+                        Created
+                    </Badge>
+                );
+            case 'payment_authorized':
+                return (
+                    <Badge variant="secondary">
+                        <CreditCard className="mr-1 h-3 w-3" />
+                        Authorized
+                    </Badge>
+                );
+            case 'pending_finalization':
+                return (
+                    <Badge variant="outline">
+                        <Hourglass className="mr-1 h-3 w-3" />
+                        Pending Finalization
+                    </Badge>
+                );
+            case 'processing_capture':
+                return (
+                    <Badge variant="secondary">
+                        <Loader className="mr-1 h-3 w-3 animate-spin" />
+                        Processing Capture
+                    </Badge>
+                );
             case 'completed':
-                return <Badge variant="outline">{status}</Badge>;
+                return (
+                    <Badge variant="default" color="green">
+                        {' '}
+                        <CheckCircle className="mr-1 h-3 w-3" />
+                        Completed
+                    </Badge>
+                );
+            case 'capture_failed':
+                return (
+                    <Badge variant="destructive">
+                        <XCircle className="mr-1 h-3 w-3" />
+                        Failed
+                    </Badge>
+                );
             case 'cancelled':
-                return <Badge variant="destructive">{status}</Badge>;
+                return (
+                    <Badge variant="destructive">
+                        <Ban className="mr-1 h-3 w-3" />
+                        Cancelled
+                    </Badge>
+                );
             default:
-                return <Badge>{status}</Badge>;
+                return (
+                    <Badge variant="secondary">
+                        {' '}
+                        {/* Default or unknown status */}
+                        <CircleDot className="mr-1 h-3 w-3" />
+                        Unknown
+                    </Badge>
+                );
         }
     };
 
@@ -63,23 +115,23 @@ export default function OrderView(props: ShowOrderProps) {
     };
 
     return (
-        <AppLayout breadcrumbs={[{
-            title: 'Orders',
-            href: route('orders.index')
-        }]}>
-            <Head title={"Order #" + data.id} />
-            <div className="mb-2 flex justify-between items-center p-4">
+        <AppLayout
+            breadcrumbs={[
+                {
+                    title: 'Orders',
+                    href: route('orders.index'),
+                },
+            ]}
+        >
+            <Head title={'Order #' + data.id} />
+            <div className="mb-2 flex items-center justify-between p-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Order Details</h1>
                     <p className="text-gray-500 dark:text-gray-400">Order ID: #{data.id}</p>
                 </div>
 
                 <div>
-                    <a
-                        href={route('invoice.orders.download', data.id)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
+                    <a href={route('invoice.orders.download', data.id)} target="_blank" rel="noopener noreferrer">
                         <Button variant="outline" size="sm">
                             <DownloadIcon className="mr-2 h-4 w-4" />
                             Download & Email Invoice
@@ -88,27 +140,27 @@ export default function OrderView(props: ShowOrderProps) {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-4">
+            <div className="grid grid-cols-1 gap-8 p-4 lg:grid-cols-3">
                 {/* Main Content Area */}
-                <div className="lg:col-span-2 space-y-8">
+                <div className="space-y-8 lg:col-span-2">
                     {/* Order Summary */}
-                    <Card className={'shadow-xs rounded-sm p-4 bg-background'}>
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                    <Card className={'bg-background rounded-sm p-4 shadow-xs'}>
+                        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
                             <TagIcon className="h-5 w-5" /> Order Summary
                         </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div className="flex items-center gap-2">
                                 <span className="font-medium text-gray-700 dark:text-gray-300">Status:</span>
                                 {getOrderStatusBadge(data.status)}
                             </div>
-                            <div className="flex items-center gap-2">
+                            {/* <div className="flex items-center gap-2">
                                 <span className="font-medium text-gray-700 dark:text-gray-300">Quantity:</span>
                                 {data.quantity}
-                            </div>
+                            </div> */}
                             <div className="flex items-center gap-2">
                                 <span className="font-medium text-gray-700 dark:text-gray-300">Payment:</span>
                                 <Badge variant="outline" className="flex items-center gap-1">
-                                    <CheckCircleIcon className="h-4 w-4" /> Paid
+                                    <CheckCircleIcon className="h-4 w-4" /> {getOrderPaymentStatusText(data.status)}
                                 </Badge>
                             </div>
                             {/* Add created_at if you include it in the resource */}
@@ -120,76 +172,19 @@ export default function OrderView(props: ShowOrderProps) {
                     </Card>
 
                     {/* Product Details */}
-                    <Card className={'shadow-sm rounded-sm p-4 bg-background'}>
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-                            <PackageIcon className="h-5 w-5" /> Product Details
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                            {data.product?.image && (
-                                <div className="rounded-md overflow-hidden w-48 h-48">
-                                    <img src={data.product.image} alt={data.product.name} className="w-full h-full object-cover" />
-                                </div>
-                            )}
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-700 dark:text-gray-300">Name:</span>
-                                    <p className="text-gray-900 dark:text-gray-100">{data.product?.name}</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-700 dark:text-gray-300">Category:</span>
-                                    <Badge variant="secondary">{data.product?.category}</Badge>
-                                </div>
-                                {/* {orderItem?.quantity !== undefined && (
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium text-gray-700 dark:text-gray-300">Quantity:</span>
-                                        <p className="text-gray-900 dark:text-gray-100">{orderItem.quantity} {productData?.unit}</p>
-                                    </div>
-                                )} */}
-                                {/* Display the actual price paid per unit from the order item */}
-                                {/* Assuming orderItem is available and has price_per_unit */}
-                                {/* {orderItem?.price_per_unit !== undefined && data.product?.price !== undefined && (
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium text-gray-700 dark:text-gray-300">Price per Unit:</span>
-                                        {data.purchase_pool && orderItem.price_per_unit < data.product.price ? (
-                                            <div className="flex items-center gap-2">
-                                                <p className="text-lg font-semibold text-muted-foreground line-through">
-                                                    ${data.product.price.toFixed(2)}
-                                                </p>
-                                                <p className="text-xl font-bold text-primary">
-                                                    ${orderItem.price_per_unit.toFixed(2)}
-                                                </p>
-                                                {(() => {
-                                                    const discountAmount = productData.price - orderItem.price_per_unit;
-                                                    const discountPercent = (discountAmount / productData.price) * 100;
-                                                    return (
-                                                        <Badge variant="destructive" className="ml-1">-{discountPercent.toFixed(0)}%</Badge>
-                                                    );
-                                                })()}
-                                            </div>
-                                        ) : (
-                                            <p className="text-gray-900 dark:text-gray-100">
-                                                ${orderItem.price_per_unit.toFixed(2)}
-                                            </p>
-                                        )}
-                                    </div>
-                                )} */}
-
-                                {/* {orderItem?.total_price !== undefined && (
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium text-gray-700 dark:text-gray-300">Item Total:</span>
-                                        <p className="text-gray-900 dark:text-gray-100 font-bold text-lg">
-                                            ${orderItem.total_price.toFixed(2)}
-                                        </p>
-                                    </div>
-                                )} */}
-
+                    <OrderLineItemsList line_items={data.line_items} />
+                    {data.total_order_price !== undefined && (
+                        <div className="mt-4 flex justify-end border-t border-gray-200 pt-4 dark:border-gray-700">
+                            <div className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                <span>Order Total:</span>
+                                <span>{formatPrice(data.total_order_price)}</span>
                             </div>
                         </div>
-                    </Card>
+                    )}
 
                     {/* Purchase Pool Details */}
-                    <Card className={'shadow-sm rounded-sm p-4 bg-background'}>
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center justify-between gap-2">
+                    {/* <Card className={'bg-background rounded-sm p-4 shadow-sm'}>
+                        <h2 className="mb-4 flex items-center justify-between gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
                             <div className={'flex items-center justify-start gap-4'}>
                                 <ShoppingCartIcon className="h-5 w-5" /> Purchase Pool Details
                             </div>
@@ -199,7 +194,7 @@ export default function OrderView(props: ShowOrderProps) {
                                 </Link>
                             </Button>
                         </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div className="flex items-center gap-2">
                                 <CalendarIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                                 <span className="font-medium text-gray-700 dark:text-gray-300">End Date:</span>
@@ -208,10 +203,12 @@ export default function OrderView(props: ShowOrderProps) {
                             <div className="flex items-center gap-2">
                                 <TruckIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                                 <span className="font-medium text-gray-700 dark:text-gray-300">Target Delivery:</span>
-                                <p className="text-gray-900 dark:text-gray-100">{format(new Date(data.purchase_pool!.target_delivery_date), 'MM/dd/yyyy')}</p>
+                                <p className="text-gray-900 dark:text-gray-100">
+                                    {format(new Date(data.purchase_pool!.target_delivery_date), 'MM/dd/yyyy')}
+                                </p>
                             </div>
-                            <div className="col-span-full flex justify-center items-center h-32">
-                                <div className="w-24 h-24 relative">
+                            <div className="col-span-full flex h-32 items-center justify-center">
+                                <div className="relative h-24 w-24">
                                     <svg viewBox="0 0 100 100">
                                         <circle cx="50" cy="50" r="45" stroke="#e5e7eb" strokeWidth="10" fill="transparent" />
                                         <circle
@@ -226,7 +223,7 @@ export default function OrderView(props: ShowOrderProps) {
                                             strokeLinecap="round"
                                             transform="rotate(-90 50 50)"
                                         />
-                                        <text x="50" y="55" textAnchor="middle" className="font-semibold text-sm text-gray-700 dark:text-gray-300">
+                                        <text x="50" y="55" textAnchor="middle" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                             {purchasePoolProgress.toFixed(0)}%
                                         </text>
                                     </svg>
@@ -253,14 +250,14 @@ export default function OrderView(props: ShowOrderProps) {
                                 </div>
                             )}
                         </div>
-                    </Card>
+                    </Card> */}
                 </div>
 
                 {/* Side Column */}
                 <aside className="space-y-8">
                     {/* Customer Information */}
-                    <Card className={'shadow-sm rounded-sm p-4 bg-background'}>
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                    <Card className={'bg-background rounded-sm p-4 shadow-sm'}>
+                        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
                             <UserIcon className="h-5 w-5" /> Customer Information
                         </h2>
                         <div className="space-y-2">
@@ -273,7 +270,7 @@ export default function OrderView(props: ShowOrderProps) {
                                 <p className="text-gray-900 dark:text-gray-100">{data.phone}</p>
                             </div>
                             <div>
-                                <span className="font-medium flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                <span className="flex items-center gap-2 font-medium text-gray-700 dark:text-gray-300">
                                     <HomeIcon className="h-4 w-4" /> Address:
                                 </span>
                                 <p className="text-gray-900 dark:text-gray-100">
@@ -292,8 +289,8 @@ export default function OrderView(props: ShowOrderProps) {
                     </Card>
 
                     {/* Vendor Information */}
-                    <Card className={'shadow-sm rounded-sm p-4 bg-background'}>
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                    {/* <Card className={'bg-background rounded-sm p-4 shadow-sm'}>
+                        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
                             <StoreIcon className="h-5 w-5" /> Vendor Information
                         </h2>
                         <div className="space-y-2">
@@ -302,7 +299,7 @@ export default function OrderView(props: ShowOrderProps) {
                                 <p className="text-gray-900 dark:text-gray-100">{data.vendor?.name}</p>
                             </div>
                         </div>
-                    </Card>
+                    </Card> */}
                 </aside>
             </div>
         </AppLayout>

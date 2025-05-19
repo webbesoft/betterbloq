@@ -88,11 +88,6 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function purchasePool(): BelongsTo
-    {
-        return $this->belongsTo(PurchasePool::class);
-    }
-
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);
@@ -101,5 +96,10 @@ class Order extends Model
     public function lineItems(): HasMany
     {
         return $this->hasMany(OrderLineItem::class);
+    }
+
+    public function getOrderTotalAttribute(): float
+    {
+        return $this->lineItems->sum('total_price');
     }
 }

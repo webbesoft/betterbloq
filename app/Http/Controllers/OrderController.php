@@ -37,7 +37,7 @@ class OrderController extends Controller
 
     public function show(Request $request, Order $order)
     {
-        $order->load(['lineItems', 'lineItems.product', 'vendor', 'lineItems.purchasePool.purchasePoolTiers']);
+        $order->load(['lineItems', 'lineItems.product', 'vendor', 'lineItems.purchasePool', 'lineItems.purchasePool.purchasePoolTiers']);
 
         return Inertia::render('shop/orders/show', [
             'order' => new OrderResource($order),

@@ -69,29 +69,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{-- You'll need order items data. Assuming $order->orderItems relationship exists --}}
-                    {{-- Or if it's just one product per order as implied by `data.product` --}}
-                    @if($order->product)
-                        <tr>
-                            <td>{{ $order->product->name }}</td>
-                            <td>{{ $order->quantity }}</td>
-                            {{-- You NEED the price paid AT THE TIME OF ORDER. Store this on the order or order_item.
-                                 Don't rely on the current product price. Let's assume 'price_per_unit' exists on the order --}}
-                            <td>${{ number_format($order->price_per_unit ?? 0, 2) }}</td>
-                            <td>${{ number_format(($order->price_per_unit ?? 0) * $order->quantity, 2) }}</td>
-                        </tr>
-                    @else
-                        {{-- Loop through $order->orderItems if multiple items per order --}}
-                        {{-- @foreach($order->orderItems as $item)
+                    @foreach($order->lineItems as $item)
                         <tr>
                             <td>{{ $item->product->name }}</td>
                             <td>{{ $item->quantity }}</td>
                             <td>${{ number_format($item->price_per_unit, 2) }}</td>
                             <td>${{ number_format($item->total_price, 2) }}</td>
                         </tr>
-                        @endforeach --}}
-                        <tr><td colspan="4">Item details not available.</td></tr>
-                    @endif
+                    @endforeach
                 </tbody>
             </table>
         </div>

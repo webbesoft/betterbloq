@@ -113,16 +113,34 @@ export interface Order {
     name: string;
     email: string;
     phone: string;
-    address: string;
+    address: Address;
     product_id: number;
     user_id: number;
-    purchase_pool_id: number;
     status: string;
     deleted_at: string | null;
-    purchase_pool?: PurchasePool;
-    product?: Product;
+    line_items: OrderLineItem[];
     vendor?: Vendor;
+    total_order_price: number;
+}
+
+export interface Address {
+    address_line_1: string;
+    address_line_2: string;
+    provice: string;
+    postal_code: string;
+    city: string;
+    country: string;
+}
+
+export interface OrderLineItem {
+    id: number;
+    order_id: number;
+    product_id: number;
     quantity: number;
+    price_per_unit: number;
+    total_price: number;
+    product: Product;
+    purchase_pool: PurchasePool;
 }
 
 export interface PurchasePool {

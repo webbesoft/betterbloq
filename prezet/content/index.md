@@ -14,14 +14,10 @@ A. Welcome to Betterbloq!
     - A Just-In-Time (JIT) bulk purchasing platform for building materials.
 2. Who Uses This Documentation?
     - These docs are for internal use.
-3. Core Technologies Overview:
-   Laravel: The PHP framework the application is built upon.
-   Filament: The admin panel/dashboard interface used for managing the platform.
-   Stripe: The payment processing platform used for handling orders and product creation.
-   B. Accessing the System: The Filament Dashboard
-4. Eligibility for Access:
-   Only users with an "@mysite.com" email address can access the Filament dashboard.
-5. Login Procedure:
+      B. Accessing the System: The Dashboard
+3. Eligibility for Access:
+   Only users with an "@betterbloq.com" email address can access the dashboard.
+4. Login Procedure:
    Step-by-step instructions on how to log in (URL, credentials, any two-factor authentication if applicable).
    C. Core Concepts & Terminology
    A glossary or brief explanation of key terms and entities they will encounter:
@@ -39,10 +35,10 @@ A. Welcome to Betterbloq!
    Payment Intent (Stripe): Created when an order is made; finalized manually via a Filament action when the purchase pool closes.
    D. Navigating the Filament Dashboard
    (Referencing image_5e36a0.png which shows the sidebar navigation)
-6. Main Navigation Sections:
+5. Main Navigation Sections:
    General: Dashboard, Addresses, Categories, Logs, Products.
    Order Management: Orders, Purchase Pools, Purchase Pool Templates, Purchase Pool Tiers.
    Plans Management: Plan Features, Plan Limits, Plans (Note: You haven't detailed "Plans" much, so you might want to expand on this or omit if not immediately relevant for initial support tasks).
    Storage Management: Storage Order Line Items, Storage Orders, Storage Tiers.
-7. Common Actions & UI Elements:
+6. Common Actions & UI Elements:
    Brief overview of how to find create buttons, lists, edit actions, filters, etc., within Filament.

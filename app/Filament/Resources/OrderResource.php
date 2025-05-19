@@ -36,9 +36,6 @@ class OrderResource extends Resource
                 Forms\Components\TextInput::make('user_id')
                     ->required()
                     ->numeric(),
-                Forms\Components\TextInput::make('purchase_pool_id')
-                    ->required()
-                    ->numeric(),
             ]);
     }
 
@@ -53,9 +50,6 @@ class OrderResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('user_id')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('purchase_pool_id')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
