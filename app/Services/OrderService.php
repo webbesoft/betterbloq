@@ -2,7 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\OrderStatusEnum;
+use App\Models\CycleProductVolume;
+use App\Models\Order;
+use App\Models\OrderLineItem;
 use App\Models\Product;
+use App\Models\PurchaseCycle;
 use App\Models\PurchasePool;
 use App\Models\StorageOrder;
 use App\Models\User;
@@ -159,6 +164,7 @@ class OrderService
         foreach ($itemEntries as $item) {
             $productId = $item['product_id'];
             $quantity = $item['quantity'];
+            $purchaseCycleId = $item['purchase_cycle_id'];
             $product = $products->get($productId);
 
             if (! $product) {
@@ -168,7 +174,8 @@ class OrderService
             }
 
             $open_pool = PurchasePool::where('product_id', $productId)
-                ->where('status', 'active')
+                ->where('purchase_cycle_id', $purchaseCycleId)
+                ->where('cycle_status', PurchasePool::STATUS_ACCUMULATING)
                 ->first();
 
             if (! $open_pool) {
@@ -323,6 +330,7 @@ class OrderService
                 'product_name' => $data['product']->name,
                 'quantity' => $data['quantity'],
                 'purchase_pool_id' => $data['pool']->id,
+                'purchase_cycle_id' => $data['pool']->purchase_cycle_id,
                 'vendor_id' => $data['product']->vendor_id,
             ];
             $totalQuantity += $data['quantity'];
@@ -362,5 +370,135 @@ class OrderService
         }
 
         return $checkout_session_payload;
+    }
+
+    public function createOrderFromStripeSession(
+        array $session,
+        User $user,
+        array $metadata,
+        \Stripe\Collection $lineItemsFromStripe,
+        array $itemDetailsLookup
+    ): ?Order {
+        return DB::transaction(function () use ($session, $user, $metadata, $lineItemsFromStripe, $itemDetailsLookup) {
+            $mainOrder = $this->createMainOrder($session, $user, $metadata, $itemDetailsLookup);
+            if (! $mainOrder) {
+                return null;
+            }
+
+            $this->processOrderLineItems($mainOrder, $lineItemsFromStripe, $itemDetailsLookup);
+            $this->processStorageOrder($mainOrder, $metadata, $session['id']);
+
+            // TODO: Trigger events for notifications instead of direct calls
+            // event(new OrderCreated($mainOrder));
+
+            return $mainOrder;
+        });
+    }
+
+    private function createMainOrder(array $session, User $user, array $metadata, array $itemDetailsLookup): ?Order
+    {
+        // Enhanced vendor_id logic
+        $vendorId = data_get($metadata, 'vendor_id');
+        $purchaseCycleId = data_get($metadata, 'purchase_cycle_id');
+        if (! $vendorId && ! empty($itemDetailsLookup)) {
+            $firstItemDetail = reset($itemDetailsLookup); // Get the first element
+            if ($firstItemDetail && isset($firstItemDetail['vendor_id'])) {
+                $vendorId = $firstItemDetail['vendor_id'];
+            }
+        }
+
+        if (! $vendorId) {
+            Log::error('Webhook: Vendor ID could not be determined for order creation.', ['session_id' => $session['id'], 'metadata' => $metadata]);
+        }
+
+        return Order::create([
+            'user_id' => $user->id,
+            'purchase_cycle_id' => $purchaseCycleId,
+            'email' => data_get($session, 'customer_details.email') ?? $user->email,
+            'phone' => data_get($session, 'customer_details.phone') ?? '+1 (456) 7890',
+            'address' => json_encode(data_get($session, 'customer_details.address') ?? null),
+            'status' => OrderStatusEnum::PAYMENT_AUTHORIZED,
+            'stripe_session_id' => data_get($session, 'id'),
+            'payment_intent_id' => data_get($session, 'payment_intent'),
+            'initial_amount' => data_get($session, 'amount_total', 0) / 100, // Default to 0 if missing
+            'total_amount' => data_get($session, 'amount_total', 0) / 100,
+            // 'expected_delivery_date' => isset($metadata['expected_delivery_date']) ? Carbon::parse($metadata['expected_delivery_date'])->toDateString() : null,
+            'vendor_id' => $vendorId,
+        ]);
+    }
+
+    private function processOrderLineItems(Order $mainOrder, \Stripe\Collection $lineItemsFromStripe, array $itemDetailsLookup): void
+    {
+        foreach ($lineItemsFromStripe->data as $lineItem) {
+            $stripePriceId = $lineItem->price->id;
+            $product = Product::where('stripe_price_id', $stripePriceId)->first();
+
+            if (! $product) {
+                Log::warning('Webhook: Product not found for Stripe price ID.', ['stripe_price_id' => $stripePriceId, 'order_id' => $mainOrder->id]);
+
+                continue;
+            }
+
+            $purchasePoolId = null;
+            $purchaseCycleId = null;
+
+            if (isset($itemDetailsLookup[$product->id])) {
+                $matchedItemDetail = $itemDetailsLookup[$product->id];
+                $purchasePoolId = data_get($matchedItemDetail, 'purchase_pool_id');
+                $purchaseCycleId = data_get($matchedItemDetail, 'purchase_cycle_id');
+
+                if (is_null($purchasePoolId)) {
+                    info("Webhook Warning: Product ID {$product->id} in item_details metadata missing 'purchase_pool_id'.", ['matchedItemDetail' => $matchedItemDetail, 'order_id' => $mainOrder->id]);
+                }
+                if (is_null($purchaseCycleId)) {
+                    info("Webhook Warning: Product ID {$product->id} in item_details metadata missing 'purchase_cycle_id'.", ['matchedItemDetail' => $matchedItemDetail, 'order_id' => $mainOrder->id]);
+                }
+            } else {
+                info("Webhook Warning: No matching item_details metadata for product ID {$product->id}.", ['line_item_id' => $lineItem->id, 'product_id' => $product->id, 'order_id' => $mainOrder->id]);
+            }
+
+            OrderLineItem::create([
+                'order_id' => $mainOrder->id,
+                'product_id' => $product->id,
+                'quantity' => $lineItem->quantity,
+                'price_per_unit' => ($lineItem->price->unit_amount / 100),
+                'total_price' => ($lineItem->amount_total / 100),
+                'purchase_pool_id' => $purchasePoolId,
+            ]);
+
+            if ($purchasePoolId && $activePool = PurchasePool::find($purchasePoolId)) {
+                $activePool->increment('current_volume', $lineItem->quantity);
+            }
+
+            if ($purchaseCycleId && $product && $currentCycle = PurchaseCycle::find($purchaseCycleId)) {
+                $cycleProductVolume = CycleProductVolume::firstOrCreate(
+                    ['purchase_cycle_id' => $currentCycle->id, 'product_id' => $product->id],
+                    ['total_aggregated_quantity' => 0]
+                );
+                $cycleProductVolume->increment('total_aggregated_quantity', $lineItem->quantity);
+            }
+        }
+    }
+
+    private function processStorageOrder(Order $mainOrder, array $metadata, string $sessionId): void
+    {
+        $storageOrderId = data_get($metadata, 'storage_order_id');
+        $storageNeededFlag = filter_var(data_get($metadata, 'storage_needed_flag', false), FILTER_VALIDATE_BOOLEAN);
+
+        if ($storageOrderId && $storageNeededFlag) {
+            $storageOrder = StorageOrder::find($storageOrderId);
+            if ($storageOrder) {
+                $storageOrder->update([
+                    'order_id' => $mainOrder->id,
+                    'status' => 'pending_arrival',
+                ]);
+                Log::info('StorageOrder linked and updated successfully.', ['storage_order_id' => $storageOrderId, 'main_order_id' => $mainOrder->id]);
+                // TODO: Notify admin event
+            } else {
+                Log::warning('StorageOrder ID in metadata, but record not found.', ['storage_order_id' => $storageOrderId, 'session_id' => $sessionId]);
+            }
+        } elseif ($storageNeededFlag && ! $storageOrderId) {
+            Log::error('Storage needed, but no storage_order_id provided in metadata.', ['session_id' => $sessionId, 'metadata' => $metadata]);
+        }
     }
 }

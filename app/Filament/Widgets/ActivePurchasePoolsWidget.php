@@ -12,12 +12,8 @@ class ActivePurchasePoolsWidget extends BaseWidget
     protected function getStats(): array
     {
         $now = Carbon::now();
-        $activePoolsCount = PurchasePool::where('start_date', '<=', $now)
-                                       ->where('end_date', '>=', $now)
-                                       // Optionally add other status checks if needed
-                                       // ->where('status', '!=', 'completed')
-                                       // ->where('status', '!=', 'cancelled')
-                                       ->count();
+        $activePoolsCount = PurchasePool::where('cycle_status', '!=', 'cancelled')
+            ->count();
 
         return [
             Stat::make('Active Purchase Pools', $activePoolsCount)

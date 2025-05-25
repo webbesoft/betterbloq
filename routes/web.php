@@ -36,35 +36,32 @@ Route::middleware([])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    // BulkBuy app routes
-    Route::middleware(['subscribed'])->group(function () {
-        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // orders
-        Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
-        Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-        Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
-        Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
-        //        Route::get('orders', [OrderController::class, 'create'])->name('orders.create');
-        // purchase pools
-        Route::get('purchase-pools/{purchasePool}', [PurchasePoolController::class, 'show'])->name('purchase-pools.show');
-        Route::get('purchase-pools', [PurchasePoolController::class, 'index'])->name('purchase-pools.index');
-        Route::post('purchase-pools', [PurchasePoolController::class, 'store'])->name('purchase-pools.store');
-        // purchase pool requests
-        Route::post('purchase-pool-requests', [PurchasePoolRequestController::class, 'index'])->name('purchase-pool-requests.index');
-        Route::post('purchase-pool-requests', [PurchasePoolRequestController::class, 'store'])->name('purchase-pool-requests.store');
+    // orders
+    Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
+    Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
+    //        Route::get('orders', [OrderController::class, 'create'])->name('orders.create');
+    // purchase pools
+    Route::get('purchase-pools/{purchasePool}', [PurchasePoolController::class, 'show'])->name('purchase-pools.show');
+    Route::get('purchase-pools', [PurchasePoolController::class, 'index'])->name('purchase-pools.index');
+    Route::post('purchase-pools', [PurchasePoolController::class, 'store'])->name('purchase-pools.store');
+    // purchase pool requests
+    Route::post('purchase-pool-requests', [PurchasePoolRequestController::class, 'index'])->name('purchase-pool-requests.index');
+    Route::post('purchase-pool-requests', [PurchasePoolRequestController::class, 'store'])->name('purchase-pool-requests.store');
 
-        Route::resource('projects', ProjectController::class);
+    Route::resource('projects', ProjectController::class);
 
-        Route::put('/user/settings/complete-guide', [UserSettingsController::class, 'markSetupGuideComplete'])
-            ->name('user.settings.completeGuide');
+    Route::put('/user/settings/complete-guide', [UserSettingsController::class, 'markSetupGuideComplete'])
+        ->name('user.settings.completeGuide');
 
-        Route::get('cart', [CartController::class, 'index'])->name('cart.show');
+    Route::get('cart', [CartController::class, 'index'])->name('cart.show');
 
-        // invoicing
-        Route::get('/invoice/orders/{order}/download', [InvoiceController::class, 'show'])
-            ->name('invoice.orders.download');
-    });
+    // invoicing
+    Route::get('/invoice/orders/{order}/download', [InvoiceController::class, 'show'])
+        ->name('invoice.orders.download');
 
     Route::prefix('')->group(function () {
         Route::get('plans', [PlanController::class, 'index'])->name('plans.index');

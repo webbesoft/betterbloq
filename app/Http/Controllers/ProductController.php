@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\ProductResource;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\PurchaseCycle;
 use App\Models\PurchasePool;
 use App\Models\PurchasePoolRequest;
 use App\Models\PurchasePoolTier;
@@ -85,16 +86,12 @@ class ProductController extends Controller
                 })->exists();
 
         $now = Carbon::now();
-        $activePool = Cache::remember("pool_{$product->id}", 600, function () use ($product, $now) {
-            return PurchasePool::with(['purchasePoolTiers' => function ($query) {
-                $query->orderBy('min_volume', 'asc');
-            }])
-                ->where('product_id', $product->id)
-                ->where('status', PurchasePool::STATUS_ACTIVE)
-                ->where(function ($query) use ($now) {
-                    $query->whereNull('start_date')
-                        ->orWhere('start_date', '<=', $now);
-                })
+        $activeCycle = Cache::remember("pool_{$product->id}", 600, function () use ($now) {
+            return PurchaseCycle::whereIn('status', [PurchaseCycle::STATUS_ACTIVE, PurchaseCycle::STATUS_UPCOMING])
+                // ->where(function ($query) use ($now) {
+                //     $query->whereNull('start_date')
+                //         ->orWhere('start_date', '<=', $now);
+                // })
                 ->where(function ($query) use ($now) {
                     $query->whereNull('end_date')
                         ->orWhere('end_date', '>=', $now);
@@ -103,33 +100,49 @@ class ProductController extends Controller
         });
 
         $poolData = null;
-        if ($activePool) {
-            $currentTier = $this->determineCurrentTier($activePool, $activePool->current_volume);
+        $cycleData = null;
+        if ($activeCycle) {
+            $activePool = Cache::remember("pool_{$product->id}_{$activeCycle->id}", 600, function () use ($product, $activeCycle) {
+                return PurchasePool::whereIn('cycle_status', [PurchasePool::STATUS_ACCUMULATING])
+                    ->where('product_id', $product->id)
+                    ->where('purchase_cycle_id', $activeCycle->id)
+                    ->with(['purchasePoolTiers'])
+                    ->first();
+            });
 
-            $poolData = [
-                'id' => $activePool->id,
-                'status' => $activePool->status,
-                'end_date' => $activePool->end_date?->toIso8601String(),
-                'target_delivery_date' => $activePool->target_delivery_date?->toIso8601String(),
-                'min_orders_for_discount' => $activePool->min_orders_for_discount,
-                'max_orders' => $activePool->max_orders,
-                'current_volume' => $activePool->current_volume,
-                'target_volume' => $activePool->target_volume ?? 1000,
-                'tiers' => $activePool->purchasePoolTiers->map(fn ($tier) => [
-                    'id' => $tier->id,
-                    'name' => $tier->name,
-                    'description' => $tier->description,
-                    'discount_percentage' => $tier->discount_percentage,
-                    'min_volume' => $tier->min_volume,
-                    'max_volume' => $tier->max_volume,
-                ])->all(),
-                'current_tier' => $currentTier ? [
-                    'id' => $currentTier->id,
-                    'name' => $currentTier->name,
-                    'discount_percentage' => $currentTier->discount_percentage,
-                    'min_volume' => $currentTier->min_volume,
-                ] : null,
+            $cycleData = [
+                'id' => $activeCycle->id,
+                'start_date' => $activeCycle->start_date,
+                'end_date' => $activeCycle->end_date,
             ];
+
+            if ($activePool) {
+                $currentTier = $activePool->getApplicableTier();
+
+                $poolData = [
+                    'id' => $activePool->id,
+                    'cycle_status' => $activePool->cycle_status,
+                    'target_delivery_date' => $activePool->target_delivery_date?->toIso8601String(),
+                    'min_orders_for_discount' => $activePool->min_orders_for_discount,
+                    'max_orders' => $activePool->max_orders,
+                    'current_volume' => $activePool->getCurrentVolumeInCycle(),
+                    'target_volume' => $activePool->target_volume ?? 1000,
+                    'tiers' => $activePool->purchasePoolTiers->map(fn ($tier) => [
+                        'id' => $tier->id,
+                        'name' => $tier->name,
+                        'description' => $tier->description,
+                        'discount_percentage' => $tier->discount_percentage,
+                        'min_volume' => $tier->min_volume,
+                        'max_volume' => $tier->max_volume,
+                    ])->all(),
+                    'current_tier' => $currentTier ? [
+                        'id' => $currentTier->id,
+                        'name' => $currentTier->name,
+                        'discount_percentage' => $currentTier->discount_percentage,
+                        'min_volume' => $currentTier->min_volume,
+                    ] : null,
+                ];
+            }
         }
 
         // $hasPurchasePoolRequest = false;
@@ -148,6 +161,7 @@ class ProductController extends Controller
             'product' => new ProductResource($product),
             // 'hasPurchasePoolRequest' => $hasPurchasePoolRequest,
             'activePurchasePool' => $poolData,
+            'activePurchaseCycle' => $cycleData,
             'hasOrder' => $request->user() ? $request->user()->orders()->exists() : false,
             'canRate' => $canRate,
             'userRating' => $userRating,

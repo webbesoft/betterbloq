@@ -76,7 +76,7 @@ class OrderController extends Controller
                 [
                     'product_id' => $validated['product_id'],
                     'quantity' => $validated['quantity'],
-                    'purchase_pool_id' => $validated['purchase_pool_id'] ?? null,
+                    'purchase_cycle_id' => $validated['purchase_cycle_id'] ?? null,
                 ],
             ];
             $serviceData['expected_delivery_date'] = $validated['expected_delivery_date'] ?? null;

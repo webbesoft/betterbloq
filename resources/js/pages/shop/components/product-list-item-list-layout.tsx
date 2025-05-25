@@ -2,7 +2,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/types/model-types';
-import { Heart, Star, Truck } from 'lucide-react';
+import { Star, Truck } from 'lucide-react';
 
 interface ProductListItemProps {
     product: Product;
@@ -105,15 +105,15 @@ export default function ProductListItemListLayout({ product }: ProductListItemPr
                             View
                         </Button>
                     </a>
-                    <Button
+                    {/* <Button
                         variant="ghost"
                         size="sm"
                         className="text-muted-foreground hover:text-primary hidden items-center gap-1 sm:inline-flex"
                         title="Add to Wishlist"
                     >
-                        <Heart size={14} />
-                        <span className="text-xs">Save</span>
-                    </Button>
+                        <ShoppingCart size={14} />
+                        <span className="text-xs">Add to cart</span>
+                    </Button> */}
                 </div>
             </div>
         </div>

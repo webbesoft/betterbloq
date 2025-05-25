@@ -23,7 +23,8 @@ class StoreOrderRequest extends FormRequest
             'product_id' => 'sometimes',
             'quantity' => 'required|integer',
             'expected_delivery_date' => 'required|date',
-            'purchase_pool_id' => 'sometimes|integer',
+            'purchase_cycle_id' => 'sometimes|integer',
+            'requires_storage_acknowledged' => 'sometimes|boolean',
         ];
     }
 }

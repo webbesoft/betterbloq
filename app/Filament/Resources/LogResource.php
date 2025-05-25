@@ -34,6 +34,11 @@ class LogResource extends Resource
                 Tables\Columns\TextColumn::make('method')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('level'),
+                Tables\Columns\TextColumn::make('message'),
+                Tables\Columns\TextColumn::make('exception_type'),
+                Tables\Columns\TextColumn::make('exception_message'),
+                Tables\Columns\TextColumn::make('exception_trace'),
+                Tables\Columns\TextColumn::make('context'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

@@ -27,7 +27,7 @@ export default function DeveloperPreviewSection() {
                     Join our developer community to be first in line as we launch each new feature.
                 </p>
 
-                <form onSubmit={handleSubscribe} className="mt-8 flex w-full max-w-md flex-col gap-4 sm:flex-row">
+                <form onSubmit={handleSubscribe} className="mt-8 flex w-full max-w-md flex-col items-center justify-center gap-4 sm:flex-row">
                     <Input
                         type="email"
                         placeholder="Enter your email"

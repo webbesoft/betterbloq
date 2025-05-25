@@ -79,9 +79,6 @@ class StorageTierResource extends Resource
                     ->reorderable(),
                 Forms\Components\Textarea::make('notes')
                     ->columnSpanFull(),
-                // Forms\Components\Toggle::make('is_active')
-                //     ->default(true)
-                //     ->required(),
             ]);
     }
 

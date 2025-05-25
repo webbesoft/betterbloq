@@ -39,10 +39,10 @@ class FinalisePurchasePoolAction extends Action
     protected function processFinalization(PurchasePool $purchasePool): void
     {
         // 1. Check if pool can be finalized (e.g., status is 'active' or 'pending_finalization', end_date has passed)
-        if (! in_array($purchasePool->status, ['active', 'pending_finalization'])) {
+        if (! in_array($purchasePool->cycle_status, ['active', 'pending_finalization'])) {
             Notification::make()
                 ->title('Finalization Failed')
-                ->body("Purchase Pool '{$purchasePool->name}' is not in a state that allows finalization (current status: {$purchasePool->status}).")
+                ->body("Purchase Pool '{$purchasePool->name}' is not in a state that allows finalization (current status: {$purchasePool->cycle_status}).")
                 ->danger()
                 ->send();
 

@@ -17,7 +17,7 @@ class ViewPurchasePool extends ViewRecord
         return [
             Actions\EditAction::make(),
             FinalisePurchasePoolAction::make()
-                ->visible(fn (PurchasePool $record) => in_array($record->status, ['active', 'pending_finalization'])),
+                ->visible(fn (PurchasePool $record) => in_array($record->cycle_status, ['accumulating'])),
         ];
     }
 }

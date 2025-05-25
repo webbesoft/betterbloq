@@ -12,7 +12,6 @@ Your order details:
 - **Discount Value:** ${{ number_format($discountApplied, 2) }}
 @endif
 - **Final Amount Charged:** ${{ number_format($finalAmount, 2) }}
-- **Quantity:** {{ $order->quantity }}
 - **Status:** {{ ucfirst($order->status) }}
 
 @if($order->status === 'completed')

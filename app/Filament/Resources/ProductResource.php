@@ -12,10 +12,10 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Str;
 
 class ProductResource extends Resource
 {
@@ -27,47 +27,96 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->helperText('The name of the product'),
-                Forms\Components\FileUpload::make('image')
-                    ->image()
-                    ->required()
-                    ->disk('s3')
-                    ->helperText('The image of the product'),
-                Forms\Components\MarkdownEditor::make('description')
-                    ->required()
-                    ->columnSpanFull()
-                    ->helperText('The description of the product'),
-                Forms\Components\TextInput::make('price')
-                    ->required()
-                    ->numeric()
-                    ->default(0)
-                    ->prefix('$')
-                    ->helperText('The price of the product in dollars'),
-                Forms\Components\TextInput::make('unit')
-                    ->required()
-                    ->helperText('The unit of measurement for the product. E.g. kg, lb, pcs'),
-                Forms\Components\TextInput::make('delivery_time')
-                    ->label('Delivery Time (Days)')
-                    ->numeric()
-                    ->integer()
-                    ->minValue(0)
-                    ->default(0)
-                    ->required()
-                    ->helperText('The number of days needed for delivery after vendor preparation'),
-                Forms\Components\Select::make('category_id')
-                    ->options(Category::all()->pluck('name', 'id'))
-                    ->label('Category')
-                    ->required()
-                    ->searchable()
-                    ->helperText('The category the product belongs to'),
-                Forms\Components\Select::make('vendor_id')
-                    ->options(Vendor::all()->pluck('name', 'id'))
-                    ->label('Vendor')
-                    ->required()
-                    ->searchable()
-                    ->helperText('The vendor who supplies the product'),
+                Forms\Components\Tabs::make('Product Details')->tabs([
+                    Forms\Components\Tabs\Tab::make('General')
+                        ->schema([
+                            Forms\Components\TextInput::make('name')
+                                ->required()
+                                ->maxLength(150)
+                                ->columnSpanFull(),
+                            Forms\Components\MarkdownEditor::make('description')
+                                ->columnSpanFull(),
+                            Forms\Components\TextInput::make('price')
+                                ->required()
+                                ->numeric()
+                                ->prefix('$'),
+                            Forms\Components\TextInput::make('unit')
+                                ->maxLength(10)
+                                ->helperText('e.g., piece, kg, m, box'),
+                            Forms\Components\Select::make('category_id')
+                                ->relationship('category', 'name')
+                                ->searchable()
+                                ->preload()
+                                ->required(),
+                            Forms\Components\Select::make('vendor_id')
+                                ->relationship('vendor', 'name')
+                                ->searchable()
+                                ->preload()
+                                ->required(),
+                            Forms\Components\TextInput::make('delivery_time')
+                                ->numeric()
+                                ->label('Delivery Time (days)')
+                                ->integer(),
+                            Forms\Components\FileUpload::make('image')
+                                ->image()
+                                ->directory('product-images')
+                                ->columnSpanFull()
+                                ->helperText('Upload a product image.'),
+                        ])->columns(2),
+
+                    Forms\Components\Tabs\Tab::make('Stripe & Identifiers')
+                        ->schema([
+                            Forms\Components\TextInput::make('stripe_product_id')
+                                ->maxLength(255)
+                                ->readOnly()
+                                ->default(Str::uuid()->toString())
+                                ->label('Stripe Product ID'),
+                            Forms\Components\TextInput::make('stripe_price_id')
+                                ->maxLength(255)
+                                ->default(Str::uuid()->toString())
+                                ->readOnly()
+                                ->label('Stripe Price ID'),
+                        ]),
+
+                    Forms\Components\Tabs\Tab::make('Storage & Handling')
+                        ->schema([
+                            Forms\Components\Toggle::make('storable')
+                                ->inline(false),
+                            Forms\Components\TextInput::make('storage_unit_of_measure')
+                                ->maxLength(255)
+                                ->label('Storage Unit of Measure'),
+                            Forms\Components\Fieldset::make('Default Dimensions')
+                                ->schema([
+                                    Forms\Components\TextInput::make('default_length')
+                                        ->numeric()->suffix('units'), // Specify units if consistent
+                                    Forms\Components\TextInput::make('default_width')
+                                        ->numeric()->suffix('units'),
+                                    Forms\Components\TextInput::make('default_height')
+                                        ->numeric()->suffix('units'),
+                                ])->columns(3),
+                            Forms\Components\Toggle::make('is_stackable')
+                                ->inline(false),
+                            Forms\Components\TextInput::make('max_stack_height_units')
+                                ->numeric()
+                                ->integer()
+                                ->label('Max Stack Height (in storage units)'),
+                            Forms\Components\CheckboxList::make('storage_conditions_required')
+                                ->label('Storage Conditions Required')
+                                ->options([
+                                    'dry' => 'Dry Environment',
+                                    'ventilated' => 'Well Ventilated',
+                                    'refrigerated' => 'Refrigerated',
+                                    'frozen' => 'Frozen',
+                                    'controlled_temperature' => 'Controlled Temperature',
+                                    'away_from_direct_sunlight' => 'Away from Direct Sunlight',
+                                ])
+                                ->columns(2)
+                                ->helperText('Select all applicable conditions.'),
+                            Forms\Components\Textarea::make('storage_handling_notes')
+                                ->label('Storage & Handling Notes')
+                                ->columnSpanFull(),
+                        ])->columns(2),
+                ])->columnSpanFull(),
             ]);
     }
 
@@ -75,42 +124,29 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('name')
-                    ->label('Product Name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('stripe_product_id')
-                    ->label('Stripe Product ID')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('stripe_price_id')
-                    ->label('Stripe Price ID')
-                    ->searchable(),
                 Tables\Columns\ImageColumn::make('image')
-                    ->disk('s3')
-                    ->label('Image')
-                    ->size(50),
+                    ->square(),
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('price')
-                    ->money()
+                    ->money('usd') // Or your currency
                     ->sortable(),
-                Tables\Columns\TextColumn::make('unit')
-                    ->searchable(),
+                Tables\Columns\TextColumn::make('category.name') // Assuming Category relationship
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('vendor.name') // Assuming Vendor relationship
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\IconColumn::make('storable')
+                    ->boolean(),
                 Tables\Columns\TextColumn::make('delivery_time')
-                    ->label('Delivery Time (Days)')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('category_id')
                     ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('vendor_id')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('deleted_at')
-                    ->dateTime()
+                    ->suffix(' days')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
+                Tables\Columns\TextColumn::make('unit')
+                    ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
@@ -119,6 +155,13 @@ class ProductResource extends Resource
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
+                Tables\Filters\SelectFilter::make('category_id')
+                    ->relationship('category', 'name')
+                    ->label('Category'),
+                Tables\Filters\SelectFilter::make('vendor_id')
+                    ->relationship('vendor', 'name')
+                    ->label('Vendor'),
+                Tables\Filters\TernaryFilter::make('storable'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

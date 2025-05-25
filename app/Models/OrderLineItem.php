@@ -20,6 +20,14 @@ class OrderLineItem extends Model
         'quantity',
     ];
 
+    public function casts(): array
+    {
+        return [
+            'total_price' => 'float',
+            'price_per_unit' => 'float'
+        ];
+    }
+
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);

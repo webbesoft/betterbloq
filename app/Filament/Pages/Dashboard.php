@@ -3,8 +3,8 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\ActiveOrdersWidget;
-use App\Filament\Widgets\ActivePurchasePoolsWidget;
 use App\Filament\Widgets\ActiveUsersWidget;
+use App\Filament\Widgets\UpcomingPurchaseCycles;
 // use App\Filament\Widgets\PlanDistributionChart;
 use Filament\Pages\Dashboard as BaseDashboard;
 
@@ -16,7 +16,7 @@ class Dashboard extends BaseDashboard
             ActiveUsersWidget::class,
             // PlanDistributionChart::class,
             ActiveOrdersWidget::class,
-            ActivePurchasePoolsWidget::class,
+            UpcomingPurchaseCycles::class,
         ];
     }
 

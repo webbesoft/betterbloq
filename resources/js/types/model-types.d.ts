@@ -144,9 +144,7 @@ export interface OrderLineItem {
 }
 
 export interface PurchasePool {
-    status: string;
-    start_date: Date;
-    end_date: Date;
+    cycle_status: string;
     target_volume: string;
     current_volume: string;
     target_delivery_date: Date;
@@ -157,4 +155,5 @@ export interface PurchasePool {
     updated_at: Date;
     id: number;
     name: string;
+    purchase_cycle_id: number;
 }

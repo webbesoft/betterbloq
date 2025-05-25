@@ -17,7 +17,7 @@ class DashboardController extends Controller
     {
         $userId = $request->user()->id;
         $cacheKey = 'dashboard_data_'.$userId;
-        $cacheDuration = 300; // 5 minutes (adjust as needed)
+        $cacheDuration = 300;
 
         $dashboardData = Cache::remember($cacheKey, $cacheDuration, function () use ($request, $userId) {
             $ongoingProjectsCount = Project::where('status', 'ongoing')->count();
@@ -80,7 +80,7 @@ class DashboardController extends Controller
                 });
 
             return [
-                'activeOrdersCount' => Order::where('user_id', $request->user()->id)->where('status', 'active')->count(),
+                'activeOrdersCount' => Order::where('user_id', $request->user()->id)->whereIn('status', Order::ACTIVE_STATUSES)->count(),
                 'completedOrdersCount' => Order::where('user_id', $request->user()->id)->where('status', 'completed')->count(),
                 'activePoolsProgress' => $activePoolsProgress,
                 'ongoingProjectsCount' => $ongoingProjectsCount,
@@ -90,7 +90,7 @@ class DashboardController extends Controller
                 'watchedPurchasePools' => $watchedPurchasePools,
                 'frequentProducts' => $frequentProducts,
                 'regularVendors' => $regularVendors,
-                'hasCompletedGuide' => $request->user()->has_completed_guide
+                'hasCompletedGuide' => $request->user()->has_completed_guide,
             ];
         });
 

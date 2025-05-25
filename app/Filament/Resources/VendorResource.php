@@ -61,7 +61,7 @@ class VendorResource extends Resource
                 Forms\Components\TextInput::make('prep_time')
                     ->label('Preparation Time (Days)')
                     ->numeric()
-                    ->integer() // Ensure it's a whole number of days
+                    ->integer()
                     ->minValue(0)
                     ->default(0)
                     ->required()

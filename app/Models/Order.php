@@ -37,6 +37,13 @@ class Order extends Model
     /** @use HasFactory<OrderFactory> */
     use HasFactory, SoftDeletes;
 
+    public const ACTIVE_STATUSES = [
+        'created',
+        'payment_authorized',
+        'pending_finalization',
+        'processing_capture',
+    ];
+
     protected $fillable = [
         'email',
         'phone',
@@ -91,6 +98,16 @@ class Order extends Model
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
+    public function purchaseCycle(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseCycle::class, 'purchase_pool_id');
     }
 
     public function lineItems(): HasMany

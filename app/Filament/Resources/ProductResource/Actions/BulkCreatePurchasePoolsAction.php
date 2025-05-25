@@ -1,10 +1,10 @@
 <?php
 
 use App\Models\Product;
+use App\Models\PurchaseCycle;
 use App\Models\PurchasePool;
 use Carbon\Carbon;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Get;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Tables\Actions\BulkAction;
 use Illuminate\Support\Collection;
@@ -23,19 +23,15 @@ class BulkCreatePurchasePoolsAction extends BulkAction
         $this->label('Create Purchase Pools')
             ->icon('heroicon-o-shopping-bag')
             ->form([
-                DatePicker::make('start_date')
-                    ->label('Pool Start Date')
-                    ->required()
-                    ->default(now())
-                    ->native(false)
-                    ->displayFormat('Y-m-d'),
-                DatePicker::make('end_date')
-                    ->label('Pool End Date')
-                    ->required()
-                    ->native(false)
-                    ->displayFormat('Y-m-d')
-                    ->minDate(fn (Get $get) => $get('start_date') ? Carbon::parse($get('start_date'))->addDay() : now()->addDay())
-                    ->helperText('Must be after the start date.'),
+                Select::make('purchase_cycle_id')
+                    ->label('Purchase Cycle')
+                    ->options(
+                        PurchaseCycle::whereIn('status', ['upcoming', 'active'])
+                            ->get()
+                            ->pluck('name', 'id')
+                            ->all()
+                    )
+                    ->searchable(),
             ])
             ->action(function (Collection $records, array $data) {
                 $this->processBulkCreation($records, $data);
@@ -50,6 +46,11 @@ class BulkCreatePurchasePoolsAction extends BulkAction
         $skippedMissingVendorCount = 0;
         $skippedCalculationFailureCount = 0;
         $skippedProductNames = [];
+        $purchaseCycle = PurchaseCycle::whereId(data_get($data, 'purchase_cycle_id'))->first();
+
+        if (! $purchaseCycle) {
+            throw new Exception('Purchase cycle is required');
+        }
 
         foreach ($records as $product) {
             $product->loadMissing(['vendor']);
@@ -66,7 +67,7 @@ class BulkCreatePurchasePoolsAction extends BulkAction
             }
 
             $targetDeliveryDate = PurchasePool::calculateTargetDeliveryDate(
-                $data['end_date'],
+                $purchaseCycle->end_date,
                 $product
             );
 
@@ -78,21 +79,20 @@ class BulkCreatePurchasePoolsAction extends BulkAction
             }
 
             $poolName = 'Pool - '.($product->name ?? 'Unnamed Product').
-                        ' - '.Carbon::parse($data['start_date'])->format('M d').
-                        ' to '.Carbon::parse($data['end_date'])->format('M d, Y');
+                        ' - '.Carbon::parse($purchaseCycle->start_date)->format('M d').
+                        ' to '.Carbon::parse($purchaseCycle->end_date)->format('M d, Y');
 
             PurchasePool::create([
                 'name' => $poolName,
                 'product_id' => $product->id,
                 'vendor_id' => $product->vendor_id,
-                'start_date' => Carbon::parse($data['start_date'])->toDateString(),
-                'end_date' => Carbon::parse($data['end_date'])->toDateString(),
+                'purchase_cycle_id' => $purchaseCycle->id,
                 'target_delivery_date' => $targetDeliveryDate->toDateString(),
                 'min_orders_for_discount' => 0,
                 'max_orders' => 0,
                 'target_volume' => 0,
                 'current_volume' => 0,
-                'status' => 'pending',
+                'cycle_status' => PurchasePool::STATUS_ACCUMULATING,
             ]);
             $createdCount++;
         }
@@ -103,7 +103,7 @@ class BulkCreatePurchasePoolsAction extends BulkAction
                 ->title('Purchase Pools Creation Complete')
                 ->body(
                     "Successfully created {$createdCount} purchase pool(s). ".
-                    "Target delivery dates were automatically calculated. Status set to 'pending'. ".
+                    "Target delivery dates were automatically calculated. Status set to 'accumulating'. ".
                     'Please review each pool for settings like target volume and order limits before activating.'
                 )
                 ->persistent()

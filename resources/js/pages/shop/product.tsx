@@ -50,6 +50,7 @@ interface ProductProps {
     };
     hasPurchasePoolRequest: boolean;
     activePurchasePool: ActivePurchasePoolData | null;
+    activePurchaseCycle: ActivePurchaseCycleData | null;
     auth: Auth;
     hasOrder: boolean;
     canRate: boolean;
@@ -69,7 +70,6 @@ interface PurchasePoolTierData {
 export interface ActivePurchasePoolData {
     id: number;
     status: string;
-    end_date?: string | null;
     target_delivery_date?: string | null;
     min_orders_for_discount: number;
     max_orders?: number | null;
@@ -84,16 +84,22 @@ export interface ActivePurchasePoolData {
     } | null;
 }
 
+export interface ActivePurchaseCycleData {
+    id: number;
+    start_date: string;
+    end_date: string;
+}
+
 type OrderForm = {
     product_id: number;
     quantity: number;
     expected_delivery_date: string;
-    purchase_pool_id?: number | null;
+    purchase_cycle_id?: number;
     requires_storage_acknowledged?: boolean;
 };
 
 export default function ProductPage(props: ProductProps) {
-    const { product, flash, activePurchasePool, hasOrder, canRate, userRating, defaultStorageRateMessage } = props;
+    const { product, activePurchasePool, activePurchaseCycle, hasOrder, canRate, userRating, defaultStorageRateMessage } = props;
 
     const { data: productData } = product;
 
@@ -116,9 +122,10 @@ export default function ProductPage(props: ProductProps) {
         clearErrors,
     } = useForm<OrderForm>({
         product_id: productData.id,
-        purchase_pool_id: activePurchasePool?.id,
+        purchase_cycle_id: activePurchaseCycle?.id,
         quantity: 1,
         expected_delivery_date: '',
+        requires_storage_acknowledged: false,
     });
 
     useEffect(() => {
@@ -282,7 +289,7 @@ export default function ProductPage(props: ProductProps) {
                                 >
                                     {productData.name}
                                 </h1>
-                                <div className="flex items-center space-x-2">
+                                <div className="flex hidden items-center space-x-2">
                                     <Link
                                         // href={route('vendors.show', productData.vendor.id)}
                                         href="#"

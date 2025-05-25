@@ -69,6 +69,8 @@ class PurchasePool extends Model
 
     const STATUS_ACTIVE = 'active';
 
+    const STATUS_ACCUMULATING = 'accumulating';
+
     const STATUS_PENDING = 'pending';
 
     const STATUS_CLOSED = 'closed';
@@ -76,8 +78,6 @@ class PurchasePool extends Model
     protected $fillable = [
         'name',
         'description',
-        'start_date',
-        'end_date',
         'target_delivery_date',
         'status',
         'product_id',
@@ -87,6 +87,8 @@ class PurchasePool extends Model
         'max_orders',
         'target_volume',
         'current_volume',
+        'purchase_cycle_id',
+        'cycle_status',
     ];
 
     public function casts(): array
@@ -110,6 +112,11 @@ class PurchasePool extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function purchaseCycle(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseCycle::class);
+    }
+
     public function scopeWithinDeliveryRange(Builder $query, string $expectedDeliveryDate): Builder
     {
         $expectedDate = Carbon::parse($expectedDeliveryDate);
@@ -120,20 +127,48 @@ class PurchasePool extends Model
     }
 
     /**
-     * Get the applicable discount tier based on the current volume.
+     * Helper method to get the current aggregated volume for this pool's
+     * product within its specific purchase cycle from the 'cycle_product_volumes' table.
+     */
+    public function getCurrentVolumeInCycle(): float
+    {
+        $volumeRecord = CycleProductVolume::where('purchase_cycle_id', $this->purchase_cycle_id)
+            ->where('product_id', $this->product_id)
+            ->first();
+
+        return $volumeRecord ? (float) $volumeRecord->total_aggregated_quantity : 0.0;
+    }
+
+    /**
+     * Get the applicable discount tier based on the dynamically fetched volume
+     * for this pool's product and cycle, using its directly associated tiers.
+     *
+     * @return PurchasePoolTier|null The applicable tier, or null if none applies.
      */
     public function getApplicableTier(): ?PurchasePoolTier
     {
-        $tiers = $this->purchasePoolTiers()->orderBy('min_volume', 'desc')->get();
-        foreach ($tiers as $tier) {
-            if ($this->current_volume >= $tier->min_volume) {
-                if (is_null($tier->max_volume) || $this->current_volume <= $tier->max_volume) {
-                    return $tier;
-                }
-            }
-        }
+        $currentVolume = $this->getCurrentVolumeInCycle();
 
-        return null;
+        return $this->purchasePoolTiers()
+            ->where('min_volume', '<=', $currentVolume)
+            ->where(function ($query) use ($currentVolume) {
+                $query->whereNull('max_volume')
+                    ->orWhere('max_volume', '>=', $currentVolume);
+            })
+            ->orderBy('min_volume', 'desc')
+            ->first();
+    }
+
+    /**
+     * Convenience method to directly get the discount percentage.
+     *
+     * @return float The discount percentage (e.g., 10.5 for 10.5%), or 0 if no tier applies.
+     */
+    public function getApplicableDiscountPercentage(): float
+    {
+        $tier = $this->getApplicableTier();
+
+        return $tier ? (float) $tier->discount_percentage : 0.0;
     }
 
     /**
