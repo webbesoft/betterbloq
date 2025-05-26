@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\PurchasePoolResource\Actions;
+namespace App\Filament\Resources\PurchaseCycleResource\Actions;
 
 use App\Mail\OrderFinalisedNotification;
-use App\Models\Order;
 use App\Models\PurchasePool;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -13,24 +12,24 @@ use Illuminate\Support\Facades\Mail;
 use Stripe\Exception\ApiErrorException;
 use Stripe\StripeClient;
 
-class FinalisePurchasePoolAction extends Action
+class FinalisePurchaseCycleAction extends Action
 {
     public static function getDefaultName(): ?string
     {
-        return 'finalisePurchasePool';
+        return 'finalisePurchaseCycle';
     }
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->label('Finalise Pool')
+        $this->label('Finalise Cycle')
             ->color('success')
             ->icon('heroicon-o-check-circle')
             ->requiresConfirmation()
-            ->modalHeading('Finalise Purchase Pool')
-            ->modalDescription('This will calculate final discounts, attempt to capture payments for all authorized orders in this pool, mark orders as complete, and close the pool. This action is irreversible.')
-            ->modalSubmitActionLabel('Yes, Finalise Pool')
+            ->modalHeading('Finalise Purchase Cycle')
+            ->modalDescription('This will calculate final discounts, attempt to capture payments for all authorized orders in this cycle, mark orders as complete, and close the pools. This action is irreversible.')
+            ->modalSubmitActionLabel('Yes, Finalise Cycle')
             ->action(function (PurchasePool $record, array $data) {
                 $this->processFinalization($record);
             });
