@@ -52,7 +52,6 @@ interface ProductProps {
     activePurchasePool: ActivePurchasePoolData | null;
     activePurchaseCycle: ActivePurchaseCycleData | null;
     auth: Auth;
-    hasOrder: boolean;
     canRate: boolean;
     userRating: UserRating;
     defaultStorageRateMessage: string;
@@ -99,7 +98,7 @@ type OrderForm = {
 };
 
 export default function ProductPage(props: ProductProps) {
-    const { product, activePurchasePool, activePurchaseCycle, hasOrder, canRate, userRating, defaultStorageRateMessage } = props;
+    const { product, activePurchasePool, activePurchaseCycle, canRate, userRating, defaultStorageRateMessage } = props;
 
     const { data: productData } = product;
 
@@ -223,7 +222,7 @@ export default function ProductPage(props: ProductProps) {
         return discountedPricePerUnit * formdata.quantity;
     }, [discountedPricePerUnit, formdata.quantity]);
 
-    const isActionAreaDisabled = !props.auth?.user || (activePurchasePool && hasOrder);
+    const isActionAreaDisabled = !props.auth?.user || !activePurchasePool;
 
     return (
         <LandingLayout breadcrumbs={breadcrumbs}>
@@ -363,135 +362,139 @@ export default function ProductPage(props: ProductProps) {
                                     <Link href={route('login')}>Login or Create Account</Link>
                                 </Button>
                             </div>
-                        ) : activePurchasePool && hasOrder && !props.hasPurchasePoolRequest ? ( // Added !props.hasPurchasePoolRequest to allow pool request if no order
-                            <div
-                                className={
-                                    'flex flex-col items-center justify-center gap-3 rounded-lg border border-green-500 bg-green-50 p-6 text-center text-green-700 shadow-sm dark:border-green-600 dark:bg-green-900/30 dark:text-green-300'
-                                }
-                            >
-                                <CheckCircle className="mb-1 h-8 w-8" />
-                                <p className={'text-md font-semibold'}>You've already joined the pool for this product!</p>
-                                <p className="text-sm">You can view your order details in your account.</p>
-                                <Button
-                                    variant="outline"
-                                    asChild
-                                    className="mt-2 border-green-500 text-green-700 hover:bg-green-100 dark:border-green-600 dark:text-green-300 dark:hover:bg-green-800/30"
-                                >
-                                    <Link href={route('orders.index')}>View My Orders</Link>
-                                </Button>
-                            </div>
                         ) : (
-                            <form onSubmit={submit} className="space-y-6 rounded-lg border bg-white p-6 shadow-lg dark:bg-gray-800">
-                                <h2 id="order-section" className="text-xl font-semibold text-gray-900 dark:text-gray-50">
-                                    {activePurchasePool ? 'Join Purchase Pool & Order' : 'Place Your Order'}
-                                </h2>
-                                <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
-                                    <div>
-                                        <Label htmlFor="quantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                            Quantity ({productData.unit})
-                                        </Label>
-                                        <Input
-                                            type="number"
-                                            id="quantity"
-                                            name="quantity"
-                                            className="mt-1"
-                                            onChange={(e) => setData('quantity', Math.max(1, Number(e.target.value)))}
-                                            value={formdata.quantity}
-                                            min="1"
-                                            disabled={processing || isActionAreaDisabled!}
-                                        />
-                                        {errors.quantity && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.quantity}</p>}
-                                    </div>
-                                    <div>
-                                        <Label
-                                            htmlFor="expected_delivery_date"
-                                            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                                        >
-                                            Preferred Delivery Date
-                                        </Label>
-                                        <Input
-                                            type="date"
-                                            id="expected_delivery_date"
-                                            name="expected_delivery_date"
-                                            className="text-foreground mt-1"
-                                            onChange={(e) => setData('expected_delivery_date', e.target.value)}
-                                            value={formdata.expected_delivery_date}
-                                            min={new Date().toISOString().split('T')[0]} // Ensure future dates only
-                                            disabled={processing || isActionAreaDisabled!}
-                                            required
-                                        />
-                                        {errors.expected_delivery_date && (
-                                            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.expected_delivery_date}</p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {showStorageInfoMessage && activePurchasePool && (
-                                    <div className="border-primary/50 bg-primary/10 text-primary flex items-start gap-3 rounded-md border p-4 text-sm">
-                                        <PackageSearch className="mt-0.5 h-5 w-5 flex-shrink-0" />
-                                        <div>
-                                            <p className="font-semibold">Storage Information</p>
-                                            <p>
-                                                Your selected delivery date is significantly after the pool's target delivery date (
-                                                {formatDate(activePurchasePool.target_delivery_date!)}). This may require storage.
-                                            </p>
-                                            <p className="mt-1">
-                                                {defaultStorageRateMessage
-                                                    ? `Storage is typically charged at ${defaultStorageRateMessage}. `
-                                                    : 'Storage fees may apply. '}
-                                                Final costs will be confirmed after your order.
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <Separator />
-
-                                <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                    <div className="text-left">
-                                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Order Total</p>
-                                        <span className="text-foreground text-2xl font-bold">
-                                            ${total.toFixed(2)}
-                                            {activePurchasePool && currentDiscountPercent > 0 && (
-                                                <Badge variant="secondary" className="text-primary ml-2 align-middle text-xs">
-                                                    {currentDiscountPercent}% off applied
-                                                </Badge>
-                                            )}
-                                        </span>
-                                    </div>
-                                    <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+                            activePurchasePool && (
+                                <>
+                                    <div
+                                        className={
+                                            'mb-6 flex flex-col items-center justify-center gap-3 rounded-lg border border-green-500 bg-green-50 p-6 text-center text-green-700 shadow-sm dark:border-green-600 dark:bg-green-900/30 dark:text-green-300'
+                                        }
+                                    >
+                                        <CheckCircle className="mb-1 h-8 w-8" />
+                                        <p className={'text-md font-semibold'}>You've already joined the pool for this product!</p>
+                                        <p className="text-sm">You can view your order details in your account.</p>
                                         <Button
-                                            type="button"
                                             variant="outline"
-                                            className="w-full sm:w-auto"
-                                            onClick={handleAddToCartClick}
-                                            disabled={processing || isActionAreaDisabled || !formdata.quantity || formdata.quantity < 1}
+                                            asChild
+                                            className="mt-2 border-green-500 text-green-700 hover:bg-green-100 dark:border-green-600 dark:text-green-300 dark:hover:bg-green-800/30"
                                         >
-                                            <ShoppingCart className="mr-2 h-4 w-4" />
-                                            Add to Cart
-                                        </Button>
-                                        <Button
-                                            type="submit"
-                                            className="w-full sm:w-auto"
-                                            disabled={
-                                                processing ||
-                                                isActionAreaDisabled ||
-                                                !formdata.expected_delivery_date ||
-                                                !formdata.quantity ||
-                                                formdata.quantity < 1
-                                            }
-                                        >
-                                            <CheckCircle className="mr-2 h-4 w-4" />
-                                            {getFormButtonText()}
+                                            <Link href={route('orders.index')}>View My Orders</Link>
                                         </Button>
                                     </div>
-                                </div>
-                                {!formdata.expected_delivery_date && activePurchasePool && !isActionAreaDisabled && (
-                                    <p className="text-destructive mt-2 text-center text-xs sm:text-left">
-                                        Please select your preferred delivery date to order.
-                                    </p>
-                                )}
-                            </form>
+
+                                    <form onSubmit={submit} className="space-y-6 rounded-lg border bg-white p-6 shadow-lg dark:bg-gray-800">
+                                        <h2 id="order-section" className="text-xl font-semibold text-gray-900 dark:text-gray-50">
+                                            {activePurchasePool ? 'Join Purchase Pool & Order' : 'Place Your Order'}
+                                        </h2>
+                                        <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+                                            <div>
+                                                <Label htmlFor="quantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                    Quantity ({productData.unit})
+                                                </Label>
+                                                <Input
+                                                    type="number"
+                                                    id="quantity"
+                                                    name="quantity"
+                                                    className="mt-1"
+                                                    onChange={(e) => setData('quantity', Math.max(1, Number(e.target.value)))}
+                                                    value={formdata.quantity}
+                                                    min="1"
+                                                    disabled={processing || isActionAreaDisabled!}
+                                                />
+                                                {errors.quantity && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.quantity}</p>}
+                                            </div>
+                                            <div>
+                                                <Label
+                                                    htmlFor="expected_delivery_date"
+                                                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                                >
+                                                    Preferred Delivery Date
+                                                </Label>
+                                                <Input
+                                                    type="date"
+                                                    id="expected_delivery_date"
+                                                    name="expected_delivery_date"
+                                                    className="text-foreground mt-1"
+                                                    onChange={(e) => setData('expected_delivery_date', e.target.value)}
+                                                    value={formdata.expected_delivery_date}
+                                                    min={new Date().toISOString().split('T')[0]} // Ensure future dates only
+                                                    disabled={processing || isActionAreaDisabled!}
+                                                    required
+                                                />
+                                                {errors.expected_delivery_date && (
+                                                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.expected_delivery_date}</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {showStorageInfoMessage && activePurchasePool && (
+                                            <div className="border-primary/50 bg-primary/10 text-primary flex items-start gap-3 rounded-md border p-4 text-sm">
+                                                <PackageSearch className="mt-0.5 h-5 w-5 flex-shrink-0" />
+                                                <div>
+                                                    <p className="font-semibold">Storage Information</p>
+                                                    <p>
+                                                        Your selected delivery date is significantly after the pool's target delivery date (
+                                                        {formatDate(activePurchasePool.target_delivery_date!)}). This may require storage.
+                                                    </p>
+                                                    <p className="mt-1">
+                                                        {defaultStorageRateMessage
+                                                            ? `Storage is typically charged at ${defaultStorageRateMessage}. `
+                                                            : 'Storage fees may apply. '}
+                                                        Final costs will be confirmed after your order.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <Separator />
+
+                                        <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                            <div className="text-left">
+                                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Order Total</p>
+                                                <span className="text-foreground text-2xl font-bold">
+                                                    ${total.toFixed(2)}
+                                                    {activePurchasePool && currentDiscountPercent > 0 && (
+                                                        <Badge variant="secondary" className="text-primary ml-2 align-middle text-xs">
+                                                            {currentDiscountPercent}% off applied
+                                                        </Badge>
+                                                    )}
+                                                </span>
+                                            </div>
+                                            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="w-full sm:w-auto"
+                                                    onClick={handleAddToCartClick}
+                                                    disabled={processing || isActionAreaDisabled || !formdata.quantity || formdata.quantity < 1}
+                                                >
+                                                    <ShoppingCart className="mr-2 h-4 w-4" />
+                                                    Add to Cart
+                                                </Button>
+                                                <Button
+                                                    type="submit"
+                                                    className="w-full sm:w-auto"
+                                                    disabled={
+                                                        processing ||
+                                                        isActionAreaDisabled ||
+                                                        !formdata.expected_delivery_date ||
+                                                        !formdata.quantity ||
+                                                        formdata.quantity < 1
+                                                    }
+                                                >
+                                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                                    {getFormButtonText()}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        {!formdata.expected_delivery_date && activePurchasePool && !isActionAreaDisabled && (
+                                            <p className="text-destructive mt-2 text-center text-xs sm:text-left">
+                                                Please select your preferred delivery date to order.
+                                            </p>
+                                        )}
+                                    </form>
+                                </>
+                            )
                         )}
                     </section>
 
