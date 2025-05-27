@@ -22,7 +22,6 @@ use Illuminate\Support\Facades\Cache;
  * @property string address
  * @property int product_id
  * @property int user_id
- * @property int purchase_pool_id
  * @property string status
  * @property float total_amount
  * @property Carbon|null deleted_at
@@ -60,6 +59,8 @@ class Order extends Model
         'project_id',
         'vendor_id',
         'total_amount',
+        'shipping_address',
+        'billing_address',
     ];
 
     public function casts(): array
@@ -107,7 +108,7 @@ class Order extends Model
 
     public function purchaseCycle(): BelongsTo
     {
-        return $this->belongsTo(PurchaseCycle::class, 'purchase_pool_id');
+        return $this->belongsTo(PurchaseCycle::class, 'purchase_cycle_id');
     }
 
     public function lineItems(): HasMany

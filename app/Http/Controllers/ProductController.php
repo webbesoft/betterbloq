@@ -127,6 +127,8 @@ class ProductController extends Controller
                     'max_orders' => $activePool->max_orders,
                     'current_volume' => $activePool->getCurrentVolumeInCycle(),
                     'target_volume' => $activePool->target_volume ?? 1000,
+                    'start_date' => $activeCycle->start_date,
+                    'end_date' => $activeCycle->end_date,
                     'tiers' => $activePool->purchasePoolTiers->map(fn ($tier) => [
                         'id' => $tier->id,
                         'name' => $tier->name,

@@ -40,7 +40,7 @@ export const PurchasePoolInfo = (props: PurchasePoolInfoProps) => {
 
             {end_date && (
                 <div className="bg-primary/10 text-primary-foreground rounded-md p-4 text-center">
-                    <p className="text-primary mb-1 text-sm font-medium">Pool Closes In:</p>
+                    <p className="text-primary mb-1 text-sm font-medium">Current purchase cycle ends in:</p>
                     <CountdownTimer endDate={end_date} />
                 </div>
             )}

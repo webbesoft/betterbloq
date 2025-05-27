@@ -18,6 +18,8 @@ class OrderLineItem extends Model
         'price_per_unit',
         'total_price',
         'quantity',
+        'final_line_price',
+        'applied_discount_percentage'
     ];
 
     public function casts(): array

@@ -1,8 +1,6 @@
-import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Card, CardContent } from '@/components/ui/card';
 import LandingLayout from '@/layouts/landing-layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Pagination } from '@/components/ui/pagination';
+import { Head, Link } from '@inertiajs/react';
 // import Pagination from '@/components/pagination';
 
 interface CategoryItem {
@@ -23,7 +21,6 @@ const breadcrumbs = [
     { title: 'Home', href: route('landing') },
     { title: 'Categories', href: route('categories.index') },
 ];
-
 
 export default function CategoryIndex({ categories }: CategoryProps) {
     const placeholderImage = '/images/category_placeholder.png';
@@ -46,20 +43,21 @@ export default function CategoryIndex({ categories }: CategoryProps) {
                                 >
                                     <Card className="overflow-hidden shadow-sm transition-shadow duration-200 group-hover:shadow-md">
                                         <CardContent className="p-0">
-                                            <div className="aspect-square w-full overflow-hidden bg-muted">
+                                            <div className="bg-muted aspect-square w-full overflow-hidden">
                                                 <img
                                                     src={category.image_url ?? placeholderImage}
                                                     alt={category.name}
                                                     className="h-full w-full object-cover transition-opacity duration-200 group-hover:opacity-90"
-                                                // onError={(e) => { e.currentTarget.src = placeholderImage; }}
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src =
+                                                            'https://placehold.co/600x400/e2e8f0/cbd5e0?text=Image+Not+Available';
+                                                    }}
                                                 />
                                             </div>
                                             <div className="p-3 text-center">
-                                                <h3 className="text-sm font-medium truncate group-hover:text-primary">
-                                                    {category.name}
-                                                </h3>
+                                                <h3 className="group-hover:text-primary truncate text-sm font-medium">{category.name}</h3>
                                                 {category.products_count !== undefined && (
-                                                    <p className="text-xs text-muted-foreground">{category.products_count} products</p>
+                                                    <p className="text-muted-foreground text-xs">{category.products_count} products</p>
                                                 )}
                                             </div>
                                         </CardContent>

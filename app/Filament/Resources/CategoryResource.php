@@ -25,11 +25,8 @@ class CategoryResource extends Resource
                     ->required(),
                 Forms\Components\FileUpload::make('image')
                     ->label('Category Image')
-                    ->disk('s3')
                     ->directory('category_images')
                     ->image()
-                    ->imageEditor()
-                    ->visibility('public')
                     ->nullable()
                     ->columnSpanFull(),
             ]);
@@ -41,8 +38,6 @@ class CategoryResource extends Resource
             ->columns([
                 Tables\Columns\ImageColumn::make('image')
                     ->label('Image')
-                    ->disk('s3')
-                    ->visibility('public')
                     ->width(80)
                     ->height(80)
                     ->defaultImageUrl(url('/images/category_placeholder.png')),

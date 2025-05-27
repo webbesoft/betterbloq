@@ -26,6 +26,7 @@ import { CheckCircle, ExternalLink, Info, PackageSearch, ShoppingCart } from 'lu
 import { FormEventHandler, useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { toast } from 'sonner';
 import { PurchasePoolInfo } from './components/product/purchase-pool-info';
 import { ProductRating } from './components/product/ratings/product-rating';
 import { RatingStars } from './components/rating-stars';
@@ -75,6 +76,8 @@ export interface ActivePurchasePoolData {
     current_volume: number;
     target_volume: number;
     tiers: PurchasePoolTierData[];
+    end_date: string;
+    start_date: string;
     current_tier?: {
         id: number;
         name: string;
@@ -189,6 +192,7 @@ export default function ProductPage(props: ProductProps) {
             for (let i = 0; i < quantityToAdd; i++) {
                 addItemToCart(cartProduct);
             }
+            toast('Product added to cart.');
         }
     };
 
@@ -200,6 +204,7 @@ export default function ProductPage(props: ProductProps) {
         for (let i = 0; i < quantityToAdd; i++) {
             addItemToCart(productToAdd);
         }
+        toast('Product added to cart.');
         setShowConfirmDialog(false);
         setProductToAdd(null);
     };
@@ -417,7 +422,7 @@ export default function ProductPage(props: ProductProps) {
                                                     className="text-foreground mt-1"
                                                     onChange={(e) => setData('expected_delivery_date', e.target.value)}
                                                     value={formdata.expected_delivery_date}
-                                                    min={new Date().toISOString().split('T')[0]} // Ensure future dates only
+                                                    min={new Date(activePurchasePool.target_delivery_date ?? '').toISOString().split('T')[0]}
                                                     disabled={processing || isActionAreaDisabled!}
                                                     required
                                                 />

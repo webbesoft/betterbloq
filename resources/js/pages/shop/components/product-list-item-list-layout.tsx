@@ -47,6 +47,9 @@ export default function ProductListItemListLayout({ product }: ProductListItemPr
                         alt={product.name}
                         className="h-full w-full object-cover transition-transform duration-300 ease-in-out hover:scale-105"
                         loading="lazy"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://placehold.co/600x400/e2e8f0/cbd5e0?text=Image+Not+Available';
+                        }}
                     />
                 </a>
             </div>

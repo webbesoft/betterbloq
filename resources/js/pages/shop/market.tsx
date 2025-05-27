@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import LandingLayout from '@/layouts/landing-layout';
 import { debounce } from '@/lib/helpers';
 import { type BreadcrumbItem } from '@/types';
-import { PaginationBaseLinks, PaginationType, Product } from '@/types/model-types';
+import { Category, PaginationBaseLinks, PaginationType, Product, Vendor } from '@/types/model-types';
 import { Head, router } from '@inertiajs/react';
 import { Popover } from '@radix-ui/react-popover';
 import { ChevronDown } from 'lucide-react';
@@ -120,7 +120,7 @@ export default function Market(props: MarketProps) {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">All Categories</SelectItem>
-                                    {availableFilters?.categories?.map((cat) => (
+                                    {availableFilters?.categories?.map((cat: Category) => (
                                         <SelectItem key={cat.id} value={String(cat.id)}>
                                             {cat.name}
                                         </SelectItem>
@@ -137,7 +137,7 @@ export default function Market(props: MarketProps) {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">All Vendors</SelectItem>
-                                    {availableFilters?.vendors?.map((ven) => (
+                                    {availableFilters?.vendors?.map((ven: Vendor) => (
                                         <SelectItem key={ven.id} value={String(ven.id)}>
                                             {ven.name}
                                         </SelectItem>

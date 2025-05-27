@@ -23,6 +23,11 @@ export interface Vendor {
     name: string;
 }
 
+export interface Category {
+    id: number;
+    name: string;
+}
+
 export interface PaginationType {
     current_page: number;
     last_page: number;

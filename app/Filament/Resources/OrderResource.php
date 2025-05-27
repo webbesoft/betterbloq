@@ -15,6 +15,7 @@ use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
 
@@ -33,7 +34,7 @@ class OrderResource extends Resource
                 Wizard::make([
                     Step::make('Select Vendor & Products')
                         ->schema([
-                            Forms\Components\Select::make('selected_vendor_id')
+                            Forms\Components\Select::make('vendor_id')
                                 ->label('Select Vendor')
                                 ->options(
                                     Vendor::all()->pluck('name', 'id')->toArray()
@@ -44,13 +45,14 @@ class OrderResource extends Resource
                                 ->afterStateUpdated(function (Set $set) {
                                     $set('products', []);
                                 }),
-                            Forms\Components\Repeater::make('products')
+                            Forms\Components\Repeater::make('lineItems')
+                                ->relationship()
                                 ->label('Order Products')
                                 ->schema([
                                     Forms\Components\Select::make('product_id')
                                         ->label('Product')
                                         ->options(function (Get $get) {
-                                            $vendorId = $get('../../selected_vendor_id');
+                                            $vendorId = $get('../../vendor_id');
                                             if (! $vendorId) {
                                                 return [];
                                             }
@@ -61,7 +63,7 @@ class OrderResource extends Resource
                                         })
                                         ->searchable()
                                         ->required()
-                                        ->reactive()
+                                        ->live()
                                         ->afterStateUpdated(function ($state, Set $set) {
                                             $product = Product::find($state);
                                             if ($product) {
@@ -77,15 +79,8 @@ class OrderResource extends Resource
                                         ->minValue(1)
                                         ->live(onBlur: true)
                                         ->afterStateUpdated(function (Get $get, Set $set, $state) {
-                                            $pricePerUnit = $get('./price_per_unit');
+                                            $pricePerUnit = $get('price_per_unit');
                                             $currentQuantity = $state;
-
-                                            info([
-                                                'price_per_unit_retrieved' => $pricePerUnit,
-                                                'quantity_state' => $currentQuantity,
-                                                'type_of_price' => gettype($pricePerUnit),
-                                                'type_of_quantity' => gettype($currentQuantity),
-                                            ]);
                                             $totalPrice = $pricePerUnit * $currentQuantity;
                                             $set('total_price', $totalPrice);
                                             $set('final_line_price', $totalPrice);
@@ -160,7 +155,7 @@ class OrderResource extends Resource
                             Forms\Components\Placeholder::make('order_summary')
                                 ->label('Order Summary')
                                 ->content(function (Get $get) {
-                                    $products = $get('products');
+                                    $products = $get('lineItems');
                                     $totalOrderAmount = 0;
                                     $summaryHtml = '<ul>';
                                     foreach ($products as $item) {
@@ -201,38 +196,41 @@ class OrderResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
+                TextColumn::make('id')
                     ->label('Order ID')
+                    ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('user.name')
+                TextColumn::make('vendor.name')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('user.name')
                     ->label('Customer')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('purchaseCycle.name')
-                    ->label('Purchase Cycle')
-                    ->searchable()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: false),
-                Tables\Columns\TextColumn::make('status')
+                    ->searchable(),
+                TextColumn::make('email')
+                    ->label('Customer Email')
+                    ->searchable(),
+                TextColumn::make('line_items_count')
+                    ->counts('lineItems')
+                    ->label('Items'),
+                TextColumn::make('total_amount')
+                    ->money('usd')
+                    ->sortable(),
+                TextColumn::make('status')
                     ->badge()
-                    ->searchable()
+                    ->color(fn (string $state): string => match ($state) {
+                        'created' => 'gray',
+                        'pending' => 'warning',
+                        'paid' => 'success',
+                        'cancelled' => 'danger',
+                        default => 'primary',
+                    })
                     ->sortable(),
-                Tables\Columns\TextColumn::make('total_amount')
-                    ->money()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('final_amount')
-                    ->money()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: false),
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('deleted_at')
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -268,6 +266,7 @@ class OrderResource extends Resource
         return [
             'index' => Pages\ListOrders::route('/'),
             'edit' => Pages\EditOrder::route('/{record}/edit'),
+            'view' => Pages\ViewOrder::route('/{record}'),
         ];
     }
 }

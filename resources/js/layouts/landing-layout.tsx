@@ -6,6 +6,7 @@ import { NavItem, type BreadcrumbItem } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { Home } from 'lucide-react';
 import { type ReactNode } from 'react';
+import { Toaster } from 'sonner';
 
 interface LandingLayoutProps {
     children: ReactNode;
@@ -76,6 +77,7 @@ export default ({ children, breadcrumbs }: LandingLayoutProps) => {
                 </div>
             </div>
             {children}
+            <Toaster closeButton duration={3000} />
             <LandingFooter />
         </AppShell>
     );
