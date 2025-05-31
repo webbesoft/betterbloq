@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Filament\Resources\WarehouseResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\PurchaseCycle;
 use App\Models\PurchasePool;
-use App\Models\PurchasePoolRequest;
-use App\Models\PurchasePoolTier;
 use App\Models\Vendor;
+use App\Models\Warehouse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -75,7 +75,9 @@ class ProductController extends Controller
 
         $userRating = null;
         if ($request->user()) {
-            $userRating = $request->user()->product_ratings()->where('id', $product->id)->first();
+            $userRating = Cache::remember("user_rating_{$request->user()->id}_{$product->id}", 600, function () use ($request, $product) {
+                return $request->user()->product_ratings()->where('id', $product->id)->first();
+            });
         }
 
         $canRate = $request->user()
@@ -147,45 +149,24 @@ class ProductController extends Controller
             }
         }
 
-        // $hasPurchasePoolRequest = false;
-        // try {
-        // if ($request->user()) {
-        //    $hasPurchasePoolRequest = (PurchasePoolRequest::whereIsPending()
-        //        ->where('product_id', $product->id)
-        //        ->where('user_id', $request->user()->id)
-        //        ->count() > 0);
-        // }
-        // } catch (\Exception $e) {
-        // throw new Exception($e);
-        // }
+        if ($product->preferred_warehouse_id) {
+            $storageProvider = Cache::remember("preferred_warehouse_{$product->id}", 3600, function () use ($product) {
+                $relatedWarehouse = Warehouse::where('id', $product->preferred_warehouse_id)->first();
+
+                return $relatedWarehouse;
+            });
+        }
 
         $response = Inertia::render('shop/product', [
             'product' => new ProductResource($product),
-            // 'hasPurchasePoolRequest' => $hasPurchasePoolRequest,
+            'hasOrderInPool' => $request->user()->orders()->where('purchase_cycle_id', '=', $activeCycle->id)->exists(),
             'activePurchasePool' => $poolData,
             'activePurchaseCycle' => $cycleData,
+            'storageProvider' => $storageProvider ?? null,
             'canRate' => $canRate,
             'userRating' => $userRating,
         ]);
 
         return $response;
-    }
-
-    private function determineCurrentTier(PurchasePool $pool, int $currentVolume): ?PurchasePoolTier
-    {
-        $applicableTier = null;
-        foreach ($pool->purchasePoolTiers as $tier) {
-            if ($currentVolume >= $tier->min_volume) {
-                if ($tier->max_volume === null || $currentVolume <= $tier->max_volume) {
-                    $applicableTier = $tier;
-                } elseif ($tier->max_volume !== null && $currentVolume > $tier->max_volume) {
-                    continue;
-                }
-            } else {
-                break;
-            }
-        }
-
-        return $applicableTier;
     }
 }

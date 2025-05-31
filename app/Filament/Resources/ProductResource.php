@@ -7,6 +7,7 @@ use App\Filament\Resources\ProductResource\RelationManagers\ImagesRelationManage
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Vendor;
+use App\Models\Warehouse;
 use BulkCreatePurchasePoolsAction;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -80,6 +81,10 @@ class ProductResource extends Resource
 
                     Forms\Components\Tabs\Tab::make('Storage & Handling')
                         ->schema([
+                            Forms\Components\Select::make('preferred_warehouse_id')
+                                ->label('Preferred Storage Provider')
+                                ->options(Warehouse::all()->pluck('name', 'id'))
+                                ->columnSpanFull(),
                             Forms\Components\Toggle::make('storable')
                                 ->inline(false),
                             Forms\Components\TextInput::make('storage_unit_of_measure')

@@ -2,13 +2,13 @@ import { differenceInSeconds, Duration, intervalToDuration } from 'date-fns';
 import { useEffect, useState } from 'react';
 
 type TimeLeft = {
+    months?: number;
     days?: number;
     hours?: number;
     minutes?: number;
     seconds?: number;
 };
 
-// Helper function to pad single digits with a leading zero
 const padZero = (num: number | undefined): string => {
     if (num === undefined) return '00';
     return num < 10 ? `0${num}` : `${num}`;
@@ -26,10 +26,11 @@ export const CountdownTimer = ({ endDate }: { endDate: string | null | undefined
         if (difference > 0) {
             const duration: Duration = intervalToDuration({ start: now, end: end });
             return {
-                days: duration.days,
-                hours: duration.hours,
-                minutes: duration.minutes,
-                seconds: duration.seconds,
+                months: Math.abs(duration.months ?? 0),
+                days: Math.abs(duration.days ?? 0 + (duration.months ?? 0) * 30),
+                hours: Math.abs(duration.hours ?? 0),
+                minutes: Math.abs(duration.minutes ?? 0),
+                seconds: Math.abs(duration.seconds ?? 0),
             };
         }
         return { days: 0, hours: 0, minutes: 0, seconds: 0 };
@@ -41,6 +42,7 @@ export const CountdownTimer = ({ endDate }: { endDate: string | null | undefined
     useEffect(() => {
         const initialTimeLeft = calculateTimeLeft();
         const totalSeconds =
+            (initialTimeLeft.months || 0) * 2629746 +
             (initialTimeLeft.days || 0) * 86400 +
             (initialTimeLeft.hours || 0) * 3600 +
             (initialTimeLeft.minutes || 0) * 60 +

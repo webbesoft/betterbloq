@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Stripe\Stripe;
 
@@ -65,6 +66,7 @@ class Product extends Model
         'max_stack_height_units',
         'storage_conditions_required',
         'storage_handling_notes',
+        'preferred_warehouse_id',
     ];
 
     public function casts(): array
@@ -155,5 +157,10 @@ class Product extends Model
         return $query->whereHas('purchasePools', function (Builder $poolQuery) {
             $poolQuery->where('status', 'open');
         });
+    }
+
+    public function preferredStorageProvider(): HasOne
+    {
+        return $this->hasOne(Warehouse::class, 'id', 'preferred_warehouse_id');
     }
 }

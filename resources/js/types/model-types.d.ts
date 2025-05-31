@@ -7,10 +7,12 @@ export interface Product {
     unit: string;
     vendor: Vendor;
     category: string;
-    preparation_time?: number;
+    delivery_time?: number;
     additional_images: any[];
     average_rating: number;
     ratings_count: number;
+    storable: boolean;
+    storageProvider: Warehouse;
 }
 
 export interface UserRating {
@@ -21,6 +23,19 @@ export interface UserRating {
 export interface Vendor {
     id: number;
     name: string;
+    prep_time: number;
+}
+
+export interface Warehouse {
+    id: number;
+    name: string;
+    phone: string;
+    total_capacity: number;
+    available_capacity: number;
+    default_storage_price_per_unit: number;
+    default_storage_price_period: string;
+    supported_storage_conditions: any;
+    is_active: boolean;
 }
 
 export interface Category {

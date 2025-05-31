@@ -26,7 +26,13 @@ class ProductResource extends JsonResource
             'unit' => $this->unit,
             'vendor' => $this->vendor,
             'category' => $this->category->name,
-            'preparation_time' => $this->preparation_time ?? null,
+            'storable' => $this->storable,
+            'is_stackable' => $this->is_stackable,
+            'storage_unit_of_measure' => $this->storage_unit_of_measure,
+            'default_length' => $this->default_length,
+            'default_width' => $this->default_width,
+            'default_height' => $this->default_height,
+            'delivery_time' => $this->delivery_time ?? null,
             'average_rating' => $this->ratings_avg_rating ?? 0,
         ];
     }

@@ -42,11 +42,9 @@ export const parseAndCompareDates = (
 
         return {
             needsStorage: differenceInDays > dayThreshold,
-            // could be Math.floor, if we don't want to count partial days
             daysDifference: Math.ceil(differenceInDays),
         };
     } catch (error) {
-        console.error('Error parsing or comparing dates:', error);
         return { needsStorage: false, daysDifference: 0 };
     }
 };

@@ -12,21 +12,20 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import LandingLayout from '@/layouts/landing-layout';
 import { formatDate, parseAndCompareDates } from '@/lib/helpers';
 import { useCartStore } from '@/stores/use-cart-store';
 import { Auth } from '@/types';
 import { CartItem } from '@/types/cart';
-import { Product, UserRating } from '@/types/model-types';
+import { Product, UserRating, Warehouse } from '@/types/model-types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { CheckCircle, ExternalLink, Info, PackageSearch, ShoppingCart } from 'lucide-react';
 import { FormEventHandler, useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
+import { ProductPriceCalculator } from './components/product/product-price-calculator';
 import { PurchasePoolInfo } from './components/product/purchase-pool-info';
 import { ProductRating } from './components/product/ratings/product-rating';
 import { RatingStars } from './components/rating-stars';
@@ -56,6 +55,8 @@ interface ProductProps {
     canRate: boolean;
     userRating: UserRating;
     defaultStorageRateMessage: string;
+    hasOrderInPool: boolean;
+    storageProvider: Warehouse;
 }
 
 interface PurchasePoolTierData {
@@ -98,10 +99,12 @@ type OrderForm = {
     expected_delivery_date: string;
     purchase_cycle_id?: number;
     requires_storage_acknowledged?: boolean;
+    finalLinePrice: number;
 };
 
 export default function ProductPage(props: ProductProps) {
-    const { product, activePurchasePool, activePurchaseCycle, canRate, userRating, defaultStorageRateMessage } = props;
+    const { product, activePurchasePool, activePurchaseCycle, canRate, userRating, defaultStorageRateMessage, hasOrderInPool, storageProvider } =
+        props;
 
     const { data: productData } = product;
 
@@ -128,6 +131,7 @@ export default function ProductPage(props: ProductProps) {
         quantity: 1,
         expected_delivery_date: '',
         requires_storage_acknowledged: false,
+        finalLinePrice: productData.price,
     });
 
     useEffect(() => {
@@ -148,7 +152,7 @@ export default function ProductPage(props: ProductProps) {
     const allImages = [...(productData.image ? [{ id: 'primary', url: productData.image }] : []), ...productData.additional_images];
 
     const getSubmitRoute = () => {
-        return activePurchasePool ? route('orders.store') : route('purchase-pool-requests.store');
+        return route('orders.store');
     };
 
     const submit: FormEventHandler = (e) => {
@@ -163,8 +167,6 @@ export default function ProductPage(props: ProductProps) {
             onSuccess: () => {
                 if (activePurchasePool) {
                     reset('quantity', 'expected_delivery_date');
-                } else {
-                    // Handle success for pool request (e.g., navigate or show message)
                 }
             },
             onError: (formErrors) => {
@@ -178,7 +180,7 @@ export default function ProductPage(props: ProductProps) {
             ...productData,
             price: discountedPricePerUnit,
             vendor_id: productData.vendor.id,
-            preparation_time: productData.preparation_time,
+            delivery_time: productData.delivery_time,
             image: productData.image,
             vendor_name: productData.vendor.name,
             quantity: formdata.quantity,
@@ -228,6 +230,16 @@ export default function ProductPage(props: ProductProps) {
     }, [discountedPricePerUnit, formdata.quantity]);
 
     const isActionAreaDisabled = !props.auth?.user || !activePurchasePool;
+
+    const handleCalculatorUpdate = (calculatorState) => {
+        setData((currentData) => ({
+            ...currentData,
+            quantity: calculatorState.quantity,
+            expected_delivery_date: calculatorState.chosenDeliveryDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+            finalLinePrice: calculatorState.finalLinePrice,
+            storage_cost_applied: calculatorState.totalStorageCost,
+        }));
+    };
 
     return (
         <LandingLayout breadcrumbs={breadcrumbs}>
@@ -293,7 +305,7 @@ export default function ProductPage(props: ProductProps) {
                                 >
                                     {productData.name}
                                 </h1>
-                                <div className="flex hidden items-center space-x-2">
+                                <div className="hidden items-center space-x-2">
                                     <Link
                                         // href={route('vendors.show', productData.vendor.id)}
                                         href="#"
@@ -370,28 +382,30 @@ export default function ProductPage(props: ProductProps) {
                         ) : (
                             activePurchasePool && (
                                 <>
-                                    <div
-                                        className={
-                                            'mb-6 flex flex-col items-center justify-center gap-3 rounded-lg border border-green-500 bg-green-50 p-6 text-center text-green-700 shadow-sm dark:border-green-600 dark:bg-green-900/30 dark:text-green-300'
-                                        }
-                                    >
-                                        <CheckCircle className="mb-1 h-8 w-8" />
-                                        <p className={'text-md font-semibold'}>You've already joined the pool for this product!</p>
-                                        <p className="text-sm">You can view your order details in your account.</p>
-                                        <Button
-                                            variant="outline"
-                                            asChild
-                                            className="mt-2 border-green-500 text-green-700 hover:bg-green-100 dark:border-green-600 dark:text-green-300 dark:hover:bg-green-800/30"
+                                    {hasOrderInPool && (
+                                        <div
+                                            className={
+                                                'mb-6 flex flex-col items-center justify-center gap-3 rounded-lg border border-green-500 bg-green-50 p-6 text-center text-green-700 shadow-sm dark:border-green-600 dark:bg-green-900/30 dark:text-green-300'
+                                            }
                                         >
-                                            <Link href={route('orders.index')}>View My Orders</Link>
-                                        </Button>
-                                    </div>
+                                            <CheckCircle className="mb-1 h-8 w-8" />
+                                            <p className={'text-md font-semibold'}>You've already joined the pool for this product!</p>
+                                            <p className="text-sm">You can view your order details in your account.</p>
+                                            <Button
+                                                variant="outline"
+                                                asChild
+                                                className="mt-2 border-green-500 text-green-700 hover:bg-green-100 dark:border-green-600 dark:text-green-300 dark:hover:bg-green-800/30"
+                                            >
+                                                <Link href={route('orders.index')}>View My Orders</Link>
+                                            </Button>
+                                        </div>
+                                    )}
 
                                     <form onSubmit={submit} className="space-y-6 rounded-lg border bg-white p-6 shadow-lg dark:bg-gray-800">
                                         <h2 id="order-section" className="text-xl font-semibold text-gray-900 dark:text-gray-50">
                                             {activePurchasePool ? 'Join Purchase Pool & Order' : 'Place Your Order'}
                                         </h2>
-                                        <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+                                        {/* <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
                                             <div>
                                                 <Label htmlFor="quantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                                     Quantity ({productData.unit})
@@ -430,7 +444,7 @@ export default function ProductPage(props: ProductProps) {
                                                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.expected_delivery_date}</p>
                                                 )}
                                             </div>
-                                        </div>
+                                        </div> */}
 
                                         {showStorageInfoMessage && activePurchasePool && (
                                             <div className="border-primary/50 bg-primary/10 text-primary flex items-start gap-3 rounded-md border p-4 text-sm">
@@ -453,11 +467,20 @@ export default function ProductPage(props: ProductProps) {
 
                                         <Separator />
 
+                                        <ProductPriceCalculator
+                                            product={productData}
+                                            storageProvider={storageProvider}
+                                            initialQuantity={formdata.quantity}
+                                            purchaseDate={new Date()}
+                                            onStateChange={handleCalculatorUpdate}
+                                            minimumDeliveryDate={new Date(activePurchasePool.target_delivery_date ?? '').toISOString().split('T')[0]}
+                                        />
+
+                                        <Separator />
+
                                         <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
                                             <div className="text-left">
-                                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Order Total</p>
                                                 <span className="text-foreground text-2xl font-bold">
-                                                    ${total.toFixed(2)}
                                                     {activePurchasePool && currentDiscountPercent > 0 && (
                                                         <Badge variant="secondary" className="text-primary ml-2 align-middle text-xs">
                                                             {currentDiscountPercent}% off applied

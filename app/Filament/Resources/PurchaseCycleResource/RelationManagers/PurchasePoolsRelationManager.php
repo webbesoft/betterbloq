@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PurchaseCycleResource\RelationManagers;
 
+use App\Models\PurchasePool;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -16,9 +17,9 @@ class PurchasePoolsRelationManager extends RelationManager
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('id')
-                    ->required()
-                    ->maxLength(255),
+                Forms\Components\Select::make('id')
+                    ->label('Select Pool')
+                    ->options(PurchasePool::whereIn('cycle_status', [PurchasePool::STATUS_ACCUMULATING, PurchasePool::STATUS_ACTIVE])->pluck('name', 'id')),
             ]);
     }
 

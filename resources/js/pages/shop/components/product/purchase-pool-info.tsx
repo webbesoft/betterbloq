@@ -69,7 +69,7 @@ export const PurchasePoolInfo = (props: PurchasePoolInfoProps) => {
                     )}
                 </div>
             )}
-            {!target_volume && ( // Fallback if target_volume is not set, though it should be for progress
+            {!target_volume && (
                 <p className="text-muted-foreground text-sm">
                     Current Volume: {current_volume} {product.unit}s
                 </p>
@@ -118,7 +118,7 @@ export const PurchasePoolInfo = (props: PurchasePoolInfoProps) => {
                         </div>
                     </div>
                 )}
-                {activePurchasePool.min_orders_for_discount > 0 && ( // Example of another piece of info
+                {activePurchasePool.min_orders_for_discount > 0 && (
                     <div className="text-muted-foreground flex items-center gap-2">
                         <Users className="h-4 w-4 flex-shrink-0" />
                         <div>
