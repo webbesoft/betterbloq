@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Filament\Resources\WarehouseResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Category;
 use App\Models\Product;
@@ -74,6 +73,8 @@ class ProductController extends Controller
         $request->user()?->loadMissing('orders');
 
         $userRating = null;
+        // user related data
+        $hasOrdersInPool = false;
         if ($request->user()) {
             $userRating = Cache::remember("user_rating_{$request->user()->id}_{$product->id}", 600, function () use ($request, $product) {
                 return $request->user()->product_ratings()->where('id', $product->id)->first();
@@ -157,9 +158,14 @@ class ProductController extends Controller
             });
         }
 
+        $hasOrdersInPool = $request->user()
+            && $request->user()->orders()
+            && $activeCycle
+            && $request->user()->orders()->where('purchase_cycle_id', '=', $activeCycle->id)->exists();
+
         $response = Inertia::render('shop/product', [
             'product' => new ProductResource($product),
-            'hasOrderInPool' => $request->user()->orders()->where('purchase_cycle_id', '=', $activeCycle->id)->exists(),
+            'hasOrderInPool' => $hasOrdersInPool,
             'activePurchasePool' => $poolData,
             'activePurchaseCycle' => $cycleData,
             'storageProvider' => $storageProvider ?? null,
