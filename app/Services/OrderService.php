@@ -79,7 +79,17 @@ class OrderService
         $storageOrderId = $storageHandlingResult['storageOrderId'];
         $userExpectedDeliveryDate = $storageHandlingResult['userExpectedDeliveryDate'];
 
-        $lineItemsResult = self::buildStripeLineItems($productPoolsMap);
+        $orderProductSubtotal = 0;
+        $orderStorageCostApplied = 0;
+        $orderFinalLinePrice = 0;
+
+        foreach ($itemEntries as $cartItem) {
+            $orderProductSubtotal += (float) data_get($cartItem, 'product_subtotal', 0);
+            $orderStorageCostApplied += (float) data_get($cartItem, 'storage_cost_applied', 0);
+            $orderFinalLinePrice += (float) data_get($cartItem, 'final_line_price', 0);
+        }
+
+        $lineItemsResult = self::buildStripeLineItems($productPoolsMap, $orderStorageCostApplied);
         if (! $lineItemsResult['success']) {
             Session::flash('message', ['error' => $lineItemsResult['error']]);
 
@@ -87,12 +97,19 @@ class OrderService
         }
         $line_items = data_get($lineItemsResult, 'line_items');
 
+        $prepareStripeSessionPayloadData = [
+            'user' => $user,
+            'productPoolsMap' => $productPoolsMap,
+            'userExpectedDeliveryDate' => $userExpectedDeliveryDate,
+            'storageOrderId' => $storageOrderId,
+            'storageNeeded' => $storageNeeded,
+            'storageCostApplied' => $orderStorageCostApplied,
+            'finalLinePrice' => $orderFinalLinePrice,
+            'productSubtotal' => $orderProductSubtotal,
+        ];
+
         $checkout_session_payload = self::prepareStripeCheckoutSessionPayload(
-            $user,
-            $productPoolsMap,
-            $userExpectedDeliveryDate,
-            $storageOrderId,
-            $storageNeeded
+            $prepareStripeSessionPayloadData
         );
 
         try {
@@ -286,8 +303,9 @@ class OrderService
         ];
     }
 
-    private static function buildStripeLineItems(array $productPoolsMap): array
+    private static function buildStripeLineItems(array $productPoolsMap, float $storageCostApplied): array
     {
+        info('storage cost applied: ', ['storage' => $storageCostApplied]);
         $line_items = [];
         foreach ($productPoolsMap as $productId => $data) {
             $product = data_get($data, 'product');
@@ -303,6 +321,21 @@ class OrderService
                 'quantity' => $quantity,
             ];
         }
+
+        if ($storageCostApplied > 0) {
+            $line_items[] = [
+                'price_data' => [
+                    'currency' => 'usd',
+                    'product_data' => [
+                        'name' => 'Storage Fee',
+                        'description' => 'Fee for extended storage period.', // Optional
+                    ],
+                    'unit_amount' => (int) round($storageCostApplied * 100),
+                ],
+                'quantity' => 1,
+            ];
+        }
+
         if (empty($line_items)) {
             return ['success' => false, 'error' => 'No items could be prepared for checkout.'];
         }
@@ -310,8 +343,17 @@ class OrderService
         return ['success' => true, 'line_items' => $line_items];
     }
 
-    private static function prepareStripeCheckoutSessionPayload(User $user, array $productPoolsMap, Carbon $userExpectedDeliveryDate, ?int $storageOrderId, bool $storageNeeded): array
+    private static function prepareStripeCheckoutSessionPayload(array $prepareSessionPayload): array
     {
+        $productPoolsMap = data_get($prepareSessionPayload, 'productPoolsMap');
+        $user = data_get($prepareSessionPayload, 'user');
+        $userExpectedDeliveryDate = data_get($prepareSessionPayload, 'userExpectedDeliveryDate');
+        $storageOrderId = data_get($prepareSessionPayload, 'storageOrderId');
+        $storageNeeded = data_get($prepareSessionPayload, 'storageNeeded');
+        $storageCostApplied = data_get($prepareSessionPayload, 'storageCostApplied');
+        $finalLinePrice = data_get($prepareSessionPayload, 'finalLinePrice');
+        $productSubtotal = data_get($prepareSessionPayload, 'productSubtotal');
+
         $itemDetailsForMetadata = [];
         $totalQuantity = 0;
         $firstProductName = 'Multiple Items';
@@ -351,10 +393,13 @@ class OrderService
                 'item_details' => json_encode($itemDetailsForMetadata),
                 'vendor_id' => $data['product']->vendor_id,
                 'total_items_quantity' => $totalQuantity,
+                'product_subtotal' => (string) $productSubtotal,
+                'storage_cost_applied' => (string) $storageCostApplied,
+                'final_line_price_charged' => (string) $finalLinePrice,
             ],
             'payment_intent_data' => [
                 'capture_method' => 'manual',
-                'description' => "Order for {$firstProductName} - User: {$user->id}",
+                'description' => "Order for {$firstProductName} - User: {$user->id} (Total: ".number_format((float) $finalLinePrice, 2).')',
                 'metadata' => [
                     'order_type' => 'purchase_pool_join_multiple',
                     'user_id' => $user->id,
@@ -400,6 +445,8 @@ class OrderService
         // Enhanced vendor_id logic
         $vendorId = data_get($metadata, 'vendor_id');
         $purchaseCycleId = data_get($metadata, 'purchase_cycle_id');
+        $productSubtotalMeta = data_get($metadata, 'product_subtotal');
+        $storageCostAppliedMeta = data_get($metadata, 'storage_cost_applied');
         if (! $vendorId && ! empty($itemDetailsLookup)) {
             $firstItemDetail = reset($itemDetailsLookup); // Get the first element
             if ($firstItemDetail && isset($firstItemDetail['vendor_id'])) {
@@ -411,6 +458,9 @@ class OrderService
             Log::error('Webhook: Vendor ID could not be determined for order creation.', ['session_id' => $session['id'], 'metadata' => $metadata]);
         }
 
+        $productSubtotalMeta = data_get($metadata, 'product_subtotal');
+        $storageCostAppliedMeta = data_get($metadata, 'storage_cost_applied');
+
         return Order::create([
             'user_id' => $user->id,
             'purchase_cycle_id' => $purchaseCycleId,
@@ -420,10 +470,12 @@ class OrderService
             'status' => OrderStatusEnum::PAYMENT_AUTHORIZED,
             'stripe_session_id' => data_get($session, 'id'),
             'payment_intent_id' => data_get($session, 'payment_intent'),
-            'initial_amount' => data_get($session, 'amount_total', 0) / 100, // Default to 0 if missing
+            'initial_amount' => data_get($session, 'amount_total', 0) / 100,
             'total_amount' => data_get($session, 'amount_total', 0) / 100,
             // 'expected_delivery_date' => isset($metadata['expected_delivery_date']) ? Carbon::parse($metadata['expected_delivery_date'])->toDateString() : null,
             'vendor_id' => $vendorId,
+            'product_subtotal' => $productSubtotalMeta !== null ? (float) $productSubtotalMeta : null,
+            'storage_cost_applied' => $storageCostAppliedMeta !== null ? (float) $storageCostAppliedMeta : null,
         ]);
     }
 
@@ -431,52 +483,74 @@ class OrderService
     {
         foreach ($lineItemsFromStripe->data as $lineItem) {
             $stripePriceId = $lineItem->price->id;
-            $product = Product::where('stripe_price_id', $stripePriceId)->first();
 
-            if (! $product) {
-                Log::warning('Webhook: Product not found for Stripe price ID.', ['stripe_price_id' => $stripePriceId, 'order_id' => $mainOrder->id]);
+            if ($stripePriceId) {
+                $product = Product::where('stripe_price_id', $stripePriceId)->first();
+            }
+            if ($product) {
+                $purchasePoolId = null;
+                $purchaseCycleId = null;
+
+                if (isset($itemDetailsLookup[$product->id])) {
+                    $matchedItemDetail = $itemDetailsLookup[$product->id];
+                    $purchasePoolId = data_get($matchedItemDetail, 'purchase_pool_id');
+                    $purchaseCycleId = data_get($matchedItemDetail, 'purchase_cycle_id');
+
+                    if (is_null($purchasePoolId)) {
+                        info("Webhook Warning: Product ID {$product->id} in item_details metadata missing 'purchase_pool_id'.", ['matchedItemDetail' => $matchedItemDetail, 'order_id' => $mainOrder->id]);
+                    }
+                    if (is_null($purchaseCycleId)) {
+                        info("Webhook Warning: Product ID {$product->id} in item_details metadata missing 'purchase_cycle_id'.", ['matchedItemDetail' => $matchedItemDetail, 'order_id' => $mainOrder->id]);
+                    }
+                } else {
+                    info("Webhook Warning: No matching item_details metadata for product ID {$product->id}.", ['line_item_id' => $lineItem->id, 'product_id' => $product->id, 'order_id' => $mainOrder->id]);
+                }
+
+                OrderLineItem::create([
+                    'order_id' => $mainOrder->id,
+                    'product_id' => $product->id,
+                    'quantity' => $lineItem->quantity,
+                    'price_per_unit' => ($lineItem->price->unit_amount / 100),
+                    'total_price' => ($lineItem->amount_total / 100),
+                    'purchase_pool_id' => $purchasePoolId,
+                ]);
+
+                if ($purchasePoolId && $activePool = PurchasePool::find($purchasePoolId)) {
+                    $activePool->increment('current_volume', $lineItem->quantity);
+                }
+
+                if ($purchaseCycleId && $product && $currentCycle = PurchaseCycle::find($purchaseCycleId)) {
+                    $cycleProductVolume = CycleProductVolume::firstOrCreate(
+                        ['purchase_cycle_id' => $currentCycle->id, 'product_id' => $product->id],
+                        ['total_aggregated_quantity' => 0]
+                    );
+                    $cycleProductVolume->increment('total_aggregated_quantity', $lineItem->quantity);
+                }
+            } else {
+                $lineItemDescription = $lineItem->description ?? '';
+
+                if (strtolower($lineItemDescription) === 'storage fee') {
+                    OrderLineItem::create([
+                        'order_id' => $mainOrder->id,
+                        'product_id' => null,
+                        'description' => 'Storage Fee',
+                        'quantity' => $lineItem->quantity,
+                        'price_per_unit' => ($lineItem->amount_total / 100),
+                        'total_price' => ($lineItem->amount_total / 100),
+                        'purchase_pool_id' => null,
+                    ]);
+                    Log::info('Webhook: Processed storage fee line item for order.', ['order_id' => $mainOrder->id, 'amount' => ($lineItem->amount_total / 100)]);
+                } else {
+                    Log::warning('Webhook: Product not found for Stripe price ID and not identified as storage fee.', [
+                        'stripe_price_id' => $stripePriceId,
+                        'description' => $lineItemDescription,
+                        'order_id' => $mainOrder->id,
+                    ]);
+                }
 
                 continue;
             }
 
-            $purchasePoolId = null;
-            $purchaseCycleId = null;
-
-            if (isset($itemDetailsLookup[$product->id])) {
-                $matchedItemDetail = $itemDetailsLookup[$product->id];
-                $purchasePoolId = data_get($matchedItemDetail, 'purchase_pool_id');
-                $purchaseCycleId = data_get($matchedItemDetail, 'purchase_cycle_id');
-
-                if (is_null($purchasePoolId)) {
-                    info("Webhook Warning: Product ID {$product->id} in item_details metadata missing 'purchase_pool_id'.", ['matchedItemDetail' => $matchedItemDetail, 'order_id' => $mainOrder->id]);
-                }
-                if (is_null($purchaseCycleId)) {
-                    info("Webhook Warning: Product ID {$product->id} in item_details metadata missing 'purchase_cycle_id'.", ['matchedItemDetail' => $matchedItemDetail, 'order_id' => $mainOrder->id]);
-                }
-            } else {
-                info("Webhook Warning: No matching item_details metadata for product ID {$product->id}.", ['line_item_id' => $lineItem->id, 'product_id' => $product->id, 'order_id' => $mainOrder->id]);
-            }
-
-            OrderLineItem::create([
-                'order_id' => $mainOrder->id,
-                'product_id' => $product->id,
-                'quantity' => $lineItem->quantity,
-                'price_per_unit' => ($lineItem->price->unit_amount / 100),
-                'total_price' => ($lineItem->amount_total / 100),
-                'purchase_pool_id' => $purchasePoolId,
-            ]);
-
-            if ($purchasePoolId && $activePool = PurchasePool::find($purchasePoolId)) {
-                $activePool->increment('current_volume', $lineItem->quantity);
-            }
-
-            if ($purchaseCycleId && $product && $currentCycle = PurchaseCycle::find($purchaseCycleId)) {
-                $cycleProductVolume = CycleProductVolume::firstOrCreate(
-                    ['purchase_cycle_id' => $currentCycle->id, 'product_id' => $product->id],
-                    ['total_aggregated_quantity' => 0]
-                );
-                $cycleProductVolume->increment('total_aggregated_quantity', $lineItem->quantity);
-            }
         }
     }
 

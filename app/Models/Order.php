@@ -49,7 +49,7 @@ class Order extends Model
         'address',
         'status',
         'quantity',
-        'purchase_pool_id',
+        'purchase_cycle_id',
         'product_id',
         'user_id',
         'stripe_session_id',
@@ -61,6 +61,8 @@ class Order extends Model
         'total_amount',
         'shipping_address',
         'billing_address',
+        'product_subtotal',
+        'storage_cost_applied',
     ];
 
     public function casts(): array

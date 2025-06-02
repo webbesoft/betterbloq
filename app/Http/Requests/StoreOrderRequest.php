@@ -25,6 +25,10 @@ class StoreOrderRequest extends FormRequest
             'expected_delivery_date' => 'required|date',
             'purchase_cycle_id' => 'sometimes|integer',
             'requires_storage_acknowledged' => 'sometimes|boolean',
+            'final_line_price' => 'required|decimal:2',
+            'storage_cost_applied' => 'sometimes|decimal:2',
+            'daily_storage_price' => 'sometimes|decimal:2',
+            'product_subtotal' => 'required|decimal:2',
         ];
     }
 }

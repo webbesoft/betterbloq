@@ -53,6 +53,8 @@ class CheckoutSessionCompletedManager
     public static function parseItemDetailsMetadata(array $metadata, string $sessionId): array
     {
         $itemDetailsJson = data_get($metadata, 'item_details');
+        $productSubtotalMeta = data_get($metadata, 'product_subtotal');
+        $storageCostAppliedMeta = data_get($metadata, 'storage_cost_applied');
         $decodedItemDetails = [];
 
         if ($itemDetailsJson) {

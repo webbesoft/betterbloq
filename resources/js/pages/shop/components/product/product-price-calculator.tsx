@@ -1,7 +1,6 @@
 import { Product, Warehouse } from '@/types/model-types';
 import { useEffect, useMemo, useState } from 'react';
 
-// Helper function to add days to a date
 const addDays = (date: string, days: number) => {
     const result = new Date(date);
     result.setDate(result.getDate() + days);
@@ -34,6 +33,17 @@ interface ProductPriceCalculatorProps {
     minimumDeliveryDate: string;
 }
 
+export interface PriceCalculatorState {
+    quantity: number;
+    chosenDeliveryDate: Date;
+    productSubtotal: number;
+    totalStorageCost: number;
+    finalLinePrice: number;
+    requiresStorage: boolean;
+    storageDays: number;
+    dailyStoragePrice: number;
+}
+
 export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
     const { product, initialQuantity, onStateChange, minimumDeliveryDate, storageProvider } = props;
     const [quantity, setQuantity] = useState(initialQuantity);
@@ -47,23 +57,20 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
         return new Date(baseExpectedDeliveryDate);
     });
 
-    const handleQuantityChange = (event) => {
+    const handleQuantityChange = (event: { target: { value: string } }) => {
         const newQuantity = parseInt(event.target.value, 10);
         setQuantity(newQuantity > 0 ? newQuantity : 1);
     };
 
-    const handleDateChange = (event) => {
+    const handleDateChange = (event: { target: { value: string | number | Date } }) => {
         setChosenDeliveryDate(new Date(event.target.value));
     };
 
-    // Calculate storage details
     const { storageDays, dailyStoragePrice, totalStorageCost, requiresStorage } = useMemo(() => {
-        // Use the 'storageProvider' prop here
         if (!storageProvider || !chosenDeliveryDate) {
             return { storageDays: 0, dailyStoragePrice: 0, totalStorageCost: 0, requiresStorage: false };
         }
 
-        // Normalize dates to compare day parts only (already done by YYYY-MM-DD parsing to UTC midnight)
         const startOfChosenDate = new Date(chosenDeliveryDate.getFullYear(), chosenDeliveryDate.getMonth(), chosenDeliveryDate.getDate());
         const startOfExpectedDate = new Date(
             baseExpectedDeliveryDate.getFullYear(),
@@ -77,10 +84,9 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
         let currentStorageDays = 0;
         let currentRequiresStorage = false;
 
-        if (diffInDays > 3) {
+        if (diffInDays > 7) {
             currentRequiresStorage = true;
-            // Ensure storage days is not negative if logic changes or dates are unexpected
-            currentStorageDays = Math.max(0, Math.ceil(diffInDays - 3));
+            currentStorageDays = Math.max(0, Math.ceil(diffInDays - 7));
         }
 
         const currentDailyStoragePrice = convertToDailyPrice(
@@ -96,7 +102,7 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
             totalStorageCost: currentTotalStorageCost,
             requiresStorage: currentRequiresStorage,
         };
-    }, [storageProvider, chosenDeliveryDate, baseExpectedDeliveryDate, quantity]); // Use storageProvider prop in dependency array
+    }, [storageProvider, chosenDeliveryDate, baseExpectedDeliveryDate, quantity]);
 
     const productSubtotal = (product.price ?? 0) * quantity;
     const finalLinePrice = productSubtotal + totalStorageCost;
@@ -124,7 +130,6 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
     return (
         <div className="mx-auto w-full rounded-lg border bg-white p-4 shadow-md">
             {' '}
-            {/* Added max-w-md for consistency */}
             <h2 className="mb-4 text-2xl font-semibold text-gray-800">{product.name}</h2>
             <div className="mb-4">
                 <label htmlFor="quantity" className="mb-1 block text-sm font-medium text-gray-700">
@@ -158,11 +163,11 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
                     name="calculator_delivery_date"
                     value={formatDate(chosenDeliveryDate)}
                     onChange={handleDateChange}
-                    min={minimumDeliveryDate} // Assumes minimumDeliveryDate is 'YYYY-MM-DD'
+                    min={minimumDeliveryDate}
                     className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 />
             </div>
-            {storageProvider && ( // Check the prop
+            {storageProvider && (
                 <div className="mb-4 rounded-md bg-gray-50 p-3">
                     <h3 className="mb-2 text-lg font-medium text-gray-700">Storage Information</h3>
                     {requiresStorage ? (
@@ -175,21 +180,18 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
                         </>
                     ) : (
                         <p className="text-sm text-green-600">
-                            No additional storage cost for the selected delivery date. (Up to 3 days grace period after expected delivery date of{' '}
+                            No additional storage cost for the selected delivery date. (Up to 7 days grace period after expected delivery date of{' '}
                             {formatDate(baseExpectedDeliveryDate)})
                         </p>
                     )}
                 </div>
             )}
-            {/* Logic for when product is storable but no provider, or not storable */}
             {!storageProvider && product.storable && (
                 <p className="mb-4 rounded-md bg-yellow-50 p-3 text-sm text-yellow-600">
                     Storage information is not available for this product, or no preferred provider is assigned.
                 </p>
             )}
-            {!product.storable && ( // Assuming product has a 'storable' boolean field
-                <p className="mb-4 rounded-md bg-blue-50 p-3 text-sm text-blue-600">This product does not require storage.</p>
-            )}
+            {!product.storable && <p className="mb-4 rounded-md bg-blue-50 p-3 text-sm text-blue-600">This product does not require storage.</p>}
             <div className="mt-6 border-t pt-4">
                 <div className="text-md mb-1 flex justify-between">
                     <span>

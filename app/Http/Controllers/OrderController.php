@@ -69,6 +69,10 @@ class OrderController extends Controller
                 }
             }
             $serviceData['expected_delivery_date'] = $validated['expected_delivery_date'] ?? null;
+            $serviceData['final_line_price'] = data_get($validated, 'final_line_price');
+            $serviceData['storage_cost_applied'] = data_get($validated, 'storage_cost_applied');
+            $serviceData['daily_storage_price'] = data_get($validated, 'daily_storage_price');
+            $serviceData['product_subtotal'] = data_get($validated, 'product_subtotal');
         }
         // #! scenario 2: single product order
         elseif (isset($validated['product_id'])) {
@@ -77,6 +81,10 @@ class OrderController extends Controller
                     'product_id' => $validated['product_id'],
                     'quantity' => $validated['quantity'],
                     'purchase_cycle_id' => $validated['purchase_cycle_id'] ?? null,
+                    'final_line_price' => data_get($validated, 'final_line_price'),
+                    'storage_cost_applied' => data_get($validated, 'storage_cost_applied'),
+                    'daily_storage_price' => data_get($validated, 'daily_storage_price'),
+                    'product_subtotal' => data_get($validated, 'product_subtotal'),
                 ],
             ];
             $serviceData['expected_delivery_date'] = $validated['expected_delivery_date'] ?? null;

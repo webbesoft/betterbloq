@@ -25,7 +25,7 @@ import { FormEventHandler, useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
-import { ProductPriceCalculator } from './components/product/product-price-calculator';
+import { PriceCalculatorState, ProductPriceCalculator } from './components/product/product-price-calculator';
 import { PurchasePoolInfo } from './components/product/purchase-pool-info';
 import { ProductRating } from './components/product/ratings/product-rating';
 import { RatingStars } from './components/rating-stars';
@@ -99,7 +99,7 @@ type OrderForm = {
     expected_delivery_date: string;
     purchase_cycle_id?: number;
     requires_storage_acknowledged?: boolean;
-    finalLinePrice: number;
+    final_line_price: number;
 };
 
 export default function ProductPage(props: ProductProps) {
@@ -131,7 +131,7 @@ export default function ProductPage(props: ProductProps) {
         quantity: 1,
         expected_delivery_date: '',
         requires_storage_acknowledged: false,
-        finalLinePrice: productData.price,
+        final_line_price: productData.price,
     });
 
     useEffect(() => {
@@ -225,19 +225,17 @@ export default function ProductPage(props: ProductProps) {
         return pricePerUnit * (1 - currentDiscountPercent / 100);
     }, [pricePerUnit, currentDiscountPercent]);
 
-    const total = useMemo(() => {
-        return discountedPricePerUnit * formdata.quantity;
-    }, [discountedPricePerUnit, formdata.quantity]);
-
     const isActionAreaDisabled = !props.auth?.user || !activePurchasePool;
 
-    const handleCalculatorUpdate = (calculatorState) => {
+    const handleCalculatorUpdate = (calculatorState: PriceCalculatorState) => {
         setData((currentData) => ({
             ...currentData,
             quantity: calculatorState.quantity,
-            expected_delivery_date: calculatorState.chosenDeliveryDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
-            finalLinePrice: calculatorState.finalLinePrice,
-            storage_cost_applied: calculatorState.totalStorageCost,
+            expected_delivery_date: calculatorState.chosenDeliveryDate.toISOString().split('T')[0],
+            final_line_price: calculatorState.finalLinePrice,
+            storage_cost_applied: Number(calculatorState.totalStorageCost).toFixed(2),
+            product_subtotal: calculatorState.productSubtotal,
+            daily_storage_price: calculatorState.dailyStoragePrice,
         }));
     };
 
