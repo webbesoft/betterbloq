@@ -141,14 +141,20 @@ class OrderResource extends Resource
                                 ->maxLength(65535)
                                 ->columnSpanFull()
                                 ->nullable(),
-                            Forms\Components\Textarea::make('billing_address')
-                                ->maxLength(65535)
-                                ->columnSpanFull()
-                                ->nullable(),
-                            Forms\Components\Textarea::make('shipping_address')
-                                ->maxLength(65535)
-                                ->columnSpanFull()
-                                ->nullable(),
+                            Forms\Components\Select::make('billing_address_id')
+                                ->label('Billing Address')
+                                ->relationship('billingAddress', 'address_line_1')
+                                ->searchable()
+                                ->preload()
+                                ->nullable()
+                                ->helperText('Select a billing address from saved addresses.'),
+                            Forms\Components\Select::make('shipping_address_id')
+                                ->label('Shipping Address')
+                                ->relationship('shippingAddress', 'address_line_1')
+                                ->searchable()
+                                ->preload()
+                                ->nullable()
+                                ->helperText('Select a shipping address from saved addresses.'),
                         ]),
                     Step::make('Review & Confirm')
                         ->schema([

@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Http\Resources\OrderLineItemResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,7 +27,9 @@ class OrderResource extends JsonResource
 
             'line_items' => OrderLineItemResource::collection($this->whenLoaded('lineItems')),
 
-            'total_order_price' => $this->resource->orderTotal
+            'total_order_price' => $this->resource->orderTotal,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

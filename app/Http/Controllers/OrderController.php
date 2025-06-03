@@ -26,7 +26,7 @@ class OrderController extends Controller
 
             return $ordersQuery
                 ->where('user_id', $request->user()->id)
-                ->with(['lineItems', 'vendor', 'lineItems.product.category', 'lineItems.purchasePool.purchasePoolTiers'])
+                ->with(['lineItems', 'vendor', 'lineItems.product.category', 'lineItems.purchasePool.purchasePoolTiers', 'lineItems.purchasePool.purchaseCycle'])
                 ->paginate(10);
         });
 
@@ -37,7 +37,7 @@ class OrderController extends Controller
 
     public function show(Request $request, Order $order)
     {
-        $order->load(['lineItems', 'lineItems.product', 'vendor', 'lineItems.purchasePool', 'lineItems.purchasePool.purchasePoolTiers']);
+        $order->load(['lineItems', 'lineItems.product', 'vendor', 'lineItems.purchasePool', 'lineItems.purchasePool.purchasePoolTiers', 'lineItems.purchasePool.purchaseCycle', 'purchaseCycle']);
 
         return Inertia::render('shop/orders/show', [
             'order' => new OrderResource($order),

@@ -161,6 +161,7 @@ export interface OrderLineItem {
     total_price: number;
     product: Product;
     purchase_pool: PurchasePool;
+    description: string;
 }
 
 export interface PurchasePool {

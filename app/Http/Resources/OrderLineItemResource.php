@@ -2,15 +2,13 @@
 
 namespace App\Http\Resources;
 
-use App\Filament\Resources\PurchasePoolTierResource;
-use App\Http\Resources\ProductResource;
-use App\Http\Resources\PurchasePoolResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class OrderLineItemResource extends JsonResource
 {
-    public function toArray(Request $request): array{
+    public function toArray(Request $request): array
+    {
         return [
             'id' => $this->id,
             'product_id' => $this->product_id,
@@ -20,7 +18,8 @@ class OrderLineItemResource extends JsonResource
             'purchase_pool' => new PurchasePoolResource($this->whenLoaded('purchasePool')),
             'purchase_pool_tier' => $this->resource->purchasePool->getApplicableTier(),
             'price_per_unit' => $this->price_per_unit,
-            'total_price' => $this->total_price
+            'total_price' => $this->total_price,
+            'description' => $this->description ?? null,
         ];
     }
 }

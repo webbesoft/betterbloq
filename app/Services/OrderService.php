@@ -528,6 +528,9 @@ class OrderService
                 }
             } else {
                 $lineItemDescription = $lineItem->description ?? '';
+                info(['item_details' => $itemDetailsLookup]);
+                $firstProductDetails = array_values($itemDetailsLookup);
+                $purchasePoolId = data_get($firstProductDetails, '0.purchase_pool_id');
 
                 if (strtolower($lineItemDescription) === 'storage fee') {
                     OrderLineItem::create([
@@ -537,7 +540,7 @@ class OrderService
                         'quantity' => $lineItem->quantity,
                         'price_per_unit' => ($lineItem->amount_total / 100),
                         'total_price' => ($lineItem->amount_total / 100),
-                        'purchase_pool_id' => null,
+                        'purchase_pool_id' => $purchasePoolId,
                     ]);
                     Log::info('Webhook: Processed storage fee line item for order.', ['order_id' => $mainOrder->id, 'amount' => ($lineItem->amount_total / 100)]);
                 } else {

@@ -104,7 +104,7 @@ class AddressResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('model')
+                Tables\Columns\TextColumn::make('model.name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('model_id')
                     ->numeric()

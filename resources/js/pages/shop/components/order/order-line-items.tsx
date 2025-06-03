@@ -19,29 +19,53 @@ const OrderLineItemsList = (props: Props) => {
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
                 {' '}
                 {line_items.map((line_item: OrderLineItem) => {
-                    const product = line_item.product;
-                    if (!product) return null;
+                    const product = line_item.product ?? null;
 
                     return (
                         <div key={line_item.id} className="grid grid-cols-1 items-center gap-4 py-4 md:grid-cols-4 lg:grid-cols-5">
-                            {product.image && (
+                            {product && product.image ? (
                                 <div className="flex justify-center md:col-span-1">
                                     {' '}
                                     <div className="h-16 w-16 overflow-hidden rounded-md">
                                         {' '}
-                                        <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                                        <img
+                                            src={product.image}
+                                            alt={product.name}
+                                            className="h-full w-full object-cover"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src =
+                                                    'https://placehold.co/600x400/e2e8f0/cbd5e0?text=Image+Not+Available';
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex justify-center md:col-span-1">
+                                    {' '}
+                                    <div className="h-16 w-16 overflow-hidden rounded-md">
+                                        {' '}
+                                        <img
+                                            src={undefined}
+                                            alt={(product && product.name) ?? line_item.description}
+                                            className="h-full w-full object-cover"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = 'https://placehold.co/600x400/e2e8f0/cbd5e0?text=Storage+Fee';
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             )}
 
                             <div className="space-y-1 md:col-span-1 lg:col-span-2">
-                                <p className="font-medium text-gray-900 dark:text-gray-100">{product.name}</p>
+                                <p className="font-medium text-gray-900 dark:text-gray-100">{(product && product.name) ?? line_item.description}</p>
                                 <div className="flex flex-wrap items-center gap-2">
                                     {' '}
                                     {/* Use flex-wrap for smaller screens */}
-                                    <Badge variant="secondary" className="text-xs">
-                                        {product.category}
-                                    </Badge>
+                                    {product && (
+                                        <Badge variant="secondary" className="text-xs">
+                                            {product.category}
+                                        </Badge>
+                                    )}
                                     {/* Display Purchase Pool Discount if available */}
                                     {line_item.purchase_pool && line_item.purchase_pool.discount_percentage > 0 && (
                                         <Badge variant="default" color="green" className="text-xs">

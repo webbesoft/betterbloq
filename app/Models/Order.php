@@ -59,8 +59,8 @@ class Order extends Model
         'project_id',
         'vendor_id',
         'total_amount',
-        'shipping_address',
-        'billing_address',
+        'shipping_address_id',
+        'billing_address_id',
         'product_subtotal',
         'storage_cost_applied',
     ];
@@ -121,5 +121,15 @@ class Order extends Model
     public function getOrderTotalAttribute(): float
     {
         return $this->lineItems->sum('total_price');
+    }
+
+    public function billingAddress(): BelongsTo
+    {
+        return $this->belongsTo(Address::class, 'billing_address_id');
+    }
+
+    public function shippingAddress(): BelongsTo
+    {
+        return $this->belongsTo(Address::class, 'shipping_address_id');
     }
 }

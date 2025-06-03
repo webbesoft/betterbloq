@@ -20,4 +20,28 @@ class Address extends Model
         'model_id',
         'model_type',
     ];
+
+    protected $casts = [
+        'model_id' => 'integer',
+        'model_type' => 'string',
+    ];
+
+    public function model()
+    {
+        return $this->morphTo();
+    }
+
+    public function getFullAddressAttribute(): string
+    {
+        $addressParts = [
+            $this->address_line_1,
+            $this->address_line_2,
+            $this->city,
+            $this->state,
+            $this->postal_code,
+            $this->country_code,
+        ];
+
+        return implode(', ', array_filter($addressParts));
+    }
 }

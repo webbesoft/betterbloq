@@ -7,6 +7,7 @@ use App\Managers\CheckoutSessionCompletedManager;
 use App\Models\User;
 use App\Services\LogService;
 use App\Services\OrderService;
+use Exception;
 use Illuminate\Support\Facades\Log as FacadesLog;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Cashier\Events\WebhookReceived;
@@ -89,7 +90,7 @@ class StripeEventListener
             } else {
                 FacadesLog::error('Failed to create order from Stripe webhook.', ['session_id' => $session['id']]);
             }
-        } catch (ApiErrorException $e) {
+        } catch (Exception $e) {
             (new LogService)->logException($e, __CLASS__, __METHOD__, [
                 'payload' => $payload,
             ]);

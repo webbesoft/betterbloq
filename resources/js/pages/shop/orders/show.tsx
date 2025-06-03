@@ -194,7 +194,7 @@ export default function OrderView(props: ShowOrderProps) {
                         </div>
                     </Card>
                     {/* Product Details */}
-                    <OrderLineItemsList line_items={data.line_items} /> {/* Assume this component correctly displays line items */}
+                    <OrderLineItemsList line_items={data.line_items} />
                     {data.total_order_price !== undefined && (
                         <div className="mt-4 flex justify-end border-t border-gray-200 pt-4 dark:border-gray-700">
                             <div className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100">

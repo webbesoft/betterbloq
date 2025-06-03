@@ -20,7 +20,7 @@ import { Auth } from '@/types';
 import { CartItem } from '@/types/cart';
 import { Product, UserRating, Warehouse } from '@/types/model-types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { CheckCircle, ExternalLink, Info, PackageSearch, ShoppingCart } from 'lucide-react';
+import { CheckCircle, ExternalLink, Info, PackageSearch } from 'lucide-react';
 import { FormEventHandler, useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -99,7 +99,10 @@ type OrderForm = {
     expected_delivery_date: string;
     purchase_cycle_id?: number;
     requires_storage_acknowledged?: boolean;
-    final_line_price: number;
+    final_line_price: string;
+    final_storage_price?: string;
+    daily_storage_price?: string;
+    product_subtotal: string;
 };
 
 export default function ProductPage(props: ProductProps) {
@@ -131,7 +134,10 @@ export default function ProductPage(props: ProductProps) {
         quantity: 1,
         expected_delivery_date: '',
         requires_storage_acknowledged: false,
-        final_line_price: productData.price,
+        final_line_price: Number(productData.price).toFixed(2),
+        final_storage_price: '',
+        daily_storage_price: '',
+        product_subtotal: '',
     });
 
     useEffect(() => {
@@ -232,10 +238,10 @@ export default function ProductPage(props: ProductProps) {
             ...currentData,
             quantity: calculatorState.quantity,
             expected_delivery_date: calculatorState.chosenDeliveryDate.toISOString().split('T')[0],
-            final_line_price: calculatorState.finalLinePrice,
+            final_line_price: Number(calculatorState.finalLinePrice).toFixed(2),
             storage_cost_applied: Number(calculatorState.totalStorageCost).toFixed(2),
-            product_subtotal: calculatorState.productSubtotal,
-            daily_storage_price: calculatorState.dailyStoragePrice,
+            product_subtotal: Number(calculatorState.productSubtotal).toFixed(2),
+            daily_storage_price: Number(calculatorState.dailyStoragePrice).toFixed(2),
         }));
     };
 
@@ -487,7 +493,7 @@ export default function ProductPage(props: ProductProps) {
                                                 </span>
                                             </div>
                                             <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                                                <Button
+                                                {/* <Button
                                                     type="button"
                                                     variant="outline"
                                                     className="w-full sm:w-auto"
@@ -496,7 +502,7 @@ export default function ProductPage(props: ProductProps) {
                                                 >
                                                     <ShoppingCart className="mr-2 h-4 w-4" />
                                                     Add to Cart
-                                                </Button>
+                                                </Button> */}
                                                 <Button
                                                     type="submit"
                                                     className="w-full sm:w-auto"

@@ -52,7 +52,6 @@ export default function ProductListItem(props: ProductListItemProps) {
                 {/* Price */}
                 <p className="mb-3 text-lg font-semibold">
                     ${product.price}
-                    {/* Optional: Show original price if on sale */}
                     {product.is_on_sale && product.original_price && (
                         <span className="text-muted-foreground ml-2 text-sm line-through">${product.original_price}</span>
                     )}
@@ -64,7 +63,6 @@ export default function ProductListItem(props: ProductListItemProps) {
                     onClick={(e) => {
                         e.preventDefault(); // Prevent link navigation if clicking button
                         // Add to cart logic here
-                        console.log('Add to cart:', product.id);
                     }}
                 >
                     Add to Cart

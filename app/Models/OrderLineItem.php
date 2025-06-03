@@ -19,14 +19,15 @@ class OrderLineItem extends Model
         'total_price',
         'quantity',
         'final_line_price',
-        'applied_discount_percentage'
+        'applied_discount_percentage',
+        'description',
     ];
 
     public function casts(): array
     {
         return [
             'total_price' => 'float',
-            'price_per_unit' => 'float'
+            'price_per_unit' => 'float',
         ];
     }
 
