@@ -1,3 +1,4 @@
+import { StorageCalculatorService } from '@/components/services/StorageCalculatorService';
 import { Product, Warehouse } from '@/types/model-types';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -67,7 +68,7 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
     };
 
     const { storageDays, dailyStoragePrice, totalStorageCost, requiresStorage } = useMemo(() => {
-        if (!storageProvider || !chosenDeliveryDate) {
+        if (!storageProvider || !chosenDeliveryDate || !product || product.storable === false) {
             return { storageDays: 0, dailyStoragePrice: 0, totalStorageCost: 0, requiresStorage: false };
         }
 
@@ -79,6 +80,11 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
         );
 
         const diffInMilliseconds = startOfChosenDate.getTime() - startOfExpectedDate.getTime();
+
+        if (isNaN(diffInMilliseconds)) {
+            console.error('Invalid date calculation for storage days.');
+            return { storageDays: 0, dailyStoragePrice: 0, totalStorageCost: 0, requiresStorage: false };
+        }
         const diffInDays = diffInMilliseconds / (1000 * 60 * 60 * 24);
 
         let currentStorageDays = 0;
@@ -89,12 +95,23 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
             currentStorageDays = Math.max(0, Math.ceil(diffInDays - 7));
         }
 
-        const currentDailyStoragePrice = convertToDailyPrice(
-            storageProvider.default_storage_price_per_unit,
-            storageProvider.default_storage_price_period,
-        );
+        let currentDailyStoragePrice = 0;
+        let currentTotalStorageCost = 0;
 
-        const currentTotalStorageCost = currentStorageDays * currentDailyStoragePrice * quantity;
+        if (currentRequiresStorage && currentStorageDays > 0) {
+            try {
+                const calculator = new StorageCalculatorService(product, storageProvider);
+                currentDailyStoragePrice = calculator.getStorageCostPerProductUnitPerDay();
+
+                currentTotalStorageCost = currentDailyStoragePrice * quantity * currentStorageDays;
+            } catch (error) {
+                console.error('Error calculating storage cost with StorageCalculatorService:', error);
+
+                currentDailyStoragePrice = 0;
+                currentTotalStorageCost = 0;
+                currentRequiresStorage = false;
+            }
+        }
 
         return {
             storageDays: currentStorageDays,
@@ -102,7 +119,7 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
             totalStorageCost: currentTotalStorageCost,
             requiresStorage: currentRequiresStorage,
         };
-    }, [storageProvider, chosenDeliveryDate, baseExpectedDeliveryDate, quantity]);
+    }, [storageProvider, chosenDeliveryDate, baseExpectedDeliveryDate, quantity, product]);
 
     const productSubtotal = (product.price ?? 0) * quantity;
     const finalLinePrice = productSubtotal + totalStorageCost;

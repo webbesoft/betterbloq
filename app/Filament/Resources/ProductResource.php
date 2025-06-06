@@ -87,9 +87,19 @@ class ProductResource extends Resource
                                 ->columnSpanFull(),
                             Forms\Components\Toggle::make('storable')
                                 ->inline(false),
-                            Forms\Components\TextInput::make('storage_unit_of_measure')
-                                ->maxLength(255)
-                                ->label('Storage Unit of Measure'),
+                            Forms\Components\Select::make('storage_unit_of_measure')
+                                ->label('Storage Unit of Measure (for product dimensions)')
+                                ->options([
+                                    'in' => 'Inch (in)',
+                                    'ft' => 'Foot (ft)',
+                                    'yd' => 'Yard (yd)',
+                                    // You can add common metric units too if needed for some users/products
+                                    'cm' => 'Centimeter (cm)',
+                                    'm'  => 'Meter (m)',
+                                ])
+                                ->helperText('Select the unit for product length, width, and height.')
+                                ->searchable()
+                                ->required(),
                             Forms\Components\Fieldset::make('Default Dimensions')
                                 ->schema([
                                     Forms\Components\TextInput::make('default_length')

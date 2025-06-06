@@ -68,9 +68,26 @@ class WarehouseResource extends Resource
                             ->numeric()
                             ->required()
                             ->suffix('units (e.g., sq ft, cubic meters)'),
-                        Forms\Components\TextInput::make('total_capacity_unit')
-                            ->helperText('Measurement units for the warehouse capacity')
-                            ->required(),
+                        Forms\Components\Select::make('total_capacity_unit')
+                            ->label('Total Capacity Unit')
+                            ->options([
+                                // Imperial Area Units
+                                'sq ft' => 'Square Foot (sq ft)',
+                                'sq yd' => 'Square Yard (sq yd)',
+
+                                // Imperial Volume Units
+                                'cu ft' => 'Cubic Foot (cu ft)',
+                                'cu yd' => 'Cubic Yard (cu yd)',
+
+                                'item_unit' => 'Per Item/Unit Slot',
+
+                                // Common metric units if needed
+                                'sqm' => 'Square Meter (sqm)',
+                                'cbm' => 'Cubic Meter (cbm)',
+                            ])
+                            ->helperText('Select the measurement unit for the warehouse capacity (e.g., sq ft for area, cu ft for volume).')
+                            ->required()
+                            ->searchable(),
                         Forms\Components\TextInput::make('available_capacity')
                             ->numeric()
                             ->helperText('This can be automatically updated via a separate process or manually maintained.')

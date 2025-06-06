@@ -13,6 +13,15 @@ export interface Product {
     ratings_count: number;
     storable: boolean;
     storageProvider: Warehouse;
+    default_length?: number; // e.g., in meters
+    default_width?: number; // e.g., in meters
+    default_height?: number; // e.g., in meters
+    storage_unit_of_measure?: string; // e.g., 'm', 'cm'. For simplicity, we'll assume consistent units.
+    is_stackable?: boolean | number;
+    max_stack_height_units?: number; // How many physical product units can be stacked
+    storage_conditions_required?: string;
+    storage_handling_notes?: string;
+    preferred_warehouse_id?: number | string;
 }
 
 export interface UserRating {
@@ -32,6 +41,7 @@ export interface Warehouse {
     phone: string;
     total_capacity: number;
     available_capacity: number;
+    total_capacity_unit: 'sqm' | 'cbm' | string;
     default_storage_price_per_unit: number;
     default_storage_price_period: string;
     supported_storage_conditions: any;
