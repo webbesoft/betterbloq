@@ -48,7 +48,7 @@ class StripeEventListener
                     __METHOD__,
                     ['payload' => $event->payload]
                 );
-                throw new ApiErrorException("Unhandled Stripe event type: {$payloadType}");
+                throw new Exception("Unhandled Stripe event type: {$payloadType}");
         }
     }
 

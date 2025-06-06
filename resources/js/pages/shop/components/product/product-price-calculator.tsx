@@ -158,7 +158,7 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
                     name="calculator_quantity"
                     value={quantity}
                     onChange={handleQuantityChange}
-                    min="1"
+                    min="0"
                     className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 />
             </div>
