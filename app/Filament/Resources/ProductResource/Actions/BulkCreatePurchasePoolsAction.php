@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Filament\Resources\ProductResource\Actions;
+
 use App\Models\Product;
 use App\Models\PurchaseCycle;
 use App\Models\PurchasePool;

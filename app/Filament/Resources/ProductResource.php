@@ -2,13 +2,11 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\ProductResource\Actions\BulkCreatePurchasePoolsAction;
 use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Resources\ProductResource\RelationManagers\ImagesRelationManager;
-use App\Models\Category;
 use App\Models\Product;
-use App\Models\Vendor;
 use App\Models\Warehouse;
-use BulkCreatePurchasePoolsAction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -95,7 +93,7 @@ class ProductResource extends Resource
                                     'yd' => 'Yard (yd)',
                                     // You can add common metric units too if needed for some users/products
                                     'cm' => 'Centimeter (cm)',
-                                    'm'  => 'Meter (m)',
+                                    'm' => 'Meter (m)',
                                 ])
                                 ->helperText('Select the unit for product length, width, and height.')
                                 ->searchable()
