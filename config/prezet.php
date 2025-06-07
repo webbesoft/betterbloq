@@ -69,7 +69,7 @@ return [
                 'aria_hidden' => false,
             ],
             'external_link' => [
-                'internal_hosts' => 'www.example.com', // Don't forget to set this!
+                'internal_hosts' => env('PREZET_INTERNAL_HOST', env('APP_URL', 'www.example.com')),
                 'open_in_new_window' => true,
                 'html_class' => 'external-link',
                 'nofollow' => 'external',
