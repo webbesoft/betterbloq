@@ -13,12 +13,12 @@ export interface Product {
     ratings_count: number;
     storable: boolean;
     storageProvider: Warehouse;
-    default_length?: number; // e.g., in meters
-    default_width?: number; // e.g., in meters
-    default_height?: number; // e.g., in meters
-    storage_unit_of_measure?: string; // e.g., 'm', 'cm'. For simplicity, we'll assume consistent units.
-    is_stackable?: boolean | number;
-    max_stack_height_units?: number; // How many physical product units can be stacked
+    default_length?: number;
+    default_width?: number;
+    default_height?: number;
+    storage_unit_of_measure?: 'cm' | 'm' | 'in' | 'ft';
+    is_stackable?: boolean;
+    max_stack_height_units?: number;
     storage_conditions_required?: string;
     storage_handling_notes?: string;
     preferred_warehouse_id?: number | string;
@@ -41,11 +41,12 @@ export interface Warehouse {
     phone: string;
     total_capacity: number;
     available_capacity: number;
-    total_capacity_unit: 'sqm' | 'cbm' | string;
+    total_capacity_unit: 'sq ft' | 'cu ft';
     default_storage_price_per_unit: number;
-    default_storage_price_period: string;
+    default_storage_price_period: 'days' | 'weeks' | 'months';
     supported_storage_conditions: any;
     is_active: boolean;
+    available_tiers: StorageTier[];
 }
 
 export interface Category {
@@ -187,4 +188,24 @@ export interface PurchasePool {
     id: number;
     name: string;
     purchase_cycle_id: number;
+}
+
+interface StorageTier {
+    id: number;
+    warehouse_id: number;
+    min_space_units: number;
+    max_space_units: number;
+    price_per_space_unit: number;
+    billing_period: 'days' | 'weeks' | 'months';
+}
+
+export interface CalculationResult {
+    requiredSpace: number;
+    spaceUnit: 'sq ft' | 'cu ft';
+    appliedTier: StorageTier | null;
+    isUsingDefaultRate: boolean;
+    costPerPeriod: number;
+    costPerItemPerPeriod: number;
+    billingPeriod: 'days' | 'weeks' | 'months';
+    costPerDay: number;
 }

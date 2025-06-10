@@ -1,4 +1,4 @@
-import { Product, Warehouse } from '@/types/model-types';
+import { CalculationResult, Product, Warehouse } from '@/types/model-types';
 
 export class StorageCalculatorService {
     private product: Product;
@@ -16,6 +16,25 @@ export class StorageCalculatorService {
     }
 
     /**
+     * Converts a dimension from its source unit to meters.
+     * TODO: use a robust library like 'convert-units'.
+     */
+    private convertToFeet(value: number, fromUnit: 'cm' | 'm' | 'in' | 'ft'): number {
+        if (isNaN(value) || value <= 0) return 0;
+        switch (fromUnit) {
+            case 'cm':
+                return value / 30.48;
+            case 'm':
+                return value / 0.3048;
+            case 'in':
+                return value / 12;
+            case 'ft':
+            default:
+                return value;
+        }
+    }
+
+    /**
      * Safely gets a product dimension, returning 0 if invalid.
      * Assumes dimensions are in a unit compatible with warehouse pricing (e.g., meters).
      */
@@ -29,140 +48,112 @@ export class StorageCalculatorService {
     }
 
     /**
-     * Calculates the volume of a single unit of the product.
-     * Returns volume (e.g., in cubic meters).
+     * Calculates the product's footprint in SQUARE FEET.
      */
-    public getVolumePerProductUnit(): number {
+    public getFootprintInSqFt(): number {
         if (!this.product.storable) return 0;
-        const length = this.getProductDimension(this.product.default_length, 'length');
-        const width = this.getProductDimension(this.product.default_width, 'width');
-        const height = this.getProductDimension(this.product.default_height, 'height');
-
-        if (length === 0 || width === 0 || height === 0) {
-            console.warn(`Product '${this.product.name}' has one or more zero dimensions, resulting in zero volume.`);
-            return 0;
-        }
-        return length * width * height;
-    }
-
-    /**
-     * Calculates the footprint (area) of a single unit of the product.
-     * Returns area (e.g., in square meters).
-     */
-    public getFootprintPerProductUnit(): number {
-        if (!this.product.storable) return 0;
-        const length = this.getProductDimension(this.product.default_length, 'length');
-        const width = this.getProductDimension(this.product.default_width, 'width');
-
-        if (length === 0 || width === 0) {
-            console.warn(`Product '${this.product.name}' has zero length or width, resulting in zero footprint.`);
-            return 0;
-        }
+        const length = this.convertToFeet(this.product.default_length!, this.product.storage_unit_of_measure!);
+        const width = this.convertToFeet(this.product.default_width!, this.product.storage_unit_of_measure!);
         return length * width;
     }
 
     /**
-     * Converts the warehouse's storage price for its specific space unit (e.g., cbm, sqm) to a daily rate.
-     * Returns price per warehouse space unit per day (e.g., $/cbm/day or $/sqm/day).
+     * Calculates the product's volume in CUBIC FEET.
      */
-    public getDailyPricePerWarehouseSpaceUnit(): number {
-        const price = Number(this.warehouse.default_storage_price_per_unit);
-        const period = this.warehouse.default_storage_price_period;
+    public getVolumeInCuFt(): number {
+        if (!this.product.storable) return 0;
+        const height = this.convertToFeet(this.product.default_height!, this.product.storage_unit_of_measure!);
+        return this.getFootprintInSqFt() * height;
+    }
 
-        if (isNaN(price) || price < 0 || !period) {
-            console.warn(
-                `Warehouse '${this.warehouse.name}' has invalid base pricing data (price: ${this.warehouse.default_storage_price_per_unit}, period: ${period}). Defaulting to 0.`,
-            );
-            return 0;
-        }
-
-        switch (period.toLowerCase()) {
-            case 'hours':
-                return price * 24;
+    /**
+     * Calculates daily price from ANY provided price and period.
+     * Note: Approximating month as 30 days. For financial accuracy, handle monthly billing separately.
+     */
+    public getDailyPrice(price: number, period: 'days' | 'weeks' | 'months'): number {
+        if (isNaN(price) || price < 0) return 0;
+        switch (period) {
             case 'days':
                 return price;
             case 'weeks':
                 return price / 7;
             case 'months':
-                return price / 30; // Using 30 days as an approximation for a month
+                return price / 30; // Approximation
             default:
-                console.warn(`Warehouse '${this.warehouse.name}' uses an unknown storage price period: ${period}. Cannot convert to daily rate.`);
                 return 0;
         }
     }
 
     /**
-     * Calculates the storage cost PER PRODUCT UNIT PER DAY.
-     * This considers product dimensions, stackability, and warehouse pricing model.
+     * The main calculation method to get a full pricing breakdown for a given quantity.
+     *
+     * @param quantity - The number of product units to be stored.
+     * @returns A detailed pricing object for the UI.
      */
-    public getStorageCostPerProductUnitPerDay(): number {
-        if (!this.product.storable) return 0;
-
-        const dailyPricePerWarehouseSpaceUnit = this.getDailyPricePerWarehouseSpaceUnit();
-        if (dailyPricePerWarehouseSpaceUnit === 0) {
-            // Warning would have been logged by getDailyPricePerWarehouseSpaceUnit
-            return 0;
+    public calculatePrice(quantity: number): CalculationResult | null {
+        if (!this.product.storable || quantity <= 0) {
+            return null;
         }
 
-        const warehousePricingBasis = this.warehouse.total_capacity_unit?.toLowerCase();
-
-        switch (warehousePricingBasis) {
-            case 'cu ft': {
-                // Warehouse prices per Cubic Foot
-                const volumePerUnit = this.getVolumePerProductUnit();
-                if (volumePerUnit === 0) return 0; // Avoid cost for zero-volume items
-                // Cost per product unit per day = volume_of_one_product * price_per_cbm_per_day
-                return volumePerUnit * dailyPricePerWarehouseSpaceUnit;
-            }
-
-            case 'cu yd': {
-                // Warehouse prices per Cubic Foot
-                const volumePerUnit = this.getVolumePerProductUnit();
-                if (volumePerUnit === 0) return 0; // Avoid cost for zero-volume items
-                // Cost per product unit per day = volume_of_one_product * price_per_cbm_per_day
-                return volumePerUnit * dailyPricePerWarehouseSpaceUnit;
-            }
-
-            case 'cu m': {
-                // Warehouse prices per Cubic Foot
-                const volumePerUnit = this.getVolumePerProductUnit();
-                if (volumePerUnit === 0) return 0; // Avoid cost for zero-volume items
-                // Cost per product unit per day = volume_of_one_product * price_per_cbm_per_day
-                return volumePerUnit * dailyPricePerWarehouseSpaceUnit;
-            }
-
-            case 'sq ft': {
-                // Warehouse prices per Square foot
-                const footprintPerUnit = this.getFootprintPerProductUnit();
-                if (footprintPerUnit === 0) return 0; // Avoid cost for zero-footprint items
-
-                let itemsPerFootprintSlot = 1;
-                if (this.product.is_stackable) {
-                    const stackHeightUnits = Number(this.product.max_stack_height_units);
-                    if (!isNaN(stackHeightUnits) && stackHeightUnits > 0) {
-                        itemsPerFootprintSlot = stackHeightUnits;
-                    } else {
-                        console.warn(
-                            `Product '${this.product.name}' is stackable but has invalid or zero max_stack_height_units (${this.product.max_stack_height_units}). Assuming a stack of 1 for pricing.`,
-                        );
-                    }
-                }
-                // Cost for the footprint = footprint_area * daily_price_per_sqm_per_day
-                // This cost is for a stack occupying that footprint.
-                // So, cost per item in that stack = (cost_for_footprint_area) / number_of_items_in_stack_on_that_footprint
-                return (footprintPerUnit * dailyPricePerWarehouseSpaceUnit) / itemsPerFootprintSlot;
-            }
-
-            default:
-                // Fallback: If warehouse pricing unit is not 'cbm' or 'sqm' (e.g., it's 'item_unit', null, or something else).
-                // Assume 'default_storage_price_per_unit' is per product item.
-                console.warn(
-                    `Warehouse '${this.warehouse.name}' prices per '${warehousePricingBasis || 'undefined unit'}'. ` +
-                        `This scheme doesn't use product L/W/H directly like 'cbm' or 'sqm'. ` +
-                        `Falling back to interpret 'default_storage_price_per_unit' as per-item price.`,
-                );
-                // In this fallback, getDailyPricePerWarehouseSpaceUnit() is effectively the daily price per item.
-                return dailyPricePerWarehouseSpaceUnit;
+        // 1. Calculate the total space required based on the warehouse's pricing unit.
+        const spaceUnit = this.warehouse.total_capacity_unit;
+        let requiredSpace = 0;
+        if (spaceUnit === 'sq ft') {
+            requiredSpace = this.getFootprintInSqFt() * quantity;
+        } else {
+            // 'cu ft'
+            requiredSpace = this.getVolumeInCuFt() * quantity;
         }
+
+        // 2. Find the applicable storage tier based on the required space.
+        const tiers = this.warehouse.available_tiers || [];
+        const appliedTier = tiers.find((t) => requiredSpace >= t.min_space_units && requiredSpace < t.max_space_units) || null;
+
+        // 3. Determine the correct rate and billing period to use.
+        const isUsingDefaultRate = !appliedTier;
+        const pricePerSpaceUnit = appliedTier ? appliedTier.price_per_space_unit : this.warehouse.default_storage_price_per_unit;
+        const billingPeriod = appliedTier ? appliedTier.billing_period : this.warehouse.default_storage_price_period;
+
+        // 4. Calculate the total cost for the period, accounting for stackability.
+        let costPerPeriod = 0;
+        if (spaceUnit === 'sq ft') {
+            // For area-based pricing, we calculate the cost of the footprint.
+            // Stacking allows more items on the same footprint, effectively reducing per-item cost.
+            const footprintPerUnit = this.getFootprintInSqFt();
+            const stackSize = this.product.is_stackable && this.product.max_stack_height_units! > 1 ? this.product.max_stack_height_units! : 1;
+
+            // Calculate how many physical stacks are needed
+            const numberOfStacks = Math.ceil(quantity / stackSize);
+            const totalFootprintNeeded = footprintPerUnit * numberOfStacks;
+            costPerPeriod = totalFootprintNeeded * pricePerSpaceUnit;
+        } else {
+            // 'cu ft'
+            // For volume-based pricing, stacking is already part of the volume.
+            costPerPeriod = requiredSpace * pricePerSpaceUnit;
+        }
+
+        let costPerDay = 0;
+        switch (billingPeriod) {
+            case 'days':
+                costPerDay = costPerPeriod;
+                break;
+            case 'weeks':
+                costPerDay = costPerPeriod / 7;
+                break;
+            case 'months':
+                costPerDay = costPerPeriod / 30;
+                break; // Approximation
+        }
+
+        return {
+            requiredSpace: requiredSpace,
+            spaceUnit: spaceUnit,
+            appliedTier: appliedTier,
+            isUsingDefaultRate: isUsingDefaultRate,
+            costPerPeriod: costPerPeriod,
+            costPerItemPerPeriod: costPerPeriod / quantity,
+            billingPeriod: billingPeriod,
+            costPerDay: costPerDay,
+        };
     }
 }

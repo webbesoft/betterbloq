@@ -21,7 +21,7 @@ import { CartItem } from '@/types/cart';
 import { Product, UserRating, Warehouse } from '@/types/model-types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { CheckCircle, ExternalLink, Info, PackageSearch } from 'lucide-react';
-import { FormEventHandler, useEffect, useMemo, useState } from 'react';
+import { FormEventHandler, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
@@ -93,7 +93,7 @@ export interface ActivePurchaseCycleData {
     end_date: string;
 }
 
-type OrderForm = {
+export type OrderForm = {
     product_id: number;
     quantity: number;
     expected_delivery_date: string;
@@ -184,7 +184,7 @@ export default function ProductPage(props: ProductProps) {
     const handleAddToCartClick = () => {
         const cartProduct: CartItem = {
             ...productData,
-            price: discountedPricePerUnit,
+            price: dynamicPrice.pricePerUnit,
             vendor_id: productData.vendor.id,
             delivery_time: productData.delivery_time,
             image: productData.image,
@@ -220,28 +220,53 @@ export default function ProductPage(props: ProductProps) {
     const getFormButtonText = () => {
         if (processing) return 'Placing Order...';
         if (activePurchasePool) {
-            return `Order Now & Join Pool (${currentDiscountPercent}% Off)`;
+            return `Order Now & Join Pool (${dynamicPrice.discountPercent}% Off)`;
         }
         return 'Place Order';
     };
 
-    const currentDiscountPercent = activePurchasePool?.current_tier?.discount_percentage ?? 0;
-    const pricePerUnit = productData.price;
-    const discountedPricePerUnit = useMemo(() => {
-        return pricePerUnit * (1 - currentDiscountPercent / 100);
-    }, [pricePerUnit, currentDiscountPercent]);
-
     const isActionAreaDisabled = !props.auth?.user || !activePurchasePool;
 
+    const [dynamicPrice, setDynamicPrice] = useState({
+        pricePerUnit: productData.price,
+        discountPercent: 0,
+    });
+
+    const findApplicableTier = (orderQuantity: number): PurchasePoolTierData | null => {
+        if (!activePurchasePool?.tiers) return null;
+
+        const prospectiveVolume = (activePurchasePool.current_volume || 0) + orderQuantity;
+
+        const sortedTiers = [...activePurchasePool.tiers].sort((a, b) => b.min_volume - a.min_volume);
+
+        return sortedTiers.find((tier) => prospectiveVolume >= tier.min_volume) || null;
+    };
+
     const handleCalculatorUpdate = (calculatorState: PriceCalculatorState) => {
+        const { quantity, finalLinePrice, totalStorageCost, productSubtotal, dailyStoragePrice, chosenDeliveryDate } = calculatorState;
+
+        if (activePurchasePool) {
+            const applicableTier = findApplicableTier(quantity);
+            const newDiscountPercent = applicableTier?.discount_percentage ?? 0;
+            const newPricePerUnit = productData.price * (1 - newDiscountPercent / 100);
+
+            if (newPricePerUnit !== dynamicPrice.pricePerUnit) {
+                setDynamicPrice({
+                    pricePerUnit: newPricePerUnit,
+                    discountPercent: newDiscountPercent,
+                });
+            }
+        }
+
+        // 3. Update the main form data for submission
         setData((currentData) => ({
             ...currentData,
-            quantity: calculatorState.quantity,
-            expected_delivery_date: calculatorState.chosenDeliveryDate.toISOString().split('T')[0],
-            final_line_price: Number(calculatorState.finalLinePrice).toFixed(2),
-            storage_cost_applied: Number(calculatorState.totalStorageCost).toFixed(2),
-            product_subtotal: Number(calculatorState.productSubtotal).toFixed(2),
-            daily_storage_price: Number(calculatorState.dailyStoragePrice).toFixed(2),
+            quantity: quantity,
+            expected_delivery_date: chosenDeliveryDate.toISOString().split('T')[0],
+            final_line_price: Number(finalLinePrice).toFixed(2),
+            storage_cost_applied: Number(totalStorageCost).toFixed(2),
+            product_subtotal: Number(productSubtotal).toFixed(2),
+            daily_storage_price: Number(dailyStoragePrice).toFixed(2),
         }));
     };
 
@@ -333,21 +358,22 @@ export default function ProductPage(props: ProductProps) {
 
                                 {/* Price Section */}
                                 <div className="mt-auto text-left">
-                                    {activePurchasePool && currentDiscountPercent > 0 ? (
+                                    {/* Use the new dynamicPrice state for display */}
+                                    {activePurchasePool && dynamicPrice.discountPercent > 0 ? (
                                         <>
                                             <p className="text-muted-foreground text-xl font-medium line-through">
-                                                ${pricePerUnit.toFixed(2)} / {productData.unit}
+                                                ${productData.price.toFixed(2)} / {productData.unit}
                                             </p>
                                             <p className="text-primary text-3xl font-bold sm:text-4xl">
-                                                ${discountedPricePerUnit.toFixed(2)} / {productData.unit}
+                                                ${dynamicPrice.pricePerUnit.toFixed(2)} / {productData.unit}
                                                 <Badge variant="destructive" className="ml-2 align-middle text-sm">
-                                                    -{currentDiscountPercent}%
+                                                    -{dynamicPrice.discountPercent}%
                                                 </Badge>
                                             </p>
                                         </>
                                     ) : (
                                         <p className="text-foreground text-3xl font-bold sm:text-4xl">
-                                            ${pricePerUnit.toFixed(2)} / {productData.unit}
+                                            ${productData.price.toFixed(2)} / {productData.unit}
                                         </p>
                                     )}
                                 </div>
@@ -478,6 +504,8 @@ export default function ProductPage(props: ProductProps) {
                                             purchaseDate={new Date()}
                                             onStateChange={handleCalculatorUpdate}
                                             minimumDeliveryDate={new Date(activePurchasePool.target_delivery_date ?? '').toISOString().split('T')[0]}
+                                            basePricePerUnit={dynamicPrice.pricePerUnit}
+                                            errors={errors}
                                         />
 
                                         <Separator />
@@ -485,9 +513,9 @@ export default function ProductPage(props: ProductProps) {
                                         <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
                                             <div className="text-left">
                                                 <span className="text-foreground text-2xl font-bold">
-                                                    {activePurchasePool && currentDiscountPercent > 0 && (
+                                                    {activePurchasePool && dynamicPrice.discountPercent > 0 && (
                                                         <Badge variant="secondary" className="text-primary ml-2 align-middle text-xs">
-                                                            {currentDiscountPercent}% off applied
+                                                            {dynamicPrice.discountPercent}% off applied
                                                         </Badge>
                                                     )}
                                                 </span>
