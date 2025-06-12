@@ -79,7 +79,7 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
             }
 
             // 3. The component's only job is to multiply the final daily rate by the days
-            const currentTotalStorageCost = calcResult.costPerDay * currentStorageDays;
+            const currentTotalStorageCost = calcResult.costPerPeriod * currentStorageDays;
 
             return {
                 storageDays: currentStorageDays,
@@ -170,7 +170,7 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
                             <p className="text-sm text-gray-600">
                                 Pricing Tier:{' '}
                                 {storageCalculation.appliedTier
-                                    ? `$${storageCalculation.appliedTier.price_per_space_unit.toFixed(2)} per ${storageCalculation.spaceUnit}`
+                                    ? `$${Number(storageCalculation.appliedTier.price_per_space_unit).toFixed(2)} per ${storageCalculation.spaceUnit}`
                                     : 'Default Rate'}
                             </p>
                             <p className="text-sm text-gray-600">

@@ -29,6 +29,7 @@ class ProductResource extends JsonResource
             'storable' => $this->storable,
             'is_stackable' => $this->is_stackable,
             'storage_unit_of_measure' => $this->storage_unit_of_measure,
+            'max_stack_height_units' => $this->max_stack_height_units,
             'default_length' => $this->default_length,
             'default_width' => $this->default_width,
             'default_height' => $this->default_height,

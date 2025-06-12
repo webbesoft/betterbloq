@@ -26,11 +26,13 @@ class WarehouseResource extends JsonResource
             'total_capacity' => (float) $this->total_capacity,
             'available_capacity' => (float) $this->available_capacity,
             'total_capacity_unit' => $this->total_capacity_unit,
+            'max_height' => $this->max_height,
             'default_storage_price_per_unit' => (float) $this->default_storage_price_per_unit,
             'default_storage_price_period' => $this->default_storage_price_period, // 'hours', 'days', 'weeks', 'months'
             'supported_storage_conditions' => $supportedConditions,
             'is_active' => (bool) $this->is_active,
             'user_id' => $this->user_id,
+            'available_tiers' => $this->storageTiers
         ];
     }
 }

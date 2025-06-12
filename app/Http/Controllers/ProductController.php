@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Filament\Resources\WarehouseResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Category;
 use App\Models\Product;
@@ -152,7 +153,7 @@ class ProductController extends Controller
 
         if ($product->preferred_warehouse_id) {
             $storageProvider = Cache::remember("preferred_warehouse_{$product->id}", 3600, function () use ($product) {
-                $relatedWarehouse = Warehouse::where('id', $product->preferred_warehouse_id)->first();
+                $relatedWarehouse = Warehouse::where('id', $product->preferred_warehouse_id)->with(['storageTiers'])->first();
 
                 return $relatedWarehouse;
             });

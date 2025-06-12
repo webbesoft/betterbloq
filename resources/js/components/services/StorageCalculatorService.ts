@@ -99,14 +99,33 @@ export class StorageCalculatorService {
         const spaceUnit = this.warehouse.total_capacity_unit;
         let requiredSpace = 0;
         if (spaceUnit === 'sq ft') {
-            requiredSpace = this.getFootprintInSqFt() * quantity;
+            const footprintPerUnit = this.getFootprintInSqFt();
+            if (footprintPerUnit === 0) return null;
+
+            let maxItemsPerStack = 1;
+            if (this.product.is_stackable) {
+                const productStackLimit = this.product.max_stack_height_units || 1;
+
+                let warehouseStackLimit = Infinity;
+                if (this.warehouse.max_height && this.warehouse.max_height > 0) {
+                    const productHeightInFeet = this.convertToFeet(this.product.default_height!, this.product.storage_unit_of_measure!);
+                    if (productHeightInFeet > 0) {
+                        warehouseStackLimit = Math.floor(this.warehouse.max_height / productHeightInFeet);
+                    }
+                }
+
+                maxItemsPerStack = Math.max(1, Math.min(productStackLimit, warehouseStackLimit));
+            }
+
+            const numberOfStacks = Math.ceil(quantity / maxItemsPerStack);
+
+            requiredSpace = footprintPerUnit * numberOfStacks;
         } else {
-            // 'cu ft'
             requiredSpace = this.getVolumeInCuFt() * quantity;
         }
 
         // 2. Find the applicable storage tier based on the required space.
-        const tiers = this.warehouse.available_tiers || [];
+        const tiers = this.warehouse.storage_tiers || [];
         const appliedTier = tiers.find((t) => requiredSpace >= t.min_space_units && requiredSpace < t.max_space_units) || null;
 
         // 3. Determine the correct rate and billing period to use.
@@ -114,23 +133,7 @@ export class StorageCalculatorService {
         const pricePerSpaceUnit = appliedTier ? appliedTier.price_per_space_unit : this.warehouse.default_storage_price_per_unit;
         const billingPeriod = appliedTier ? appliedTier.billing_period : this.warehouse.default_storage_price_period;
 
-        // 4. Calculate the total cost for the period, accounting for stackability.
-        let costPerPeriod = 0;
-        if (spaceUnit === 'sq ft') {
-            // For area-based pricing, we calculate the cost of the footprint.
-            // Stacking allows more items on the same footprint, effectively reducing per-item cost.
-            const footprintPerUnit = this.getFootprintInSqFt();
-            const stackSize = this.product.is_stackable && this.product.max_stack_height_units! > 1 ? this.product.max_stack_height_units! : 1;
-
-            // Calculate how many physical stacks are needed
-            const numberOfStacks = Math.ceil(quantity / stackSize);
-            const totalFootprintNeeded = footprintPerUnit * numberOfStacks;
-            costPerPeriod = totalFootprintNeeded * pricePerSpaceUnit;
-        } else {
-            // 'cu ft'
-            // For volume-based pricing, stacking is already part of the volume.
-            costPerPeriod = requiredSpace * pricePerSpaceUnit;
-        }
+        const costPerPeriod = requiredSpace * pricePerSpaceUnit;
 
         let costPerDay = 0;
         switch (billingPeriod) {

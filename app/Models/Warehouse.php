@@ -19,6 +19,7 @@ class Warehouse extends Model
         'total_capacity',
         'available_capacity',
         'total_capacity_unit',
+        'max_height',
         'default_storage_price_per_unit',
         'default_storage_price_period',
         'supported_storage_conditions',

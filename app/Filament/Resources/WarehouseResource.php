@@ -92,6 +92,9 @@ class WarehouseResource extends Resource
                             ->numeric()
                             ->helperText('This can be automatically updated via a separate process or manually maintained.')
                             ->suffix('units'),
+                        Forms\Components\TextInput::make('max_height')
+                            ->numeric()
+                            ->helperText('The maximum storage height available in the warehouse'),
                         Forms\Components\TextInput::make('default_storage_price_per_unit')
                             ->numeric()
                             ->required()

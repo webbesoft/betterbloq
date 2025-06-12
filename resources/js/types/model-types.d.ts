@@ -41,12 +41,13 @@ export interface Warehouse {
     phone: string;
     total_capacity: number;
     available_capacity: number;
+    max_height: number;
     total_capacity_unit: 'sq ft' | 'cu ft';
     default_storage_price_per_unit: number;
     default_storage_price_period: 'days' | 'weeks' | 'months';
     supported_storage_conditions: any;
     is_active: boolean;
-    available_tiers: StorageTier[];
+    storage_tiers: StorageTier[];
 }
 
 export interface Category {
