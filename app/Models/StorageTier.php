@@ -42,8 +42,8 @@ class StorageTier extends Model
             'day' => 'Day',
             'week' => 'Week',
             'month' => 'Month',
-            'quarter' => 'Quarter',
-            'year' => 'Year',
+            // 'quarter' => 'Quarter',
+            // 'year' => 'Year',
         ];
     }
 

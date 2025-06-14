@@ -41,6 +41,9 @@ class StorageTierResource extends Resource
                             ->helperText('Minimum space units (e.g., sq ft, pallets) for this tier.'),
                         Forms\Components\TextInput::make('max_space_units')
                             ->numeric()
+                            ->max(999999)
+                            ->default(0)
+                            ->min(0)
                             ->nullable()
                             ->helperText('Maximum space units. Leave blank for no upper limit.'),
                         Forms\Components\TextInput::make('price_per_space_unit')

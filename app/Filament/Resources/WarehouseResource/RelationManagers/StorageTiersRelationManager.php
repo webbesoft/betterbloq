@@ -34,10 +34,15 @@ class StorageTiersRelationManager extends RelationManager
                             ->helperText('Minimum space units for this tier.'),
                         Forms\Components\TextInput::make('max_space_units')
                             ->numeric()
+                            ->max(999999)
+                            ->default(0)
+                            ->min(0)
                             ->nullable()
                             ->helperText('Maximum space units. Blank for no limit.'),
                         Forms\Components\TextInput::make('price_per_space_unit')
                             ->numeric()
+                            ->max(999999)
+                            ->min(0)
                             ->required()
                             ->prefix('$')
                             ->helperText('Price per space unit.'),
