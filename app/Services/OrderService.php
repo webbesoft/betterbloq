@@ -563,7 +563,6 @@ class OrderService
                             $cycleProductVolume->increment('total_aggregated_quantity', $lineItem->quantity);
                         }
 
-                        
                         $checkedLineItems[] = $lineItem->id;
                     }
                 }
