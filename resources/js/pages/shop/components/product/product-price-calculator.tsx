@@ -94,7 +94,7 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
     }, [storageProvider, chosenDeliveryDate, baseExpectedDeliveryDate, quantity, product]);
 
     const productSubtotal = (basePricePerUnit ?? 0) * quantity;
-    const finalLinePrice = productSubtotal + totalStorageCost;
+    const finalLinePrice = productSubtotal.toFixed(2) + totalStorageCost;
 
     const formatDate = (date: Date): string => {
         if (!date || isNaN(date.getTime())) return '';
@@ -205,7 +205,7 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
                 )}
                 <div className="mt-2 flex justify-between text-xl font-bold text-gray-900">
                     <span>Total Price:</span>
-                    <span>${finalLinePrice.toFixed(2)}</span>
+                    <span>${Number(finalLinePrice).toFixed(2)}</span>
                 </div>
             </div>
         </div>

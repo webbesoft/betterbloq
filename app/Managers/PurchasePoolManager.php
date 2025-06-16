@@ -5,6 +5,7 @@ namespace App\Managers;
 use App\Models\Product;
 use App\Models\PurchaseCycle;
 use App\Models\PurchasePool;
+use App\Models\PurchasePoolTier;
 use App\Models\Vendor;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -52,4 +53,16 @@ class PurchasePoolManager extends Manager
     }
 
     public function onPurchasePoolDeleted() {}
+
+    public static function getLivePurchaseTier(PurchasePool $pool, int $orderQuantity): ?PurchasePoolTier
+    {
+        $currentVolumeInCycle = $pool->getCurrentVolumeInCycle() ?? 0;
+        $prospectiveVolume = $currentVolumeInCycle + $orderQuantity;
+
+        return $pool->purchasePoolTiers()
+            ->select(['stripe_coupon_id', 'min_volume', 'max_volume', 'discount_percentage'])
+            ->where('min_volume', '<=', $prospectiveVolume)
+            ->orderBy('min_volume', 'desc')
+            ->first();
+    }
 }

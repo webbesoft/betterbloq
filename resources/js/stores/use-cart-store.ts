@@ -54,7 +54,6 @@ export const useCartStore = create<CartState & CartActions>()(
                             quantity: 1,
                             vendor_id: productVendorId,
                             vendor_name: productVendorName,
-                            preparation_time: product.preparation_time || product.preparation_time,
                         };
                         updatedItems = [...items, newItem];
                     }

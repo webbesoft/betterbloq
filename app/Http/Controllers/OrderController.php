@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreOrderRequest;
+use App\Http\Resources\OrderMinimalResource;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Services\OrderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
@@ -25,19 +27,19 @@ class OrderController extends Controller
             $ordersQuery = Order::query();
 
             return $ordersQuery
+                ->with(['vendor', 'lineItems:order_id,id,total_price'])
                 ->where('user_id', $request->user()->id)
-                ->with(['lineItems', 'vendor', 'lineItems.product.category', 'lineItems.purchasePool.purchasePoolTiers', 'lineItems.purchasePool.purchaseCycle'])
                 ->paginate(10);
         });
 
         return Inertia::render('shop/orders/index', [
-            'orders' => OrderResource::collection($orders),
+            'orders' => OrderMinimalResource::collection($orders),
         ]);
     }
 
     public function show(Request $request, Order $order)
     {
-        $order->load(['lineItems', 'lineItems.product', 'vendor', 'lineItems.purchasePool', 'lineItems.purchasePool.purchasePoolTiers', 'lineItems.purchasePool.purchaseCycle', 'purchaseCycle']);
+        $order->loadMissing(['lineItems', 'lineItems.product', 'vendor', 'lineItems.purchasePool', 'lineItems.purchasePool.purchasePoolTiers', 'lineItems.purchasePool.purchaseCycle', 'lineItems.product.images', 'lineItems.product.category:id,name', 'lineItems.product.vendor:id,name', 'purchaseCycle']);
 
         return Inertia::render('shop/orders/show', [
             'order' => new OrderResource($order),
@@ -46,7 +48,7 @@ class OrderController extends Controller
 
     public function store(StoreOrderRequest $request): RedirectResponse|Response
     {
-        $user = $request->user();
+        $user = Auth::user();
 
         if (! $user) {
             Session::flash('message', ['error' => 'You must be logged in to place an order.']);
@@ -68,7 +70,6 @@ class OrderController extends Controller
                     return back()->withInput()->with('error', 'Invalid cart item data.');
                 }
             }
-            $serviceData['expected_delivery_date'] = $validated['expected_delivery_date'] ?? null;
             $serviceData['final_line_price'] = data_get($validated, 'final_line_price');
             $serviceData['storage_cost_applied'] = data_get($validated, 'storage_cost_applied');
             $serviceData['daily_storage_price'] = data_get($validated, 'daily_storage_price');
@@ -80,14 +81,15 @@ class OrderController extends Controller
                 [
                     'product_id' => $validated['product_id'],
                     'quantity' => $validated['quantity'],
+                    'expected_delivery_date' => $validated['expected_delivery_date'],
                     'purchase_cycle_id' => $validated['purchase_cycle_id'] ?? null,
+                    'requires_storage_acknowledged' => $validated['requires_storage_acknowledged'] ?? false,
                     'final_line_price' => data_get($validated, 'final_line_price'),
                     'storage_cost_applied' => data_get($validated, 'storage_cost_applied'),
                     'daily_storage_price' => data_get($validated, 'daily_storage_price'),
                     'product_subtotal' => data_get($validated, 'product_subtotal'),
                 ],
             ];
-            $serviceData['expected_delivery_date'] = $validated['expected_delivery_date'] ?? null;
         } else {
             Session::flash('message', ['error' => 'Invalid order data submitted.']);
 

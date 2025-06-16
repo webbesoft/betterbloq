@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Filament\Resources\WarehouseResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Category;
 use App\Models\Product;
@@ -52,7 +51,7 @@ class ProductController extends Controller
                 'price',
                 'name',
             ])
-            ->with(['category', 'vendor', 'images'])
+            ->with(['category', 'vendor:id,name', 'images', 'ratings:rating'])
             ->paginate(10)
             ->withQueryString();
 

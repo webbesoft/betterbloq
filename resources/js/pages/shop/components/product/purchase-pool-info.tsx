@@ -123,7 +123,7 @@ export const PurchasePoolInfo = (props: PurchasePoolInfoProps) => {
                         <Users className="h-4 w-4 flex-shrink-0" />
                         <div>
                             <span>Min Orders for Discount: </span>
-                            <span className="text-foreground font-medium">{activePurchasePool.min_orders_for_discount}</span>
+                            <span className="text-foreground font-medium">{tiers[0].min_volume}</span>
                         </div>
                     </div>
                 )}

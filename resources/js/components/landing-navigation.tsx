@@ -1,3 +1,4 @@
+import { CartDropdown } from '@/pages/shop/components/cart-dropdown';
 import { SharedData, type NavItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import { LayoutDashboard, LogOut, Menu, User } from 'lucide-react';
@@ -66,7 +67,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
 
                     {/* Auth Area */}
                     <div className="flex items-center gap-3">
-                        {/* <CartDropdown /> */}
+                        <CartDropdown />
                         {user ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>

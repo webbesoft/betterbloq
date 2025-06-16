@@ -171,6 +171,11 @@ class PurchasePool extends Model
         return $tier ? (float) $tier->discount_percentage : 0.0;
     }
 
+    public function getStripeCouponIdAttribute(): ?string
+    {
+        return $this->getApplicableTier()?->stripe_coupon_id;
+    }
+
     /**
      * Calculate the target delivery date based on end date, product, and vendor.
      *

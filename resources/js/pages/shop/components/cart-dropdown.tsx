@@ -4,13 +4,12 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { formatDate } from '@/lib/helpers';
 import { useCartStore } from '@/stores/use-cart-store';
 import { Link } from '@inertiajs/react';
-import { CalendarDays, ShoppingCart, Trash2 } from 'lucide-react';
+import { ShoppingCart, Trash2 } from 'lucide-react';
 
 export function CartDropdown() {
-    const { items, currentVendorId, expectedDeliveryDate, removeItem, updateQuantity } = useCartStore();
+    const { items, currentVendorId, removeItem, updateQuantity } = useCartStore();
 
     const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
     const firstItemVendorName = items[0]?.vendor_name;
@@ -27,10 +26,8 @@ export function CartDropdown() {
     };
 
     const calculateSubtotal = () => {
-        return items.reduce((total, item) => total + item.price * item.quantity, 0);
+        return items.reduce((total, item) => total + Number(item.final_line_price), 0);
     };
-
-    const formattedDeliveryDate = expectedDeliveryDate ? formatDate(expectedDeliveryDate.toString()) : 'N/A';
 
     return (
         <Popover>
@@ -40,7 +37,7 @@ export function CartDropdown() {
                     {cartItemCount > 0 && (
                         <Badge
                             variant="destructive"
-                            className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs"
+                            className="absolute -top-2 -right-2 flex h-5 w-7 items-center justify-center rounded-full p-0 text-xs"
                         >
                             {cartItemCount}
                         </Badge>
@@ -48,8 +45,8 @@ export function CartDropdown() {
                     <span className="sr-only">Open shopping cart</span>
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="z-100 w-80" align="end">
-                <div className="p-4">
+            <PopoverContent className="z-100 w-96" align="end">
+                <div className="p-1">
                     {items.length === 0 ? (
                         <p className="text-muted-foreground text-center">Your cart is empty.</p>
                     ) : (
@@ -60,11 +57,11 @@ export function CartDropdown() {
                                 <p className="font-medium">
                                     Vendor: <span className="text-muted-foreground">{firstItemVendorName ?? `ID ${currentVendorId}`}</span>
                                 </p>
-                                <div className="text-muted-foreground flex items-center gap-1">
+                                {/* <div className="text-muted-foreground flex items-center gap-1">
                                     <CalendarDays className="h-4 w-4" />
                                     <span>Est. Delivery:</span>
                                     <span className="text-foreground font-medium">{formattedDeliveryDate}</span>
-                                </div>
+                                </div> */}
                             </div>
 
                             <Separator className="mb-4" />
@@ -73,9 +70,22 @@ export function CartDropdown() {
                                 <div className="space-y-4">
                                     {items.map((item) => (
                                         <div key={item.id} className="flex items-center gap-3">
-                                            {item.image && <img src={item.image} alt={item.name} className="h-12 w-12 rounded border object-cover" />}
+                                            {item.image && (
+                                                <img
+                                                    src={item.image}
+                                                    alt={item.name}
+                                                    className="h-12 w-12 rounded border object-cover"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = 'https://placehold.co/100x100/e2e8f0/cbd5e0?text=Thumb';
+                                                    }}
+                                                />
+                                            )}
                                             <div className="flex-grow">
                                                 <p className="truncate text-sm font-medium">{item.name}</p>
+                                                <p className="text-muted-foreground truncate text-xs">
+                                                    <span className="font-medium">Exp. delivery: </span>
+                                                    {item.expected_delivery_date}
+                                                </p>
                                                 <p className="text-muted-foreground text-xs">${item.price.toFixed(2)}</p>
                                             </div>
                                             <div className="flex shrink-0 items-center gap-1">

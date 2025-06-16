@@ -28,7 +28,7 @@ class LogService
     public function logException(\Throwable $exception, ?string $class = null, ?string $method = null, array $context = []): Log
     {
         return Log::create([
-            'user_id' => Auth::id(),
+            'user_id' => Auth::id() ?? 1,
             'level' => 'error', // Default level for exceptions
             'class' => $class,
             'method' => $method,

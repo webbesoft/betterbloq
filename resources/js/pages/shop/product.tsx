@@ -20,7 +20,7 @@ import { Auth } from '@/types';
 import { CartItem } from '@/types/cart';
 import { Product, UserRating, Warehouse } from '@/types/model-types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { CheckCircle, ExternalLink, Info, PackageSearch } from 'lucide-react';
+import { CheckCircle, ExternalLink, Info, PackageSearch, ShoppingCart } from 'lucide-react';
 import { FormEventHandler, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -103,6 +103,7 @@ export type OrderForm = {
     final_storage_price?: string;
     daily_storage_price?: string;
     product_subtotal: string;
+    storage_cost_applied?: string;
 };
 
 export default function ProductPage(props: ProductProps) {
@@ -136,7 +137,7 @@ export default function ProductPage(props: ProductProps) {
         requires_storage_acknowledged: false,
         final_line_price: Number(productData.price).toFixed(2),
         final_storage_price: '',
-        daily_storage_price: '',
+        daily_storage_price: '0.0',
         product_subtotal: '',
     });
 
@@ -181,29 +182,6 @@ export default function ProductPage(props: ProductProps) {
         });
     };
 
-    const handleAddToCartClick = () => {
-        const cartProduct: CartItem = {
-            ...productData,
-            price: dynamicPrice.pricePerUnit,
-            vendor_id: productData.vendor.id,
-            delivery_time: productData.delivery_time,
-            image: productData.image,
-            vendor_name: productData.vendor.name,
-            quantity: formdata.quantity,
-        };
-
-        if (cartVendorId !== null && cartVendorId !== cartProduct.vendor.id) {
-            setProductToAdd(cartProduct);
-            setShowConfirmDialog(true);
-        } else {
-            const quantityToAdd = Math.max(1, Number(formdata.quantity));
-            for (let i = 0; i < quantityToAdd; i++) {
-                addItemToCart(cartProduct);
-            }
-            toast('Product added to cart.');
-        }
-    };
-
     const handleConfirmClearAndAdd = () => {
         if (!productToAdd) return;
 
@@ -233,13 +211,17 @@ export default function ProductPage(props: ProductProps) {
     });
 
     const findApplicableTier = (orderQuantity: number): PurchasePoolTierData | null => {
-        if (!activePurchasePool?.tiers) return null;
+        if (!activePurchasePool?.tiers || activePurchasePool.tiers.length === 0) {
+            return null;
+        }
 
-        const prospectiveVolume = (activePurchasePool.current_volume || 0) + orderQuantity;
+        const prospectiveVolume = (activePurchasePool.current_volume ?? 0) + orderQuantity;
 
-        const sortedTiers = [...activePurchasePool.tiers].sort((a, b) => b.min_volume - a.min_volume);
+        const tiersSortedByHighest = [...activePurchasePool.tiers].sort((a, b) => b.min_volume - a.min_volume);
 
-        return sortedTiers.find((tier) => prospectiveVolume >= tier.min_volume) || null;
+        const applicableTier = tiersSortedByHighest.find((tier) => prospectiveVolume >= tier.min_volume);
+
+        return applicableTier || null;
     };
 
     const handleCalculatorUpdate = (calculatorState: PriceCalculatorState) => {
@@ -268,6 +250,35 @@ export default function ProductPage(props: ProductProps) {
             product_subtotal: Number(productSubtotal).toFixed(2),
             daily_storage_price: Number(dailyStoragePrice).toFixed(2),
         }));
+    };
+
+    const handleAddToCartClick = () => {
+        const cartProduct: CartItem = {
+            ...productData,
+            price: dynamicPrice.pricePerUnit,
+            vendor_id: productData.vendor.id,
+            delivery_time: productData.delivery_time,
+            image: productData.image,
+            vendor_name: productData.vendor.name,
+            quantity: formdata.quantity,
+            expected_delivery_date: formdata.expected_delivery_date,
+            final_line_price: formdata.final_line_price,
+            storage_cost_applied: formdata.storage_cost_applied,
+            product_subtotal: formdata.product_subtotal,
+            daily_storage_price: formdata.daily_storage_price,
+            purchase_cycle_id: activePurchaseCycle?.id,
+        };
+
+        if (cartVendorId !== null && cartVendorId !== cartProduct.vendor.id) {
+            setProductToAdd(cartProduct);
+            setShowConfirmDialog(true);
+        } else {
+            const quantityToAdd = Math.max(1, Number(formdata.quantity));
+            for (let i = 0; i < quantityToAdd; i++) {
+                addItemToCart(cartProduct);
+            }
+            toast('Product added to cart.');
+        }
     };
 
     return (
@@ -521,7 +532,7 @@ export default function ProductPage(props: ProductProps) {
                                                 </span>
                                             </div>
                                             <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                                                {/* <Button
+                                                <Button
                                                     type="button"
                                                     variant="outline"
                                                     className="w-full sm:w-auto"
@@ -530,7 +541,7 @@ export default function ProductPage(props: ProductProps) {
                                                 >
                                                     <ShoppingCart className="mr-2 h-4 w-4" />
                                                     Add to Cart
-                                                </Button> */}
+                                                </Button>
                                                 <Button
                                                     type="submit"
                                                     className="w-full sm:w-auto"

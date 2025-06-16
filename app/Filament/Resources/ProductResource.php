@@ -112,7 +112,8 @@ class ProductResource extends Resource
                             Forms\Components\TextInput::make('max_stack_height_units')
                                 ->numeric()
                                 ->integer()
-                                ->label('Max Stack Height (in storage units)'),
+                                ->label('Max Stack Count')
+                                ->helperText('The maximum number of items that can be stacked'),
                             Forms\Components\CheckboxList::make('storage_conditions_required')
                                 ->label('Storage Conditions Required')
                                 ->options([
@@ -143,12 +144,12 @@ class ProductResource extends Resource
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('price')
-                    ->money('usd') // Or your currency
+                    ->money('usd')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('category.name') // Assuming Category relationship
+                Tables\Columns\TextColumn::make('category.name')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('vendor.name') // Assuming Vendor relationship
+                Tables\Columns\TextColumn::make('vendor.name')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\IconColumn::make('storable')

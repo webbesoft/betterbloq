@@ -7,6 +7,7 @@ import { Order } from '@/types/model-types';
 import { Head } from '@inertiajs/react';
 import { format } from 'date-fns';
 import {
+    ArrowLeft,
     Ban,
     CalendarIcon,
     CheckCircle,
@@ -149,6 +150,12 @@ export default function OrderView(props: ShowOrderProps) {
             ]}
         >
             <Head title={'Order #' + data.id} />
+            <div className="mx-2 w-max rounded-md border p-2">
+                <a href={window.location.origin} className="flex items-start justify-start gap-1">
+                    <ArrowLeft />
+                    Back
+                </a>
+            </div>
             <div className="mb-2 flex items-center justify-between p-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Order Details</h1>

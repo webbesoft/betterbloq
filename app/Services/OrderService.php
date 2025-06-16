@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\OrderStatusEnum;
+use App\Managers\PurchasePoolManager;
 use App\Models\CycleProductVolume;
 use App\Models\Order;
 use App\Models\OrderLineItem;
@@ -52,32 +53,13 @@ class OrderService
         */
         $productPoolsMap = $poolAssociationResult['productPoolsMap'];
 
-        $userExpectedDeliveryDateString = data_get($data, 'expected_delivery_date');
-        if (empty($userExpectedDeliveryDateString)) {
-            Session::flash('message', ['error' => 'Please provide your preferred delivery date.']);
-
-            return ['redirect_back' => true, 'error' => 'Missing expected delivery date.'];
-        }
-
-        // DB::transaction(function () use (
-        //     $user,
-        //     $userExpectedDeliveryDateString,
-        //     $productPoolsMap,
-        //     $itemEntries) {
-        $storageHandlingResult = self::handleStorageRequirements(
-            $user,
-
-            $userExpectedDeliveryDateString,
-            $productPoolsMap
-        );
+        $storageHandlingResult = self::handleItemStorageRequirements($user, $itemEntries, $productPoolsMap);
         if (! $storageHandlingResult['success']) {
             Session::flash('message', ['error' => $storageHandlingResult['error']]);
 
-            return ['error' => $storageHandlingResult['error'], 'redirect_back' => $storageHandlingResult['redirect_back'] ?? true];
+            return ['error' => $storageHandlingResult['error'], 'redirect_back' => true];
         }
-        $storageNeeded = $storageHandlingResult['storageNeeded'];
-        $storageOrderId = $storageHandlingResult['storageOrderId'];
-        $userExpectedDeliveryDate = $storageHandlingResult['userExpectedDeliveryDate'];
+        $storageOrderIds = $storageHandlingResult['storageOrderIds'];
 
         $orderProductSubtotal = 0;
         $orderStorageCostApplied = 0;
@@ -100,9 +82,8 @@ class OrderService
         $prepareStripeSessionPayloadData = [
             'user' => $user,
             'productPoolsMap' => $productPoolsMap,
-            'userExpectedDeliveryDate' => $userExpectedDeliveryDate,
-            'storageOrderId' => $storageOrderId,
-            'storageNeeded' => $storageNeeded,
+            'itemEntries' => $itemEntries,
+            'storageOrderIds' => $storageOrderIds,
             'storageCostApplied' => $orderStorageCostApplied,
             'finalLinePrice' => $orderFinalLinePrice,
             'productSubtotal' => $orderProductSubtotal,
@@ -130,17 +111,13 @@ class OrderService
             (new LogService)->logException($e, __CLASS__, __METHOD__, [
                 'metadata' => [
                     'item_entries' => $itemEntries,
-                    'expected_delivery_date' => $userExpectedDeliveryDateString,
                     'user_id' => $user->id,
-                    'storage_order_id' => $storageOrderId,
                 ],
             ]);
             Session::flash('message', ['error' => 'Could not initiate checkout. Please try again or contact support.']);
 
-            // Changed from `return back();` to be consistent with other error returns
             return ['error' => 'Stripe checkout session creation failed.', 'redirect_back' => true];
         }
-        // });
     }
 
     private static function prepareProductData(array $itemEntries): array
@@ -204,6 +181,7 @@ class OrderService
                 'pool' => $open_pool,
                 'quantity' => $quantity,
                 'product' => $product,
+                'expected_delivery_date' => $item['expected_delivery_date'],
             ];
         }
 
@@ -221,105 +199,95 @@ class OrderService
         return ['success' => true, 'productPoolsMap' => $productPoolsMap];
     }
 
-    private static function handleStorageRequirements(User $user, string $userExpectedDeliveryDateString, array $productPoolsMap): array
+    private static function handleItemStorageRequirements(User $user, array $itemEntries, array $productPoolsMap): array
     {
-        try {
-            $userExpectedDeliveryDate = Carbon::parse($userExpectedDeliveryDateString);
-        } catch (\Exception $e) {
-            Log::info('Invalid user expected delivery date format.', ['date_string' => $userExpectedDeliveryDateString, 'user_id' => $user->id]);
+        $storageOrderIds = [];
 
-            return ['success' => false, 'error' => 'Invalid delivery date format provided.', 'redirect_back' => true];
-        }
-
-        $storageNeeded = false;
-        $storageOrderId = null;
-        $earliestPoolTargetDeliveryDateForStorage = null;
-
-        foreach ($productPoolsMap as $productId => $data) {
-            $poolTargetDeliveryDate = Carbon::parse($data['pool']->target_delivery_date);
-            if ($userExpectedDeliveryDate->isAfter($poolTargetDeliveryDate->copy()->addDays(3))) {
-                $storageNeeded = true;
-                if (is_null($earliestPoolTargetDeliveryDateForStorage) || $poolTargetDeliveryDate->lt($earliestPoolTargetDeliveryDateForStorage)) {
-                    $earliestPoolTargetDeliveryDateForStorage = $poolTargetDeliveryDate;
-                }
-            }
-        }
-
-        if ($storageNeeded) {
-            $defaultWarehouse = Warehouse::where('is_active', true)->orderBy('id')->first();
-            if (! $defaultWarehouse) {
-                Log::error('No active default warehouse found for creating storage order.', ['user_id' => $user->id]);
-
-                return ['success' => false, 'error' => 'Storage configuration error. Please contact support.', 'redirect_back' => true];
+        foreach ($itemEntries as $item) {
+            if (! ($item['requires_storage_acknowledged'] ?? false)) {
+                continue;
             }
 
             try {
-                $productNamesForStorage = implode(', ', array_map(fn ($item) => $item['product']->name, array_filter($productPoolsMap, function ($data) use ($userExpectedDeliveryDate) {
-                    $poolTarget = Carbon::parse($data['pool']->target_delivery_date);
+                $defaultWarehouse = Warehouse::where('is_active', true)->orderBy('id')->first();
+                if (! $defaultWarehouse) {
+                    Log::error('No active default warehouse found for creating storage order.', ['user_id' => $user->id]);
 
-                    return $userExpectedDeliveryDate->isAfter($poolTarget->copy()->addDays(3));
-                })));
+                    return ['success' => false, 'error' => 'Storage configuration error. Please contact support.'];
+                }
+
+                $product = $productPoolsMap[$item['product_id']]['product'];
+                $pool = $productPoolsMap[$item['product_id']]['pool'];
 
                 $storageOrder = StorageOrder::create([
                     'user_id' => $user->id,
                     'order_id' => null,
                     'warehouse_id' => $defaultWarehouse->id,
-                    'requested_storage_start_date' => $earliestPoolTargetDeliveryDateForStorage ? $earliestPoolTargetDeliveryDateForStorage->copy()->addDay() : Carbon::now()->addDay(),
-                    'requested_storage_duration_estimate' => $userExpectedDeliveryDate->diffForHumans($earliestPoolTargetDeliveryDateForStorage ? $earliestPoolTargetDeliveryDateForStorage->copy()->addDay() : Carbon::now()->addDay(), true).' (approx)',
-                    'preliminary_storage_cost_estimate' => 0.00,
+                    'requested_storage_start_date' => Carbon::parse($pool->target_delivery_date)->addDay(),
+                    'requested_storage_duration_estimate' => Carbon::parse($item['expected_delivery_date'])->diffForHumans(Carbon::parse($pool->target_delivery_date)->addDay(), true).' (approx)',
+                    'preliminary_storage_cost_estimate' => (float) ($item['storage_cost_applied'] ?? 0),
                     'status' => 'pending_arrival',
-                    'notes' => 'Storage automatically initiated for products: '.$productNamesForStorage.' due to extended delivery date request.',
-                    'manually_entered_total_space_units' => null,
-                    'calculated_space_unit_type' => null,
-                    'applied_storage_tier_id' => null,
+                    'notes' => 'Storage for product: '.$product->name.' with extended delivery date.',
                 ]);
-                $storageOrderId = $storageOrder->id;
-                Log::info('Preliminary StorageOrder created.', ['id' => $storageOrderId, 'user_id' => $user->id, 'products_requiring_storage' => $productNamesForStorage]);
+
+                $storageOrderIds[] = $storageOrder->id;
+
             } catch (\Exception $e) {
-                (new LogService)->logException(
-                    $e,
-                    __CLASS__,
-                    __METHOD__,
-                    [
-                        'user_id' => $user->id,
-                        'productPoolsMap_keys' => array_keys($productPoolsMap),
-                        'error' => $e->getMessage(),
-                    ]);
-                Log::error('Failed to create preliminary StorageOrder', [
+                Log::error('Failed to create storage order for item', [
                     'user_id' => $user->id,
-                    'productPoolsMap_keys' => array_keys($productPoolsMap),
+                    'product_id' => $item['product_id'],
                     'error' => $e->getMessage(),
                 ]);
 
-                return ['success' => false, 'error' => 'Could not set up storage details. Please try again or contact support.', 'redirect_back' => true];
+                return ['success' => false, 'error' => 'Could not set up storage details. Please try again or contact support.'];
             }
         }
 
         return [
             'success' => true,
-            'storageNeeded' => $storageNeeded,
-            'storageOrderId' => $storageOrderId,
-            'userExpectedDeliveryDate' => $userExpectedDeliveryDate,
+            'storageOrderIds' => $storageOrderIds,
         ];
     }
 
     private static function buildStripeLineItems(array $productPoolsMap, float $storageCostApplied): array
     {
-        info('storage cost applied: ', ['storage' => $storageCostApplied]);
         $line_items = [];
         foreach ($productPoolsMap as $productId => $data) {
             $product = data_get($data, 'product');
             $quantity = data_get($data, 'quantity');
+            $pool = data_get($data, 'pool');
 
             if (empty($product->stripe_price_id)) {
                 Log::error('Critical: Product missing stripe_price_id at line item building stage.', ['product_id' => $product->id]);
 
                 return ['success' => false, 'error' => "Configuration error for product '{$product->name}'. Cannot proceed."];
             }
-            $line_items[] = [
-                'price' => $product->stripe_price_id,
-                'quantity' => $quantity,
-            ];
+
+            $appliedDiscountPercentage = PurchasePoolManager::getLivePurchaseTier($data['pool'], data_get($data, 'quantity'))?->discount_percentage;
+
+            info('applied discount ', ['perc' => $appliedDiscountPercentage]);
+
+            if ($appliedDiscountPercentage > 0) {
+                // Use price_data with discounted amount
+                $originalPrice = $product->price; // Assuming you have price stored on product
+                $discountedPrice = $originalPrice * (1 - $appliedDiscountPercentage / 100);
+
+                $line_items[] = [
+                    'price_data' => [
+                        'currency' => 'usd',
+                        'product_data' => [
+                            'name' => $product->name,
+                        ],
+                        'unit_amount' => (int) round($discountedPrice * 100),
+                    ],
+                    'quantity' => $quantity,
+                ];
+            } else {
+                $line_items[] = [
+                    'price' => $product->stripe_price_id,
+                    'quantity' => $quantity,
+                ];
+            }
         }
 
         if ($storageCostApplied > 0) {
@@ -347,7 +315,6 @@ class OrderService
     {
         $productPoolsMap = data_get($prepareSessionPayload, 'productPoolsMap');
         $user = data_get($prepareSessionPayload, 'user');
-        $userExpectedDeliveryDate = data_get($prepareSessionPayload, 'userExpectedDeliveryDate');
         $storageOrderId = data_get($prepareSessionPayload, 'storageOrderId');
         $storageNeeded = data_get($prepareSessionPayload, 'storageNeeded');
         $storageCostApplied = data_get($prepareSessionPayload, 'storageCostApplied');
@@ -374,6 +341,7 @@ class OrderService
                 'purchase_pool_id' => $data['pool']->id,
                 'purchase_cycle_id' => $data['pool']->purchase_cycle_id,
                 'vendor_id' => $data['product']->vendor_id,
+                'expected_delivery_date' => data_get($data, 'expected_delivery_date'),
             ];
             $totalQuantity += $data['quantity'];
             if ($data['product']->vendor_id) {
@@ -387,11 +355,11 @@ class OrderService
             'cancel_url' => route('cart.show'),
             'metadata' => [
                 'user_id' => $user->id,
-                'expected_delivery_date' => $userExpectedDeliveryDate->toDateString(),
                 'storage_order_id' => $storageOrderId,
                 'storage_needed_flag' => $storageNeeded,
                 'item_details' => json_encode($itemDetailsForMetadata),
                 'vendor_id' => $data['product']->vendor_id,
+                'product_id' => $data['product']->id,
                 'total_items_quantity' => $totalQuantity,
                 'product_subtotal' => (string) $productSubtotal,
                 'storage_cost_applied' => (string) $storageCostApplied,
@@ -481,12 +449,15 @@ class OrderService
 
     private function processOrderLineItems(Order $mainOrder, \Stripe\Collection $lineItemsFromStripe, array $itemDetailsLookup): void
     {
+        $checkedLineItems = [];
         foreach ($lineItemsFromStripe->data as $lineItem) {
             $stripePriceId = $lineItem->price->id;
+            $product = null;
 
             if ($stripePriceId) {
                 $product = Product::where('stripe_price_id', $stripePriceId)->first();
             }
+
             if ($product) {
                 $purchasePoolId = null;
                 $purchaseCycleId = null;
@@ -528,7 +499,6 @@ class OrderService
                 }
             } else {
                 $lineItemDescription = $lineItem->description ?? '';
-                info(['item_details' => $itemDetailsLookup]);
                 $firstProductDetails = array_values($itemDetailsLookup);
                 $purchasePoolId = data_get($firstProductDetails, '0.purchase_pool_id');
 
@@ -544,16 +514,62 @@ class OrderService
                     ]);
                     Log::info('Webhook: Processed storage fee line item for order.', ['order_id' => $mainOrder->id, 'amount' => ($lineItem->amount_total / 100)]);
                 } else {
-                    Log::warning('Webhook: Product not found for Stripe price ID and not identified as storage fee.', [
-                        'stripe_price_id' => $stripePriceId,
-                        'description' => $lineItemDescription,
-                        'order_id' => $mainOrder->id,
-                    ]);
+                    // TODO: don't repeat the same line item for both products
+                    foreach ($itemDetailsLookup as $key => &$itemDetails) {
+                        $productId = data_get($itemDetails, 'product_id');
+                        $purchasePoolId = data_get($itemDetails, 'purchase_pool_id');
+                        $purchaseCycleId = data_get($itemDetails, 'purchase_cycle_id');
+
+                        $product = Product::find($productId);
+
+                        if (is_null($purchasePoolId)) {
+                            info("Webhook Warning: Product ID {$product->id} in item_details metadata missing 'purchase_pool_id'.", ['matchedItemDetail' => $itemDetails, 'order_id' => $mainOrder->id]);
+                        }
+                        if (is_null($purchaseCycleId)) {
+                            info("Webhook Warning: Product ID {$product->id} in item_details metadata missing 'purchase_cycle_id'.", ['matchedItemDetail' => $itemDetails, 'order_id' => $mainOrder->id]);
+                        }
+
+                        info('not product', [
+                            'order' => $mainOrder,
+                            'product' => $product,
+                        ]);
+
+                        if (OrderLineItem::where('product_id', $product->id)->where('order_id', $mainOrder->id)->exists()) {
+                            return;
+                        }
+
+                        if (in_array($lineItem->id, $checkedLineItems)) {
+                            return;
+                        }
+
+                        OrderLineItem::create([
+                            'order_id' => $mainOrder->id,
+                            'product_id' => $product->id,
+                            'quantity' => $lineItem->quantity,
+                            'price_per_unit' => ($lineItem->price->unit_amount / 100),
+                            'total_price' => ($lineItem->amount_total / 100),
+                            'purchase_pool_id' => $purchasePoolId,
+                        ]);
+
+                        if ($purchasePoolId && $activePool = PurchasePool::find($purchasePoolId)) {
+                            $activePool->increment('current_volume', $lineItem->quantity);
+                        }
+
+                        if ($purchaseCycleId && $product && $currentCycle = PurchaseCycle::find($purchaseCycleId)) {
+                            $cycleProductVolume = CycleProductVolume::firstOrCreate(
+                                ['purchase_cycle_id' => $currentCycle->id, 'product_id' => $product->id],
+                                ['total_aggregated_quantity' => 0]
+                            );
+                            $cycleProductVolume->increment('total_aggregated_quantity', $lineItem->quantity);
+                        }
+
+                        
+                        $checkedLineItems[] = $lineItem->id;
+                    }
                 }
 
                 continue;
             }
-
         }
     }
 

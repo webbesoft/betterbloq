@@ -82,6 +82,8 @@ export default function Index(props: Props) {
         next: orders.links[orders.links.length - 1]?.url || null,
     };
 
+    console.log(orders.links);
+
     return (
         <AppLayout>
             <Head title="Orders" />
@@ -162,7 +164,6 @@ export default function Index(props: Props) {
                         {/*</Link>*/}
                     </div>
                 </div>
-
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -219,15 +220,15 @@ export default function Index(props: Props) {
                     </TableBody>
                 </Table>
 
-                {orders.links && orders.links.length > 3 && (
+                {orders.links && (
                     <Pagination>
                         <PaginationContent className="justify-center gap-2">
                             <PaginationItem>
-                                <PaginationPrevious hidden={!links.prev} href={links.prev} />
+                                <PaginationPrevious hidden={!orders.links.prev} href={orders.links.prev} />
                             </PaginationItem>
                             {paginationLinks()}
                             <PaginationItem>
-                                <PaginationNext hidden={!links.next} href={links.next} />
+                                <PaginationNext hidden={!orders.links.next} href={orders.links.next} />
                             </PaginationItem>
                         </PaginationContent>
                     </Pagination>
