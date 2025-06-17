@@ -81,10 +81,14 @@ class Order extends Model
 
         static::created(function ($model) {
             $userId = $model->user_id;
-            $cacheKeyPrefix = 'user_orders_'.$userId.'_page_';
+            $ordersCount = static::where('user_id', $userId)->count();
+            $perPage = 10;
+            $pages = (int) ceil($ordersCount / $perPage);
 
-            // Invalidate all pages of the user's orders cache
-            Cache::forget($cacheKeyPrefix.'1');
+            for ($page = 1; $page <= $pages; $page++) {
+                $cacheKey = 'user_orders_'.$userId.'_page_'.$page;
+                Cache::forget($cacheKey);
+            }
         });
     }
 

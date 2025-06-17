@@ -60,9 +60,7 @@ export default function CartItemComponent(props: CartItemProps) {
                             {totalStorageForItem > 0 && (
                                 <div className="flex items-center gap-4 text-sm">
                                     <span className="text-gray-600">Storage Cost:</span>
-                                    <span className="font-medium text-amber-600">
-                                        ${storagePerItem.toFixed(2)} per unit × {item.quantity} = ${totalStorageForItem.toFixed(2)}
-                                    </span>
+                                    <span className="font-medium text-amber-600">${storagePerItem.toFixed(2)}</span>
                                 </div>
                             )}
                         </div>
@@ -72,7 +70,7 @@ export default function CartItemComponent(props: CartItemProps) {
                 <div className="text-right">
                     <div className="mb-3">
                         <div className="text-sm text-gray-600">Item Total</div>
-                        <div className="text-xl font-bold">${(itemSubtotal + totalStorageForItem).toFixed(2)}</div>
+                        <div className="text-xl font-bold">${(itemSubtotal + storagePerItem).toFixed(2)}</div>
                     </div>
 
                     <div className="mx-auto flex items-end space-x-2">

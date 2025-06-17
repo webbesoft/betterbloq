@@ -94,7 +94,7 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
     }, [storageProvider, chosenDeliveryDate, baseExpectedDeliveryDate, quantity, product]);
 
     const productSubtotal = (basePricePerUnit ?? 0) * quantity;
-    const finalLinePrice = productSubtotal.toFixed(2) + totalStorageCost;
+    const finalLinePrice = productSubtotal + totalStorageCost;
 
     const formatDate = (date: Date): string => {
         if (!date || isNaN(date.getTime())) return '';

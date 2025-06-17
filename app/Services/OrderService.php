@@ -449,127 +449,94 @@ class OrderService
 
     private function processOrderLineItems(Order $mainOrder, \Stripe\Collection $lineItemsFromStripe, array $itemDetailsLookup): void
     {
-        $checkedLineItems = [];
-        foreach ($lineItemsFromStripe->data as $lineItem) {
+        // Convert itemDetailsLookup to indexed array to match line item positions
+        $itemDetailsArray = array_values($itemDetailsLookup);
+
+        foreach ($lineItemsFromStripe->data as $index => $lineItem) {
             $stripePriceId = $lineItem->price->id;
             $product = null;
+            // #! BIG ASSUMPTION: line items are in the same order as itemDetailsLookup
+            $itemDetail = $itemDetailsArray[$index] ?? null;
 
             if ($stripePriceId) {
                 $product = Product::where('stripe_price_id', $stripePriceId)->first();
             }
 
             if ($product) {
-                $purchasePoolId = null;
-                $purchaseCycleId = null;
-
-                if (isset($itemDetailsLookup[$product->id])) {
-                    $matchedItemDetail = $itemDetailsLookup[$product->id];
-                    $purchasePoolId = data_get($matchedItemDetail, 'purchase_pool_id');
-                    $purchaseCycleId = data_get($matchedItemDetail, 'purchase_cycle_id');
-
-                    if (is_null($purchasePoolId)) {
-                        info("Webhook Warning: Product ID {$product->id} in item_details metadata missing 'purchase_pool_id'.", ['matchedItemDetail' => $matchedItemDetail, 'order_id' => $mainOrder->id]);
-                    }
-                    if (is_null($purchaseCycleId)) {
-                        info("Webhook Warning: Product ID {$product->id} in item_details metadata missing 'purchase_cycle_id'.", ['matchedItemDetail' => $matchedItemDetail, 'order_id' => $mainOrder->id]);
-                    }
-                } else {
-                    info("Webhook Warning: No matching item_details metadata for product ID {$product->id}.", ['line_item_id' => $lineItem->id, 'product_id' => $product->id, 'order_id' => $mainOrder->id]);
-                }
-
-                OrderLineItem::create([
-                    'order_id' => $mainOrder->id,
-                    'product_id' => $product->id,
-                    'quantity' => $lineItem->quantity,
-                    'price_per_unit' => ($lineItem->price->unit_amount / 100),
-                    'total_price' => ($lineItem->amount_total / 100),
-                    'purchase_pool_id' => $purchasePoolId,
-                ]);
-
-                if ($purchasePoolId && $activePool = PurchasePool::find($purchasePoolId)) {
-                    $activePool->increment('current_volume', $lineItem->quantity);
-                }
-
-                if ($purchaseCycleId && $product && $currentCycle = PurchaseCycle::find($purchaseCycleId)) {
-                    $cycleProductVolume = CycleProductVolume::firstOrCreate(
-                        ['purchase_cycle_id' => $currentCycle->id, 'product_id' => $product->id],
-                        ['total_aggregated_quantity' => 0]
-                    );
-                    $cycleProductVolume->increment('total_aggregated_quantity', $lineItem->quantity);
-                }
+                $this->createOrderLineItemForProduct($mainOrder, $lineItem, $product, $itemDetail);
             } else {
-                $lineItemDescription = $lineItem->description ?? '';
-                $firstProductDetails = array_values($itemDetailsLookup);
-                $purchasePoolId = data_get($firstProductDetails, '0.purchase_pool_id');
+                $lineItemDescription = strtolower($lineItem->description ?? '');
 
-                if (strtolower($lineItemDescription) === 'storage fee') {
-                    OrderLineItem::create([
-                        'order_id' => $mainOrder->id,
-                        'product_id' => null,
-                        'description' => 'Storage Fee',
-                        'quantity' => $lineItem->quantity,
-                        'price_per_unit' => ($lineItem->amount_total / 100),
-                        'total_price' => ($lineItem->amount_total / 100),
-                        'purchase_pool_id' => $purchasePoolId,
-                    ]);
-                    Log::info('Webhook: Processed storage fee line item for order.', ['order_id' => $mainOrder->id, 'amount' => ($lineItem->amount_total / 100)]);
-                } else {
-                    // TODO: don't repeat the same line item for both products
-                    foreach ($itemDetailsLookup as $key => &$itemDetails) {
-                        $productId = data_get($itemDetails, 'product_id');
-                        $purchasePoolId = data_get($itemDetails, 'purchase_pool_id');
-                        $purchaseCycleId = data_get($itemDetails, 'purchase_cycle_id');
-
-                        $product = Product::find($productId);
-
-                        if (is_null($purchasePoolId)) {
-                            info("Webhook Warning: Product ID {$product->id} in item_details metadata missing 'purchase_pool_id'.", ['matchedItemDetail' => $itemDetails, 'order_id' => $mainOrder->id]);
-                        }
-                        if (is_null($purchaseCycleId)) {
-                            info("Webhook Warning: Product ID {$product->id} in item_details metadata missing 'purchase_cycle_id'.", ['matchedItemDetail' => $itemDetails, 'order_id' => $mainOrder->id]);
-                        }
-
-                        info('not product', [
-                            'order' => $mainOrder,
-                            'product' => $product,
-                        ]);
-
-                        if (OrderLineItem::where('product_id', $product->id)->where('order_id', $mainOrder->id)->exists()) {
-                            return;
-                        }
-
-                        if (in_array($lineItem->id, $checkedLineItems)) {
-                            return;
-                        }
-
-                        OrderLineItem::create([
-                            'order_id' => $mainOrder->id,
-                            'product_id' => $product->id,
-                            'quantity' => $lineItem->quantity,
-                            'price_per_unit' => ($lineItem->price->unit_amount / 100),
-                            'total_price' => ($lineItem->amount_total / 100),
-                            'purchase_pool_id' => $purchasePoolId,
-                        ]);
-
-                        if ($purchasePoolId && $activePool = PurchasePool::find($purchasePoolId)) {
-                            $activePool->increment('current_volume', $lineItem->quantity);
-                        }
-
-                        if ($purchaseCycleId && $product && $currentCycle = PurchaseCycle::find($purchaseCycleId)) {
-                            $cycleProductVolume = CycleProductVolume::firstOrCreate(
-                                ['purchase_cycle_id' => $currentCycle->id, 'product_id' => $product->id],
-                                ['total_aggregated_quantity' => 0]
-                            );
-                            $cycleProductVolume->increment('total_aggregated_quantity', $lineItem->quantity);
-                        }
-
-                        $checkedLineItems[] = $lineItem->id;
+                // Scenario 3: Storage fee
+                if ($lineItemDescription === 'storage fee') {
+                    $this->createStorageFeeLineItem($mainOrder, $lineItem, $itemDetailsArray);
+                }
+                // Scenario 2: Product with custom pricing (no stripe_price_id match)
+                elseif ($itemDetail && isset($itemDetail['product_id'])) {
+                    $customProduct = Product::find($itemDetail['product_id']);
+                    if ($customProduct) {
+                        $this->createOrderLineItemForProduct($mainOrder, $lineItem, $customProduct, $itemDetail);
                     }
                 }
-
-                continue;
             }
         }
+    }
+
+    private function createOrderLineItemForProduct(Order $mainOrder, $lineItem, Product $product, ?array $itemDetail): void
+    {
+        $purchasePoolId = data_get($itemDetail, 'purchase_pool_id');
+        $purchaseCycleId = data_get($itemDetail, 'purchase_cycle_id');
+
+        if (is_null($purchasePoolId)) {
+            info("Webhook Warning: Product ID {$product->id} missing 'purchase_pool_id'.", ['order_id' => $mainOrder->id]);
+        }
+        if (is_null($purchaseCycleId)) {
+            info("Webhook Warning: Product ID {$product->id} missing 'purchase_cycle_id'.", ['order_id' => $mainOrder->id]);
+        }
+
+        OrderLineItem::create([
+            'order_id' => $mainOrder->id,
+            'product_id' => $product->id,
+            'quantity' => $lineItem->quantity,
+            'price_per_unit' => ($lineItem->price->unit_amount / 100),
+            'total_price' => ($lineItem->amount_total / 100),
+            'purchase_pool_id' => $purchasePoolId,
+        ]);
+
+        // Update purchase pool volume
+        if ($purchasePoolId && $activePool = PurchasePool::find($purchasePoolId)) {
+            $activePool->increment('current_volume', $lineItem->quantity);
+        }
+
+        // Update cycle product volume
+        if ($purchaseCycleId && $currentCycle = PurchaseCycle::find($purchaseCycleId)) {
+            $cycleProductVolume = CycleProductVolume::firstOrCreate(
+                ['purchase_cycle_id' => $currentCycle->id, 'product_id' => $product->id],
+                ['total_aggregated_quantity' => 0]
+            );
+            $cycleProductVolume->increment('total_aggregated_quantity', $lineItem->quantity);
+        }
+    }
+
+    private function createStorageFeeLineItem(Order $mainOrder, $lineItem, array $itemDetailsArray): void
+    {
+        $firstProductDetails = reset($itemDetailsArray);
+        $purchasePoolId = data_get($firstProductDetails, 'purchase_pool_id');
+
+        OrderLineItem::create([
+            'order_id' => $mainOrder->id,
+            'product_id' => null,
+            'description' => 'Storage Fee',
+            'quantity' => $lineItem->quantity,
+            'price_per_unit' => ($lineItem->amount_total / 100),
+            'total_price' => ($lineItem->amount_total / 100),
+            'purchase_pool_id' => $purchasePoolId,
+        ]);
+
+        Log::info('Webhook: Processed storage fee line item for order.', [
+            'order_id' => $mainOrder->id,
+            'amount' => ($lineItem->amount_total / 100),
+        ]);
     }
 
     private function processStorageOrder(Order $mainOrder, array $metadata, string $sessionId): void
