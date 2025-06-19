@@ -410,15 +410,15 @@ class OrderService
 
     private function createMainOrder(array $session, User $user, array $metadata, array $itemDetailsLookup): ?Order
     {
-        // Enhanced vendor_id logic
         $vendorId = data_get($metadata, 'vendor_id');
-        $purchaseCycleId = data_get($metadata, 'purchase_cycle_id');
         $productSubtotalMeta = data_get($metadata, 'product_subtotal');
         $storageCostAppliedMeta = data_get($metadata, 'storage_cost_applied');
         if (! $vendorId && ! empty($itemDetailsLookup)) {
-            $firstItemDetail = reset($itemDetailsLookup); // Get the first element
+            $firstItemDetail = reset($itemDetailsLookup);
             if ($firstItemDetail && isset($firstItemDetail['vendor_id'])) {
+                // #! All *should* have the same vendor and purchase cycle
                 $vendorId = $firstItemDetail['vendor_id'];
+                $purchaseCycleId = data_get($firstItemDetail, 'purchase_cycle_id');
             }
         }
 
