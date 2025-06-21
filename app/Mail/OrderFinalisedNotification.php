@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use App\Models\Order;
-use App\Models\PurchasePoolTier;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -17,7 +16,7 @@ class OrderFinalisedNotification extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(public Order $order, public ?PurchasePoolTier $appliedTier)
+    public function __construct(public Order $order, public float $discountPercentage = 0.0)
     {
         //
     }
@@ -43,7 +42,7 @@ class OrderFinalisedNotification extends Mailable
                 'order' => $this->order,
                 'user' => $this->order->user,
                 'product' => $this->order->product,
-                'appliedTier' => $this->appliedTier,
+                'appliedTierPercentage' => $this->discountPercentage,
                 'initialAmount' => $this->order->initial_amount,
                 'finalAmount' => $this->order->final_amount,
                 'discountApplied' => $this->order->initial_amount - $this->order->final_amount,

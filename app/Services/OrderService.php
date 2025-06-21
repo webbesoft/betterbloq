@@ -503,8 +503,10 @@ class OrderService
             'purchase_pool_id' => $purchasePoolId,
         ]);
 
+        $activePool = PurchasePool::find($purchasePoolId);
+
         // Update purchase pool volume
-        if ($purchasePoolId && $activePool = PurchasePool::find($purchasePoolId)) {
+        if ($purchasePoolId && $activePool) {
             $activePool->increment('current_volume', $lineItem->quantity);
         }
 
@@ -515,6 +517,9 @@ class OrderService
                 ['total_aggregated_quantity' => 0]
             );
             $cycleProductVolume->increment('total_aggregated_quantity', $lineItem->quantity);
+            $cycleProductVolume->update([
+                'achieved_discount_percentage' => $activePool->getApplicableDiscountPercentage(),
+            ]);
         }
     }
 
