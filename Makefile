@@ -19,3 +19,52 @@ build-staging:
 build-prod:
 	git checkout main || true
 	$(DOCKER_COMPOSE_PROD) build php-fpm-prod
+
+# Default destination
+DEST ?= staging
+
+kamal-reboot-proxy:
+	@if [ -f .env.$(DEST) ]; then \
+		echo "Rebooting proxy for $(DEST) with environment from .env.$(DEST)"; \
+		export $$(cat .env.$(DEST) | grep -v '^#' | xargs) && kamal proxy reboot -d $(DEST); \
+	else \
+		echo "Error: .env.$(DEST) file not found"; \
+		exit 1; \
+	fi
+
+# Load environment variables from .env file based on destination
+kamal-setup:
+	@if [ -f .env.$(DEST) ]; then \
+		echo "Loading environment from .env.$(DEST)"; \
+		export $$(cat .env.$(DEST) | grep -v '^#' | xargs) && kamal setup -d $(DEST); \
+	else \
+		echo "Error: .env.$(DEST) file not found"; \
+		exit 1; \
+	fi
+
+kamal-deploy:
+	@if [ -f .env.$(DEST) ]; then \
+		echo "Deploying to $(DEST) with environment from .env.$(DEST)"; \
+		export $$(cat .env.$(DEST) | grep -v '^#' | xargs) && kamal deploy -d $(DEST); \
+	else \
+		echo "Error: .env.$(DEST) file not found"; \
+		exit 1; \
+	fi
+
+kamal-app:
+	@if [ -f .env.$(DEST) ]; then \
+		echo "Deploying app to $(DEST) with environment from .env.$(DEST)"; \
+		export $$(cat .env.$(DEST) | grep -v '^#' | xargs) && kamal app deploy -d $(DEST); \
+	else \
+		echo "Error: .env.$(DEST) file not found"; \
+		exit 1; \
+	fi
+
+kamal-accessory:
+	@if [ -f .env.$(DEST) ]; then \
+		echo "Deploying accessories to $(DEST) with environment from .env.$(DEST)"; \
+		export $$(cat .env.$(DEST) | grep -v '^#' | xargs) && kamal accessory boot all -d $(DEST); \
+	else \
+		echo "Error: .env.$(DEST) file not found"; \
+		exit 1; \
+	fi

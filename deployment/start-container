@@ -10,7 +10,13 @@ initialStuff() {
     
     if [ "${running_migrations_and_seeders}" = "true" ]; then
         echo "Running migrations and seeding database ..."
-        php artisan migrate --isolated --seed --force || php artisan migrate --seed --force
+        if php artisan migrate --isolated --seed --force; then
+            echo "Migrations and seeding completed successfully (with --isolated)."
+        elif php artisan migrate --seed --force; then
+            echo "Migrations and seeding completed successfully (without --isolated)."
+        else
+            echo "Migrations and seeding failed."
+        fi
     fi
 	
     php artisan storage:link; \
