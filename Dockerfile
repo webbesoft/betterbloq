@@ -1,3 +1,6 @@
+ARG BUN_VERSION="latest"
+ARG APP_ENV
+
 FROM serversideup/php:8.4-fpm-nginx AS base
 
 # Switch to root so we can do root things
