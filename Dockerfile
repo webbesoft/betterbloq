@@ -25,27 +25,30 @@ USER www-data
 # Build frontend assets with Bun
 ###########################################
 
-FROM oven/bun:${BUN_VERSION} AS build
+# FROM oven/bun:${BUN_VERSION} AS build
 
-ARG APP_ENV
-ARG APP_URL
-ARG VITE_APP_URL
+# ARG APP_ENV
+# ARG APP_URL
+# ARG VITE_APP_URL
 
-ENV ROOT=/var/www/html \
-    APP_ENV=${APP_ENV} \
-    NODE_ENV=${APP_ENV:-production} \
-    VITE_APP_URL=${VITE_APP_URL}
+# ENV ROOT=/var/www/html \
+#     APP_ENV=${APP_ENV} \
+#     NODE_ENV=${APP_ENV:-production} \
+#     VITE_APP_URL=${VITE_APP_URL}
 
-WORKDIR ${ROOT}
+# WORKDIR ${ROOT}
 
-COPY --link package.json bun.lock* ./
+# COPY --link package.json bun.lock* ./
 
-RUN bun install --frozen-lockfile
+# RUN bun install --frozen-lockfile
 
-COPY --link . .
+# COPY --link . .
 
-RUN bun run build
+# RUN bun run build
 
+###########################################
+# Final stage
+###########################################
 FROM base
 
 # These are environments variables from https://serversideup.net/open-source/docker-php/docs/reference/environment-variable-specification
@@ -59,7 +62,10 @@ ARG ROOT=/var/www/html
 
 # Copy the app files...
 COPY --chown=www-data:www-data . /var/www/html
-COPY --link --chown=www-data:www-data --from=build ${ROOT}/public public
 
 # Re-run install, but now with scripts and optimizing the autoloader (should be faster)...
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+
+RUN yarn install --immutable && \
+    yarn build && \
+    rm -rf node_modules
