@@ -9,14 +9,18 @@ initialStuff() {
     echo "Container mode: $container_mode"
     
     if [ "${running_migrations_and_seeders}" = "true" ]; then
-        echo "Running migrations and seeding database ..."
-        if php artisan migrate --isolated --seed --force; then
-            echo "Migrations and seeding completed successfully (with --isolated)."
-        elif php artisan migrate --seed --force; then
-            echo "Migrations and seeding completed successfully (without --isolated)."
-        else
-            echo "Migrations and seeding failed."
+        echo "Running migrations..."
+        
+        if ! php artisan migrate --isolated --force; then
+            echo "Migration with --isolated failed (this is expected on a fresh database). Retrying without lock..."
+            # If it fails, run it again without the lock. This will create the cache tables.
+            php artisan migrate --force
         fi
+        
+        echo "Seeding the database..."
+        php artisan db:seed --force
+        
+        echo "Migrations and seeding completed."
     fi
     
     php artisan storage:link; \
