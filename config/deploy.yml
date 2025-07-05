@@ -23,12 +23,8 @@ proxy:
   ssl: true
   host: betterbloq.com
   # Proxy connects to your container on port 80 by default.
-  app_port: 8000
+  app_port: 9000
   forward_headers: true
-  healthcheck:
-    interval: 3
-    path: /
-    timeout: 3
 
 # Credentials for your image host.
 registry:
@@ -52,10 +48,9 @@ builder:
 env:
   clear:
     APP_NAME: 'BetterBloq'
-    APP_ENV: 'production'
     APP_DEBUG: 'false'
     APP_URL: 'https://betterbloq.com'
-    APP_PORT: '8000'
+    APP_PORT: '9000'
     FILESYSTEM_DISK: 's3'
     DB_HOST: 'betterbloq-db'
     APP_FAKER_LOCALE: 'en_US'

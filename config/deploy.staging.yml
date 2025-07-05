@@ -1,5 +1,6 @@
+<% require "dotenv"; Dotenv.load(".env.staging") %>
 # Name of your application. Used to uniquely configure containers.
-service: betterbloq
+service: betterbloq-staging
 
 # Name of the container image.
 image: betterbloq/betterbloq-platform-staging
@@ -20,10 +21,10 @@ servers:
 #
 # Note: If using Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
 proxy:
-  # ssl: true
+  ssl: true
   host: staging.betterbloq.com
   # Proxy connects to your container on port 80 by default.
-  app_port: 8000
+  app_port: 9000
 
 # Credentials for your image host.
 registry:
@@ -55,6 +56,7 @@ env:
     APP_NAME: 'BetterBloq Staging'
     APP_URL: 'https://staging.betterbloq.com'
     APP_PORT: '9000'
+    APP_ENV: 'staging'
     FILESYSTEM_DISK: 's3'
     DB_HOST: 'betterbloq-staging-db'
     DB_CONNECTION: 'mariadb'
@@ -173,7 +175,7 @@ accessories:
   db:
     image: mariadb:11
     host: staging.betterbloq.com
-    port: 3306
+    port: "3306:3306"
     env:
       clear:
         MARIADB_ROOT_HOST: '%'
@@ -192,8 +194,8 @@ accessories:
   #     - data:/data
   minio:
     image: minio/minio
-    port: "127.0.0.1:9000:9000"
-    port: "127.0.0.1:9001:9001"
+    port: "9000:9000"
+    port: "9001:9001"
     host: staging.betterbloq.com
     env:
       secret:
