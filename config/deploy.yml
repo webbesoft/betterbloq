@@ -11,7 +11,7 @@ servers:
   cron:
     hosts:
       - 15.235.44.149
-    cmd: php artisan schedule:run
+    cmd: php artisan schedule:work
     options:
       health-cmd: healthcheck-schedule
 
@@ -23,7 +23,7 @@ proxy:
   ssl: true
   host: betterbloq.com
   # Proxy connects to your container on port 80 by default.
-  app_port: 8000
+  app_port: 8080
   forward_headers: true
 
 # Credentials for your image host.
@@ -50,7 +50,6 @@ env:
     APP_NAME: 'BetterBloq'
     APP_DEBUG: 'false'
     APP_URL: 'https://betterbloq.com'
-    APP_PORT: '9000'
     FILESYSTEM_DISK: 's3'
     DB_HOST: 'betterbloq-db'
     APP_FAKER_LOCALE: 'en_US'
