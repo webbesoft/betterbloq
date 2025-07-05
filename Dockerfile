@@ -7,7 +7,7 @@ FROM serversideup/php:8.4-fpm-nginx AS base
 USER root
 
 # Install the exif extension with root permissions
-RUN install-php-extensions exif
+RUN install-php-extensions exif intl bcmath gd
 
 # Install JavaScript dependencies
 ARG NODE_VERSION=20.18.0
