@@ -24,7 +24,7 @@ proxy:
   ssl: true
   host: staging.betterbloq.com
   # Proxy connects to your container on port 80 by default.
-  app_port: 9000
+  app_port: 8000
 
 # Credentials for your image host.
 registry:
@@ -55,7 +55,7 @@ env:
   clear:
     APP_NAME: 'BetterBloq Staging'
     APP_URL: 'https://staging.betterbloq.com'
-    APP_PORT: '9000'
+    APP_PORT: '8000'
     APP_ENV: 'staging'
     FILESYSTEM_DISK: 's3'
     DB_HOST: 'betterbloq-staging-db'

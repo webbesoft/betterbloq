@@ -23,7 +23,7 @@ proxy:
   ssl: true
   host: betterbloq.com
   # Proxy connects to your container on port 80 by default.
-  app_port: 9000
+  app_port: 8000
   forward_headers: true
 
 # Credentials for your image host.
