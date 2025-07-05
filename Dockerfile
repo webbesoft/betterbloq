@@ -43,7 +43,6 @@ COPY --link package.json bun.lock* ./
 RUN bun install --frozen-lockfile
 
 COPY --link . .
-COPY --link --from=common ${ROOT}/vendor vendor
 
 RUN bun run build
 
