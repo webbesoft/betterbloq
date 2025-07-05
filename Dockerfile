@@ -58,7 +58,14 @@ ENV SSL_MODE="off"
 ENV AUTORUN_ENABLED="true"
 ENV PHP_OPCACHE_ENABLE="1"
 ENV HEALTHCHECK_PATH="/up"
-ARG ROOT=/var/www/html
+ARG APP_ENV
+ARG APP_URL
+ARG VITE_APP_URL
+
+ENV ROOT=/var/www/html \
+    APP_ENV=${APP_ENV} \
+    NODE_ENV=${APP_ENV:-production} \
+    VITE_APP_URL=${VITE_APP_URL}
 
 # Copy the app files...
 COPY --chown=www-data:www-data . /var/www/html

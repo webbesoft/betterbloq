@@ -49,7 +49,6 @@ env:
   clear:
     APP_NAME: 'BetterBloq'
     APP_DEBUG: 'false'
-    APP_URL: 'https://betterbloq.com'
     FILESYSTEM_DISK: 's3'
     DB_HOST: 'betterbloq-db'
     APP_FAKER_LOCALE: 'en_US'
