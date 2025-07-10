@@ -44,7 +44,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                     <Link href="/" className="mr-4 flex items-center gap-2">
                         {' '}
                         <div className="rounded-md">
-                            <img src="/images/3.png" alt="betterbloq logo" className="h-10 w-auto bg-white" />
+                            <img src="/images/3.png" alt="betterbloq logo" className="bg-background h-10 w-auto rounded-md" />
                         </div>
                         <span className="text-foreground hidden font-bold sm:inline-block">BetterBloq</span>
                     </Link>
