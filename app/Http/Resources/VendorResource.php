@@ -13,6 +13,7 @@ class VendorResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'phone' => $this->phone,
+            'prep_time' => $this->prep_time,
         ];
     }
 }

@@ -7,10 +7,21 @@ export interface Product {
     unit: string;
     vendor: Vendor;
     category: string;
-    preparation_time?: number;
+    delivery_time?: number;
     additional_images: any[];
     average_rating: number;
     ratings_count: number;
+    storable: boolean;
+    storageProvider: Warehouse;
+    default_length?: number;
+    default_width?: number;
+    default_height?: number;
+    storage_unit_of_measure?: 'cm' | 'm' | 'in' | 'ft';
+    is_stackable?: boolean;
+    max_stack_height_units?: number;
+    storage_conditions_required?: string;
+    storage_handling_notes?: string;
+    preferred_warehouse_id?: number | string;
 }
 
 export interface UserRating {
@@ -19,6 +30,27 @@ export interface UserRating {
 }
 
 export interface Vendor {
+    id: number;
+    name: string;
+    prep_time: number;
+}
+
+export interface Warehouse {
+    id: number;
+    name: string;
+    phone: string;
+    total_capacity: number;
+    available_capacity: number;
+    max_height: number;
+    total_capacity_unit: 'sq ft' | 'cu ft';
+    default_storage_price_per_unit: number;
+    default_storage_price_period: 'days' | 'weeks' | 'months';
+    supported_storage_conditions: any;
+    is_active: boolean;
+    storage_tiers: StorageTier[];
+}
+
+export interface Category {
     id: number;
     name: string;
 }
@@ -113,22 +145,39 @@ export interface Order {
     name: string;
     email: string;
     phone: string;
-    address: string;
+    address: Address;
     product_id: number;
     user_id: number;
-    purchase_pool_id: number;
     status: string;
     deleted_at: string | null;
-    purchase_pool?: PurchasePool;
-    product?: Product;
+    line_items: OrderLineItem[];
     vendor?: Vendor;
+    total_order_price: number;
+}
+
+export interface Address {
+    address_line_1: string;
+    address_line_2: string;
+    provice: string;
+    postal_code: string;
+    city: string;
+    country: string;
+}
+
+export interface OrderLineItem {
+    id: number;
+    order_id: number;
+    product_id: number;
     quantity: number;
+    price_per_unit: number;
+    total_price: number;
+    product: Product;
+    purchase_pool: PurchasePool;
+    description: string;
 }
 
 export interface PurchasePool {
-    status: string;
-    start_date: Date;
-    end_date: Date;
+    cycle_status: string;
     target_volume: string;
     current_volume: string;
     target_delivery_date: Date;
@@ -139,4 +188,25 @@ export interface PurchasePool {
     updated_at: Date;
     id: number;
     name: string;
+    purchase_cycle_id: number;
+}
+
+interface StorageTier {
+    id: number;
+    warehouse_id: number;
+    min_space_units: number;
+    max_space_units: number;
+    price_per_space_unit: number;
+    billing_period: 'days' | 'weeks' | 'months';
+}
+
+export interface CalculationResult {
+    requiredSpace: number;
+    spaceUnit: 'sq ft' | 'cu ft';
+    appliedTier: StorageTier | null;
+    isUsingDefaultRate: boolean;
+    costPerPeriod: number;
+    costPerItemPerPeriod: number;
+    billingPeriod: 'days' | 'weeks' | 'months';
+    costPerDay: number;
 }

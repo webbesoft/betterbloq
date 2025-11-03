@@ -109,6 +109,7 @@ class ListPurchasePools extends ListRecords
                     }
                 }),
             // --- End Custom Action ---
+
         ];
     }
 }

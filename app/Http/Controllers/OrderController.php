@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreOrderRequest;
+use App\Http\Resources\OrderMinimalResource;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Services\OrderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
@@ -19,25 +21,25 @@ class OrderController extends Controller
     {
         $userId = $request->user()->id;
         $cacheKey = 'user_orders_'.$userId.'_page_'.$request->query('page', 1);
-        $cacheDuration = 600;
+        $cacheDuration = 300;
 
         $orders = Cache::remember($cacheKey, $cacheDuration, function () use ($request) {
             $ordersQuery = Order::query();
 
             return $ordersQuery
+                ->with(['vendor', 'lineItems:order_id,id,total_price'])
                 ->where('user_id', $request->user()->id)
-                ->with(['product', 'purchasePool', 'vendor', 'product.category', 'purchasePool.purchasePoolTiers'])
                 ->paginate(10);
         });
 
         return Inertia::render('shop/orders/index', [
-            'orders' => OrderResource::collection($orders),
+            'orders' => OrderMinimalResource::collection($orders),
         ]);
     }
 
     public function show(Request $request, Order $order)
     {
-        $order->load(['product', 'purchasePool', 'vendor', 'purchasePool.purchasePoolTiers']);
+        $order->loadMissing(['lineItems', 'lineItems.product', 'vendor', 'lineItems.purchasePool', 'lineItems.purchasePool.purchasePoolTiers', 'lineItems.purchasePool.purchaseCycle', 'lineItems.product.images', 'lineItems.product.category:id,name', 'lineItems.product.vendor:id,name', 'purchaseCycle']);
 
         return Inertia::render('shop/orders/show', [
             'order' => new OrderResource($order),
@@ -46,18 +48,64 @@ class OrderController extends Controller
 
     public function store(StoreOrderRequest $request): RedirectResponse|Response
     {
+        $user = Auth::user();
+
+        if (! $user) {
+            Session::flash('message', ['error' => 'You must be logged in to place an order.']);
+
+            return redirect()->route('login');
+        }
+
         $validated = $request->validated();
 
-        $order = OrderService::createOrder($request->user(), $validated);
+        $serviceData = [];
 
-        if (! data_get($order, 'error')) {
+        // #! Order from cart has multiple items
+        if (isset($validated['items']) && is_array($validated['items'])) {
+            $serviceData['items'] = $validated['items'];
+            foreach ($serviceData['items'] as $cartItem) {
+                if (empty($cartItem['product_id']) || empty($cartItem['quantity'])) {
+                    Session::flash('message', ['error' => 'Invalid cart item data. Each item must have a product ID and quantity.']);
+
+                    return back()->withInput()->with('error', 'Invalid cart item data.');
+                }
+            }
+            $serviceData['final_line_price'] = data_get($validated, 'final_line_price');
+            $serviceData['storage_cost_applied'] = data_get($validated, 'storage_cost_applied');
+            $serviceData['daily_storage_price'] = data_get($validated, 'daily_storage_price');
+            $serviceData['product_subtotal'] = data_get($validated, 'product_subtotal');
+        }
+        // #! scenario 2: single product order
+        elseif (isset($validated['product_id'])) {
+            $serviceData['items'] = [
+                [
+                    'product_id' => $validated['product_id'],
+                    'quantity' => $validated['quantity'],
+                    'expected_delivery_date' => $validated['expected_delivery_date'],
+                    'purchase_cycle_id' => $validated['purchase_cycle_id'] ?? null,
+                    'requires_storage_acknowledged' => $validated['requires_storage_acknowledged'] ?? false,
+                    'final_line_price' => data_get($validated, 'final_line_price'),
+                    'storage_cost_applied' => data_get($validated, 'storage_cost_applied'),
+                    'daily_storage_price' => data_get($validated, 'daily_storage_price'),
+                    'product_subtotal' => data_get($validated, 'product_subtotal'),
+                ],
+            ];
+        } else {
+            Session::flash('message', ['error' => 'Invalid order data submitted.']);
+
+            return back()->withInput()->with('error', 'Invalid order data submitted.');
+        }
+
+        $orderResponse = OrderService::createOrder($user, $serviceData);
+
+        if (! data_get($orderResponse, 'error') && ! is_null($orderResponse)) {
             return Inertia::render('shop/payment-pending', [
-                'url' => data_get($order, 'url'),
+                'url' => data_get($orderResponse, 'url'),
             ]);
         }
 
-        Session::flash('message', ['error' => data_get($order, 'error')]);
+        Session::flash('message', ['error' => data_get($orderResponse, 'error')]);
 
-        return back()->with('error', data_get($order, 'error'));
+        return back()->with('error', data_get($orderResponse, 'error'));
     }
 }

@@ -3,15 +3,15 @@
 namespace App\Listeners;
 
 use App\Mail\NewOrderConfirmation;
-use App\Models\Order;
-use App\Models\Product;
-use App\Models\PurchasePool;
+use App\Managers\CheckoutSessionCompletedManager;
 use App\Models\User;
 use App\Services\LogService;
+use App\Services\OrderService;
+use Exception;
+use Illuminate\Support\Facades\Log as FacadesLog;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Cashier\Events\WebhookReceived;
 use Stripe\Exception\ApiErrorException;
-use Stripe\StripeClient;
 
 class StripeEventListener
 {
@@ -30,79 +30,70 @@ class StripeEventListener
      */
     public function handle(WebhookReceived $event): void
     {
-        //
-        if ($event->payload['type'] === 'checkout.session.completed') {
-            $session = $event->payload;
+        $payloadType = $event->payload['type'] ?? null;
 
-            $stripeCustomerId = data_get($session, 'data.object.customer');
+        switch ($payloadType) {
+            case 'checkout.session.completed':
+                $this->handleCheckoutSessionCompleted($event->payload);
+                break;
+                // case 'invoice.payment_succeeded':
+                //     $this->handleInvoicePaymentSucceeded($event->payload);
+                //     break;
+                // Add more cases as needed
+            default:
+                (new LogService)->createLog(
+                    'error',
+                    "Unhandled Stripe event type: {$payloadType}",
+                    __CLASS__,
+                    __METHOD__,
+                    ['payload' => $event->payload]
+                );
+                throw new Exception("Unhandled Stripe event type: {$payloadType}");
+        }
+    }
 
-            $user = User::whereStripeCustomerId($stripeCustomerId)->first();
+    /**
+     * @throws ApiErrorException
+     */
+    private function handleCheckoutSessionCompleted(array $payload): void
+    {
+        $validatedData = CheckoutSessionCompletedManager::getValidatedSessionData($payload);
+        if (! $validatedData) {
+            return;
+        }
 
-            if ($user) {
-                try {
-                    $stripe = new StripeClient(config('services.stripe.secret'));
-                    $lineItems = $stripe->checkout->sessions->allLineItems(data_get($session, 'data.object.id'), ['limit' => 1]);
+        $session = $validatedData->session;
+        $user = $validatedData->user;
+        $metadata = $validatedData->metadata;
 
-                    if (! empty($lineItems->data)) {
-                        $lineItem = $lineItems->data[0];
-                        $stripePriceId = $lineItem->price->id;
-                        $quantity = $lineItem->quantity;
-                        $price = $lineItem->price;
-
-                        $product = Product::where('stripe_price_id', $stripePriceId)->first();
-
-                        if ($product) {
-                            $expectedDeliveryDate = data_get($session, 'data.object.metadata.expected_delivery_date');
-
-                            if ($expectedDeliveryDate) {
-                                $openPool = PurchasePool::where('product_id', $product->id)
-                                    ->where('status', 'active')
-                                    ->withinDeliveryRange($expectedDeliveryDate)
-                                    ->first();
-
-                                if ($openPool) {
-                                    $order = Order::create([
-                                        'user_id' => $user->id,
-                                        'email' => data_get($session, 'data.object.customer_details.email') ?? 'tawanda@betterbloq.com',
-                                        'phone' => data_get($session, 'data.object.customer_details.phone') ?? '+1 (456) 7890',
-                                        'address' => json_encode(data_get($session, 'data.object.customer_details.address')),
-                                        'status' => 'completed',
-                                        'purchase_pool_id' => $openPool->id,
-                                        'product_id' => $product->id,
-                                        'quantity' => $quantity,
-                                        'stripe_session_id' => data_get($session, 'data.object.id'),
-                                        'vendor_id' => $product->vendor_id,
-                                        'total_amount' => ($price->unit_amount / 100) * $quantity,
-                                    ]);
-
-                                    // #! Stripe provides the unit amount in cents
-                                    $openPool->update([
-                                        'current_volume' => $openPool->current_volume + $quantity,
-                                    ]);
-
-                                    Mail::to($order->user->email)->send(new NewOrderConfirmation($order, $user));
-                                } else {
-                                    info('No active purchase pool found for product after successful payment', [
-                                        'product_id' => $product->id,
-                                        'expected_delivery_date' => $expectedDeliveryDate,
-                                        'stripe_session_id' => data_get($session, 'data.object.id'),
-                                    ]);
-                                }
-                            } else {
-                                // Handle the case where expected_delivery_date is not found in metadata
-                                info('Expected delivery date not found in Stripe session metadata', [
-                                    'stripe_session_id' => data_get($session, 'data.object.id'),
-                                ]);
-                            }
-                        }
-                    }
-                } catch (ApiErrorException $e) {
-                    (new LogService)->logException($e, __CLASS__, __METHOD__, [
-                        $event->payload,
-                    ]);
-                }
-
+        try {
+            $lineItemsFromStripe = CheckoutSessionCompletedManager::fetchStripeLineItems(data_get($session, 'id'));
+            if (! $lineItemsFromStripe) {
+                return;
             }
+
+            $itemDetailsLookup = CheckoutSessionCompletedManager::parseItemDetailsMetadata($metadata, $session['id']);
+
+            $orderService = new OrderService;
+            $mainOrder = $orderService->createOrderFromStripeSession(
+                $session,
+                $user,
+                $metadata,
+                $lineItemsFromStripe,
+                $itemDetailsLookup
+            );
+
+            if ($mainOrder) {
+                // Mail::to($mainOrder->user->email)->send(new NewOrderConfirmation($mainOrder, $user));
+                // Send internal notifications, perhaps via events
+                info('Order successfully processed from Stripe webhook.', ['order_id' => $mainOrder->id, 'session_id' => $session['id']]);
+            } else {
+                FacadesLog::error('Failed to create order from Stripe webhook.', ['session_id' => $session['id']]);
+            }
+        } catch (Exception $e) {
+            (new LogService)->logException($e, __CLASS__, __METHOD__, [
+                'payload' => $payload,
+            ]);
         }
     }
 }

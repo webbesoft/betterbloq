@@ -13,7 +13,7 @@ class LogService
     public function createLog(string $level, string $message, ?string $class = null, ?string $method = null, array $context = []): Log
     {
         return Log::create([
-            'user_id' => Auth::id(), // Automatically get the authenticated user's ID if available
+            'user_id' => Auth::user() ? Auth::id() : 1,
             'level' => $level,
             'class' => $class,
             'method' => $method,
@@ -28,7 +28,7 @@ class LogService
     public function logException(\Throwable $exception, ?string $class = null, ?string $method = null, array $context = []): Log
     {
         return Log::create([
-            'user_id' => Auth::id(),
+            'user_id' => Auth::id() ?? 1,
             'level' => 'error', // Default level for exceptions
             'class' => $class,
             'method' => $method,
@@ -36,7 +36,8 @@ class LogService
             'exception_type' => get_class($exception),
             'exception_message' => $exception->getMessage(),
             'exception_trace' => $exception->getTraceAsString(),
-            'context' => $context,
+            // TODO: add context
+            // 'context' => $context,
         ]);
     }
 }

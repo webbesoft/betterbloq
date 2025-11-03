@@ -8,7 +8,7 @@
 {{--    <x-mail::table>--}}
         | Item        | Quantity | Price     |
         | :---------- | :------- | :-------- |
-            | {{ $order->product->name }} | x{{ $order->quantity }} | ${{ number_format($order->product->price, 2) }} |
+            | {{ $order->product->name }} | ${{ number_format($order->product->price, 2) }} |
         -------------------------------------
         | **Total** |          | **${{ number_format($order->total_amount, 2) }}** |
 {{--    </x-mail::table>--}}

@@ -23,7 +23,7 @@ class InvoiceController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $order->loadMissing(['product']);
+        $order->loadMissing(['lineItems', 'lineItems.product']);
 
         $pdf = Pdf::loadView('invoices.order', ['order' => $order]);
 

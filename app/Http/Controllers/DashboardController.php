@@ -17,7 +17,7 @@ class DashboardController extends Controller
     {
         $userId = $request->user()->id;
         $cacheKey = 'dashboard_data_'.$userId;
-        $cacheDuration = 300; // 5 minutes (adjust as needed)
+        $cacheDuration = 300;
 
         $dashboardData = Cache::remember($cacheKey, $cacheDuration, function () use ($request, $userId) {
             $ongoingProjectsCount = Project::where('status', 'ongoing')->count();
@@ -45,40 +45,22 @@ class DashboardController extends Controller
 
             $watchedPurchasePools = $request->user()->watchedPurchasePools()->get();
 
-            $activeOrderPoolIds = Order::where('user_id', $userId)
-                ->where('status', 'completed')
-                ->whereNotNull('purchase_pool_id')
-                ->distinct()
-                ->pluck('purchase_pool_id');
-
             $activePoolsProgress = [];
-            if ($activeOrderPoolIds->isNotEmpty()) {
-                $activePoolsProgress = PurchasePool::whereIn('id', $activeOrderPoolIds)
-                    ->with('product:id,name')
-                    ->get()
-                    ->map(function ($pool) {
-                        return [
-                            'id' => $pool->id,
-                            'name' => $pool->name,
-                            'product_id' => $pool->product->id ?? null,
-                            'current_volume' => $pool->current_volume ?? 0,
-                            'target_volume' => $pool->target_volume ?? 0,
-                        ];
-                    })->all();
-            }
 
-            $frequentProducts = Order::where('user_id', $request->user()->id)
-                ->with('product')
-                ->select('product_id', DB::raw('count(*) as frequency'))
-                ->groupBy('product_id')
-                ->orderByDesc(DB::raw('count(*)'))
+            $frequentProducts = DB::table('order_line_items')
+                ->join('orders', 'order_line_items.order_id', '=', 'orders.id')
+                ->join('products', 'order_line_items.product_id', '=', 'products.id')
+                ->where('orders.user_id', $request->user()->id)
+                ->select('order_line_items.product_id', 'products.name', DB::raw('count(*) as frequency'))
+                ->groupBy('order_line_items.product_id', 'products.name')
+                ->orderByDesc('frequency')
                 ->limit(5)
                 ->get()
-                ->map(function ($order) {
+                ->map(function ($item) {
                     return [
-                        'product_id' => $order->product->id,
-                        'name' => $order->product->name,
-                        'frequency' => $order->getAttribute('frequency'),
+                        'product_id' => $item->product_id,
+                        'name' => $item->name,
+                        'frequency' => $item->frequency,
                     ];
                 });
 
@@ -98,7 +80,7 @@ class DashboardController extends Controller
                 });
 
             return [
-                'activeOrdersCount' => Order::where('user_id', $request->user()->id)->where('status', 'active')->count(),
+                'activeOrdersCount' => Order::where('user_id', $request->user()->id)->whereIn('status', Order::ACTIVE_STATUSES)->count(),
                 'completedOrdersCount' => Order::where('user_id', $request->user()->id)->where('status', 'completed')->count(),
                 'activePoolsProgress' => $activePoolsProgress,
                 'ongoingProjectsCount' => $ongoingProjectsCount,
@@ -108,7 +90,7 @@ class DashboardController extends Controller
                 'watchedPurchasePools' => $watchedPurchasePools,
                 'frequentProducts' => $frequentProducts,
                 'regularVendors' => $regularVendors,
-                'hasCompletedGuide' => $request->user()->has_completed_guide
+                'hasCompletedGuide' => $request->user()->has_completed_guide,
             ];
         });
 

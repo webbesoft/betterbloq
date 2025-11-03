@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -35,5 +36,10 @@ class Vendor extends Model
         static::updated(function ($vendor) {
             Cache::forget('shop_available_filters');
         });
+    }
+
+    public function address(): MorphOne
+    {
+        return $this->morphOne(Address::class, 'model');
     }
 }

@@ -17,19 +17,19 @@ class OrderResource extends JsonResource
         return [
             'id' => $this->id,
             'status' => $this->status,
-            'quantity' => $this->quantity,
             'email' => $this->email,
             'phone' => $this->phone,
 
             'address' => $this->address,
 
-            //            'stripe_session_id' => $this->stripe_session_id, // Include if relevant
-            //            'created_at' => $this->created_at?->toIso8601String(), // Format timestamp
-            //            'updated_at' => $this->updated_at?->toIso8601String(), // Format timestamp
-
-            'product' => new ProductResource($this->whenLoaded('product')),
-            'purchase_pool' => new PurchasePoolResource($this->whenLoaded('purchasePool')),
+            'product' => new ProductResource($this->whenLoaded('lineItems.product')) ?? null,
             'vendor' => new VendorResource($this->whenLoaded('vendor')),
+
+            'line_items' => OrderLineItemResource::collection($this->whenLoaded('lineItems')),
+
+            'total_order_price' => $this->resource->orderTotal,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

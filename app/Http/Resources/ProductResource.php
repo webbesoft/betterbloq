@@ -21,12 +21,20 @@ class ProductResource extends JsonResource
                     'order' => $image->order,
                 ];
             })->all(),
-            'ratings_count' => $this->ratings_count,
+            'ratings_count' => $this->ratings_count ?? 0,
             'price' => $this->price,
             'unit' => $this->unit,
             'vendor' => $this->vendor,
             'category' => $this->category->name,
-            'preparation_time' => $this->preparation_time ?? null,
+            'storable' => $this->storable,
+            'is_stackable' => $this->is_stackable,
+            'storage_unit_of_measure' => $this->storage_unit_of_measure,
+            'max_stack_height_units' => $this->max_stack_height_units,
+            'default_length' => $this->default_length,
+            'default_width' => $this->default_width,
+            'default_height' => $this->default_height,
+            'delivery_time' => $this->delivery_time ?? null,
+            'average_rating' => $this->ratings_avg_rating ?? 0,
         ];
     }
 }

@@ -2,15 +2,14 @@
 
 namespace App\Models;
 
-use App\Services\LogService;
+use App\Managers\ProductManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Log;
-use Stripe\Exception\ApiErrorException;
 use Stripe\Stripe;
 
 /**
@@ -58,12 +57,28 @@ class Product extends Model
         'price',
         'unit',
         'amount',
+        'storable',
+        'storage_unit_of_measure',
+        'default_length',
+        'default_width',
+        'default_height',
+        'is_stackable',
+        'max_stack_height_units',
+        'storage_conditions_required',
+        'storage_handling_notes',
+        'preferred_warehouse_id',
     ];
 
     public function casts(): array
     {
         return [
             'price' => 'float',
+            'storage_conditions_required' => 'array', // or 'json'
+            'storable' => 'boolean',
+            'is_stackable' => 'boolean',
+            'default_length' => 'float:2',
+            'default_width' => 'float:2',
+            'default_height' => 'float:2',
         ];
     }
 
@@ -74,29 +89,7 @@ class Product extends Model
         parent::boot();
 
         static::created(function ($product) {
-            try {
-                $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
-                $stripeProduct = $stripe->products->create([
-                    'name' => $product->name.' from '.$product->vendor->name,
-                    'description' => $product->description ?? null,
-                ]);
-
-                // Create Stripe Price
-                $stripePrice = $stripe->prices->create([
-                    'product' => $stripeProduct->id,
-                    'unit_amount' => $product->price * 100,
-                    'currency' => 'usd',
-                ]);
-
-                // Update the local Product record with Stripe IDs
-                $product->update([
-                    'stripe_product_id' => $stripeProduct->id,
-                    'stripe_price_id' => $stripePrice->id,
-                ]);
-            } catch (ApiErrorException $e) {
-                (new LogService)->createLog('error', $e->getMessage(), Product::class, 'boot::created');
-                Log::error('Error creating Stripe product: '.$e->getMessage());
-            }
+            (new ProductManager)->onCreated($product);
         });
 
         static::updated(function ($product) {
@@ -164,5 +157,10 @@ class Product extends Model
         return $query->whereHas('purchasePools', function (Builder $poolQuery) {
             $poolQuery->where('status', 'open');
         });
+    }
+
+    public function preferredStorageProvider(): HasOne
+    {
+        return $this->hasOne(Warehouse::class, 'id', 'preferred_warehouse_id');
     }
 }

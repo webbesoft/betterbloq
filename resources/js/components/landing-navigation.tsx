@@ -1,3 +1,4 @@
+import { CartDropdown } from '@/pages/shop/components/cart-dropdown';
 import { SharedData, type NavItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import { LayoutDashboard, LogOut, Menu, User } from 'lucide-react';
@@ -13,7 +14,6 @@ import {
 } from './ui/dropdown-menu';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from './ui/navigation-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
-import { CartDropdown } from '@/pages/shop/components/cart-dropdown';
 
 // Helper to get initials from name
 const getInitials = (name = '') => {
@@ -35,7 +35,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
     };
 
     return (
-        <div className="container mx-auto border-b px-4 sm:px-6 lg:px-8 z-100">
+        <div className="z-100 container mx-auto border-b px-4 sm:px-6 lg:px-8">
             {' '}
             <header className="w-full py-3">
                 {' '}
@@ -43,12 +43,8 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                     {/* Logo */}
                     <Link href="/" className="mr-4 flex items-center gap-2">
                         {' '}
-                        <div className='rounded-md'>
-                            <img
-                                src="/images/3.png"
-                                alt="betterbloq logo"
-                                className="h-10 w-auto bg-white"
-                            />
+                        <div className="rounded-md">
+                            <img src="/images/3.png" alt="betterbloq logo" className="bg-background h-10 w-auto rounded-md" />
                         </div>
                         <span className="text-foreground hidden font-bold sm:inline-block">BetterBloq</span>
                     </Link>
@@ -60,7 +56,9 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                             <NavigationMenuList>
                                 {items.map((item) => (
                                     <NavigationMenuItem key={item.title}>
-                                        <NavigationMenuLink className={navigationMenuTriggerStyle()} href={item.url}>{item.title}</NavigationMenuLink>
+                                        <NavigationMenuLink className={navigationMenuTriggerStyle()} href={item.url}>
+                                            {item.title}
+                                        </NavigationMenuLink>
                                     </NavigationMenuItem>
                                 ))}
                             </NavigationMenuList>
@@ -80,7 +78,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                                         </Avatar>
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-56 z-100" align="end" forceMount>
+                                <DropdownMenuContent className="z-100 w-56" align="end" forceMount>
                                     <DropdownMenuLabel className="font-normal">
                                         <div className="flex flex-col space-y-1">
                                             <p className="text-sm leading-none font-medium">{user.name}</p>
@@ -110,23 +108,23 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                             </DropdownMenu>
                         ) : (
                             <>
-                                <Button variant="ghost" size="sm" className="hidden sm:inline-flex"> {/* Hide on extra-small screens */}
+                                <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
+                                    {' '}
+                                    {/* Hide on extra-small screens */}
                                     <Link href={route('login')} className="stretch text">
-                                        <span className={'text-foreground'}>
-                                            Log in
-                                        </span>
+                                        <span className={'text-foreground'}>Log in</span>
                                     </Link>
                                 </Button>
-                                <Button variant="default" size="sm" className="hidden sm:inline-flex"> {/* Hide on extra-small screens */}
+                                <Button variant="default" size="sm" className="hidden sm:inline-flex">
+                                    {' '}
+                                    {/* Hide on extra-small screens */}
                                     <Link href={route('register')}>Register</Link>
                                 </Button>
                                 {/* Mobile Login/Register Buttons */}
                                 <div className="flex gap-2 sm:hidden">
                                     <Button variant="ghost" size="sm">
                                         <Link href={route('login')} className="stretch text">
-                                            <span className={'text-foreground'}>
-                                                Log in
-                                            </span>
+                                            <span className={'text-foreground'}>Log in</span>
                                         </Link>
                                     </Button>
                                     <Button variant="default" size="sm">
@@ -145,13 +143,13 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                                             <Menu className="h-4 w-4" />
                                         </Button>
                                     </SheetTrigger>
-                                    <SheetContent className="pr-4 sm:pr-6 lg:pr-8 bg-background">
+                                    <SheetContent className="z-1000 bg-[var(--custom-background)] pr-4 sm:pr-6 lg:pr-8">
                                         <SheetHeader>
                                             <SheetTitle>Menu</SheetTitle>
                                         </SheetHeader>
                                         <div className="grid gap-4 py-4">
                                             {items.map((item) => (
-                                                <Link key={item.title} href={item.url} className="hover:underline">
+                                                <Link key={item.title} href={item.url} className="px-4 hover:underline">
                                                     {item.title}
                                                 </Link>
                                             ))}
@@ -167,7 +165,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                                                                 <span>{user.name || 'User'}</span>
                                                             </Button>
                                                         </DropdownMenuTrigger>
-                                                        <DropdownMenuContent className="w-56" align="start" forceMount>
+                                                        <DropdownMenuContent className="w-56 p-4" align="start" forceMount>
                                                             <DropdownMenuItem>
                                                                 <Link href={route('dashboard')}>
                                                                     <LayoutDashboard className="mr-2 h-4 w-4" />

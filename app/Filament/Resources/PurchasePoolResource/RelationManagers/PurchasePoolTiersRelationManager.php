@@ -7,6 +7,7 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 
 class PurchasePoolTiersRelationManager extends RelationManager
 {
@@ -24,6 +25,12 @@ class PurchasePoolTiersRelationManager extends RelationManager
                 TextInput::make('discount_percentage')
                     ->required()
                     ->numeric(),
+                TextInput::make('stripe_coupon_id')
+                    ->maxLength(255)
+                    ->default(Str::uuid()->toString())
+                    ->readOnly()
+                    ->label('Stripe Coupon ID (read only)')
+                    ->helperText('Stripe coupon ID'),
                 TextInput::make('min_volume')
                     ->numeric(),
                 TextInput::make('max_volume')

@@ -69,6 +69,8 @@ class PurchasePool extends Model
 
     const STATUS_ACTIVE = 'active';
 
+    const STATUS_ACCUMULATING = 'accumulating';
+
     const STATUS_PENDING = 'pending';
 
     const STATUS_CLOSED = 'closed';
@@ -76,8 +78,6 @@ class PurchasePool extends Model
     protected $fillable = [
         'name',
         'description',
-        'start_date',
-        'end_date',
         'target_delivery_date',
         'status',
         'product_id',
@@ -87,6 +87,8 @@ class PurchasePool extends Model
         'max_orders',
         'target_volume',
         'current_volume',
+        'purchase_cycle_id',
+        'cycle_status',
     ];
 
     public function casts(): array
@@ -110,6 +112,11 @@ class PurchasePool extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function purchaseCycle(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseCycle::class);
+    }
+
     public function scopeWithinDeliveryRange(Builder $query, string $expectedDeliveryDate): Builder
     {
         $expectedDate = Carbon::parse($expectedDeliveryDate);
@@ -117,5 +124,89 @@ class PurchasePool extends Model
         $endDate = $expectedDate->copy()->addDays(3)->toDateString();
 
         return $query->whereBetween('target_delivery_date', [$startDate, $endDate]);
+    }
+
+    /**
+     * Helper method to get the current aggregated volume for this pool's
+     * product within its specific purchase cycle from the 'cycle_product_volumes' table.
+     */
+    public function getCurrentVolumeInCycle(): float
+    {
+        $volumeRecord = CycleProductVolume::where('purchase_cycle_id', $this->purchase_cycle_id)
+            ->where('product_id', $this->product_id)
+            ->first();
+
+        return $volumeRecord ? (float) $volumeRecord->total_aggregated_quantity : 0.0;
+    }
+
+    /**
+     * Get the applicable discount tier based on the dynamically fetched volume
+     * for this pool's product and cycle, using its directly associated tiers.
+     *
+     * @return PurchasePoolTier|null The applicable tier, or null if none applies.
+     */
+    public function getApplicableTier(): ?PurchasePoolTier
+    {
+        $currentVolume = $this->getCurrentVolumeInCycle();
+
+        return $this->purchasePoolTiers()
+            ->where('min_volume', '<=', $currentVolume)
+            ->where(function ($query) use ($currentVolume) {
+                $query->whereNull('max_volume')
+                    ->orWhere('max_volume', '>=', $currentVolume);
+            })
+            ->orderBy('min_volume', 'desc')
+            ->first();
+    }
+
+    /**
+     * Convenience method to directly get the discount percentage.
+     *
+     * @return float The discount percentage (e.g., 10.5 for 10.5%), or 0 if no tier applies.
+     */
+    public function getApplicableDiscountPercentage(): float
+    {
+        $tier = $this->getApplicableTier();
+
+        return $tier ? (float) $tier->discount_percentage : 0.0;
+    }
+
+    public function getStripeCouponIdAttribute(): ?string
+    {
+        return $this->getApplicableTier()?->stripe_coupon_id;
+    }
+
+    /**
+     * Calculate the target delivery date based on end date, product, and vendor.
+     *
+     * @param  string|Carbon  $endDateInput  The end date of the purchase pool.
+     * @param  int|Product  $productOrProductId  The Product model instance or its ID.
+     * @return Carbon|null The calculated target delivery date as a Carbon instance, or null on failure.
+     */
+    public static function calculateTargetDeliveryDate($endDateInput, $productOrProductId): ?Carbon
+    {
+        try {
+            $endDate = Carbon::parse($endDateInput);
+        } catch (\Exception $e) {
+            return null;
+        }
+
+        $product = $productOrProductId instanceof Product ? $productOrProductId : Product::find($productOrProductId);
+
+        if (! $product) {
+            return null;
+        }
+
+        $vendor = $product->vendor;
+
+        if (! $vendor) {
+            return null;
+        }
+
+        $prepTimeDays = $vendor->prep_time ?? 0;
+        $deliveryTimeDays = $product->delivery_time ?? 0;
+
+        // Calculate the target delivery date
+        return $endDate->addDays((int) $prepTimeDays + (int) $deliveryTimeDays);
     }
 }

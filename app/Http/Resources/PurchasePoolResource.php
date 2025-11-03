@@ -22,9 +22,9 @@ class PurchasePoolResource extends JsonResource
             'target_delivery_date' => $this->target_delivery_date,
             'min_orders_for_discount' => $this->min_orders_for_discount,
             'max_orders' => $this->max_orders,
-            'start_date' => $this->start_date,
-            'end_date' => $this->end_date,
-            'status' => $this->status,
+            'start_date' => $this->purchaseCycle->start_date,
+            'end_date' => $this->purchaseCycle->end_date,
+            'status' => $this->cycle_status,
             'tiers' => $this->purchasePoolTiers,
         ];
     }

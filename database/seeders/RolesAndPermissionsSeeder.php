@@ -16,7 +16,7 @@ class RolesAndPermissionsSeeder extends Seeder
         //
         Role::create(['name' => 'Super Admin']);
 
-        $adminUser = User::where('email', 'like', '%betterbloq.io')->first();
+        $adminUser = User::where('email', 'like', '%betterbloq.com')->first();
         if ($adminUser) {
             $superAdminRole = Role::findByName('Super Admin');
             $adminUser->assignRole($superAdminRole);

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
+use App\Filament\Resources\UserResource\RelationManagers\AddressRelationManager;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -14,7 +15,9 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-user';
+
+    protected static ?string $navigationGroup = 'Entity Management';
 
     public static function form(Form $form): Form
     {
@@ -25,10 +28,38 @@ class UserResource extends Resource
                 Forms\Components\TextInput::make('email')
                     ->email()
                     ->required(),
+                Forms\Components\Section::make('Address')
+                    ->relationship('address')
+                    ->schema([
+                        Forms\Components\TextInput::make('address_line_1')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('address_line_2')
+                            ->maxLength(255)
+                            ->default(null),
+                        Forms\Components\TextInput::make('city')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\Select::make('state')
+                            ->options([
+                                'texas' => 'Texas',
+                            ])
+                            ->default('texas')
+                            ->required(),
+                        Forms\Components\TextInput::make('postal_code')
+                            ->maxLength(255)
+                            ->default(null),
+                        Forms\Components\Select::make('country_code')
+                            ->required()
+                            ->options([
+                                'usa' => 'USA',
+                            ])
+                            ->default('usa'),
+                    ]),
                 Forms\Components\DateTimePicker::make('email_verified_at'),
-                Forms\Components\TextInput::make('password')
-                    ->password()
-                    ->required(),
+                // Forms\Components\TextInput::make('password')
+                //     ->password()
+                //     ->required(),
             ]);
     }
 
@@ -71,6 +102,7 @@ class UserResource extends Resource
     {
         return [
             //
+            // AddressRelationManager::class,
         ];
     }
 

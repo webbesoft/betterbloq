@@ -10,12 +10,15 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 
 class PurchasePoolTierResource extends Resource
 {
     protected static ?string $model = PurchasePoolTier::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
+
+    protected static ?string $navigationGroup = 'Order Management';
 
     public static function form(Form $form): Form
     {
@@ -41,6 +44,12 @@ class PurchasePoolTierResource extends Resource
                     ->required()
                     ->numeric()
                     ->helperText('The discount percentage of the tier'),
+                Forms\Components\TextInput::make('stripe_coupon_id')
+                    ->maxLength(255)
+                    ->default(Str::uuid()->toString())
+                    ->readOnly()
+                    ->label('Stripe Coupon ID (read only)')
+                    ->helperText('Stripe coupon ID'),
                 Forms\Components\Select::make('purchase_pool_id')
                     ->label('Purchase Pool')
                     ->required()
@@ -69,6 +78,7 @@ class PurchasePoolTierResource extends Resource
                 Tables\Columns\TextColumn::make('discount_percentage')
                     ->numeric()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('stripe_coupon_id'),
                 Tables\Columns\TextColumn::make('purchase_pool_id')
                     ->numeric()
                     ->sortable(),
