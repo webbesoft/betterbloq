@@ -4,6 +4,7 @@ namespace App\Managers;
 
 use App\Models\Log;
 use App\Models\User;
+use Illuminate\Support\Facades\Log as FacadesLog;
 use Stripe\StripeClient;
 
 class CheckoutSessionCompletedManager
@@ -22,6 +23,23 @@ class CheckoutSessionCompletedManager
 
         if (data_get($session, 'mode') === 'subscription') {
             info('Webhook: Ignoring subscription event for checkout.session.completed.', ['session_id' => $session['id']]);
+
+            return null;
+        }
+
+        // Guard against asynchronous payment methods (e.g. ACH, SEPA, bank transfers).
+        // For these methods, checkout.session.completed fires when the customer submits
+        // the form, but with payment_status: 'unpaid'. The actual debit can fail days
+        // later. We must only provision orders once payment is confirmed.
+        //
+        // For our purchase pool flow, setup_future_usage: 'off_session' means the
+        // initial charge is processed immediately at checkout, so we expect 'paid'.
+        $paymentStatus = data_get($session, 'payment_status');
+        if (! in_array($paymentStatus, ['paid', 'no_payment_required'])) {
+            FacadesLog::warning('Webhook: Skipping order creation — payment not confirmed.', [
+                'session_id' => $session['id'],
+                'payment_status' => $paymentStatus,
+            ]);
 
             return null;
         }

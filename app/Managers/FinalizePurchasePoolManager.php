@@ -141,39 +141,99 @@ class FinalizePurchasePoolManager
         $order->update(['status' => 'processing_capture']);
 
         $finalAmount = self::calculateFinalAmount($order->initial_amount, $discountPercentage);
-        $amountInCents = (int) ($finalAmount * 100);
 
         if ($finalAmount <= 0) {
             return self::handleFreeOrder($order, $finalAmount);
         }
 
+        // Always use round() before casting to int to avoid IEEE 754 float truncation.
+        // e.g. (int)(19.99 * 100) === 1998 in some float representations.
+        $amountInCents = (int) round($finalAmount * 100);
+
         if ($amountInCents < 50) {
             return self::handleInsufficientAmount($order, $finalAmount);
         }
 
-        $capturedIntent = $stripe->paymentIntents->capture(
-            $order->payment_intent_id,
-            ['amount_to_capture' => $amountInCents]
-        );
-
-        if ($capturedIntent->status === 'succeeded') {
-            $order->update([
-                'status' => 'completed',
-                'final_amount' => $finalAmount,
-                'notes' => self::buildSuccessNotes($order, $discountPercentage),
+        if (! $order->payment_method_id) {
+            Log::error('Cannot finalise order: missing payment_method_id. Order may have been created before the off-session mandate migration.', [
+                'order_id' => $order->id,
             ]);
 
-            Mail::to($order->user->email)->send(new OrderFinalisedNotification($order, $discountPercentage));
-
-            return ['success' => true];
+            return [
+                'success' => false,
+                'failure_reason' => 'No saved payment method on order. Manual recovery required.',
+            ];
         }
 
-        self::handleFailedCapture($order, $finalAmount, $capturedIntent->status);
+        // Deterministic idempotency key: safe to retry if a network error occurs
+        // mid-request. Stripe guarantees the same key returns the same PaymentIntent
+        // instead of creating a duplicate charge.
+        $idempotencyKey = "order_{$order->id}_cycle_{$order->purchase_cycle_id}_final_capture";
 
-        return [
-            'success' => false,
-            'failure_reason' => 'Stripe capture failed: '.$capturedIntent->status,
-        ];
+        try {
+            // Create a fresh off-session PaymentIntent (Merchant-Initiated Transaction).
+            // This replaces the old capture_method: manual approach which expired after 7 days.
+            // The customer previously authenticated with 3D Secure / SCA at checkout via
+            // setup_future_usage: 'off_session', granting us a network mandate to bill later.
+            $paymentIntent = $stripe->paymentIntents->create(
+                [
+                    'amount' => $amountInCents,
+                    'currency' => 'usd',
+                    'customer' => $order->user->stripe_id,
+                    'payment_method' => $order->payment_method_id,
+                    'off_session' => true,
+                    'confirm' => true,
+                    'description' => "Cycle finalisation for Order #{$order->id} (Discount: {$discountPercentage}%)",
+                    'metadata' => [
+                        'order_id' => $order->id,
+                        'purchase_cycle_id' => $order->purchase_cycle_id,
+                        'discount_percentage' => $discountPercentage,
+                    ],
+                ],
+                ['idempotency_key' => $idempotencyKey]
+            );
+
+            if ($paymentIntent->status === 'succeeded') {
+                $order->update([
+                    'status' => 'completed',
+                    'final_amount' => $finalAmount,
+                    'payment_intent_id' => $paymentIntent->id,
+                    'notes' => self::buildSuccessNotes($order, $discountPercentage),
+                ]);
+
+                Mail::to($order->user->email)->send(new OrderFinalisedNotification($order, $discountPercentage));
+
+                return ['success' => true];
+            }
+
+            // Unexpected non-succeeded status (e.g. requires_action for SCA step-up)
+            self::handleFailedCapture($order, $finalAmount, $paymentIntent->status);
+
+            return [
+                'success' => false,
+                'failure_reason' => 'Off-session charge failed: '.$paymentIntent->status,
+            ];
+
+        } catch (\Stripe\Exception\CardException $e) {
+            // The card was declined, expired, or requires step-up authentication.
+            // Log for dunning recovery — do NOT mark as a hard failure yet.
+            Log::warning('Off-session charge declined for order. Dunning recovery required.', [
+                'order_id' => $order->id,
+                'decline_code' => $e->getDeclineCode(),
+                'stripe_error_code' => $e->getStripeCode(),
+                'error' => $e->getMessage(),
+            ]);
+
+            $order->update([
+                'status' => 'capture_failed',
+                'notes' => ($order->notes ?? '')." Card declined: {$e->getDeclineCode()}. Dunning required.",
+            ]);
+
+            return [
+                'success' => false,
+                'failure_reason' => "Card declined ({$e->getDeclineCode()}): {$e->getMessage()}",
+            ];
+        }
     }
 
     private function calculateFinalAmount(float $initialAmount, float $discountPercentage): float
@@ -202,7 +262,7 @@ class FinalizePurchasePoolManager
 
     private function handleInsufficientAmount(Order $order, float $finalAmount): array
     {
-        Log::warning('Final amount too small for Stripe capture', [
+        Log::warning('Final amount too small for Stripe charge', [
             'order_id' => $order->id,
             'final_amount' => $finalAmount,
         ]);
@@ -210,12 +270,12 @@ class FinalizePurchasePoolManager
         $order->update([
             'status' => 'capture_failed',
             'final_amount' => $finalAmount,
-            'notes' => ($order->notes ?? '').' Error: Amount too small for capture.',
+            'notes' => ($order->notes ?? '').' Error: Amount too small for charge.',
         ]);
 
         return [
             'success' => false,
-            'failure_reason' => 'Amount too small for Stripe capture ('.$finalAmount.')',
+            'failure_reason' => 'Amount too small for Stripe charge ('.$finalAmount.')',
         ];
     }
 

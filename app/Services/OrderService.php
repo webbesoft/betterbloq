@@ -365,8 +365,19 @@ class OrderService
                 'storage_cost_applied' => (string) $storageCostApplied,
                 'final_line_price_charged' => (string) $finalLinePrice,
             ],
+            // Using setup_future_usage instead of capture_method: manual.
+            //
+            // WHY: Standard card-not-present authorizations expire after 7 calendar days
+            // under Visa/Mastercard network rules. Purchase Pool cycles can run for 14–30
+            // days, meaning the hold would already be released before cycle finalisation.
+            //
+            // HOW: setup_future_usage: 'off_session' tells Stripe to authenticate the
+            // customer for future Merchant-Initiated Transactions (MIT) and store the
+            // resulting PaymentMethod on the customer record. At cycle close, we create
+            // a fresh off-session PaymentIntent for the exact discounted amount.
+            'mode' => 'payment',
             'payment_intent_data' => [
-                'capture_method' => 'manual',
+                'setup_future_usage' => 'off_session',
                 'description' => "Order for {$firstProductName} - User: {$user->id} (Total: ".number_format((float) $finalLinePrice, 2).')',
                 'metadata' => [
                     'order_type' => 'purchase_pool_join_multiple',
@@ -375,7 +386,6 @@ class OrderService
                     'item_details_summary_hash' => md5(json_encode($itemDetailsForMetadata)),
                 ],
             ],
-            // 'mode' => 'payment',
         ];
 
         if ($user->stripe_id) {
@@ -429,6 +439,28 @@ class OrderService
         $productSubtotalMeta = data_get($metadata, 'product_subtotal');
         $storageCostAppliedMeta = data_get($metadata, 'storage_cost_applied');
 
+        // Retrieve the PaymentMethod ID saved by setup_future_usage: 'off_session'.
+        // With setup_future_usage the PaymentIntent charges immediately and stores
+        // the PaymentMethod on the customer record. We save the pm_xxx ID here so that
+        // at cycle finalisation we can create a new MIT PaymentIntent for the exact
+        // discounted amount without needing the customer to be present.
+        $paymentIntentId = data_get($session, 'payment_intent');
+        $paymentMethodId = null;
+
+        if ($paymentIntentId) {
+            try {
+                $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
+                $pi = $stripe->paymentIntents->retrieve($paymentIntentId);
+                $paymentMethodId = $pi->payment_method ?? null;
+            } catch (\Exception $e) {
+                Log::warning('Webhook: Could not retrieve PaymentIntent to extract payment_method_id.', [
+                    'payment_intent_id' => $paymentIntentId,
+                    'session_id' => data_get($session, 'id'),
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         return Order::create([
             'user_id' => $user->id,
             'purchase_cycle_id' => $purchaseCycleId,
@@ -437,7 +469,8 @@ class OrderService
             'address' => json_encode(data_get($session, 'customer_details.address') ?? null),
             'status' => OrderStatusEnum::PAYMENT_AUTHORIZED,
             'stripe_session_id' => data_get($session, 'id'),
-            'payment_intent_id' => data_get($session, 'payment_intent'),
+            'payment_intent_id' => $paymentIntentId,
+            'payment_method_id' => $paymentMethodId,
             'initial_amount' => data_get($session, 'amount_total', 0) / 100,
             'total_amount' => data_get($session, 'amount_total', 0) / 100,
             // 'expected_delivery_date' => isset($metadata['expected_delivery_date']) ? Carbon::parse($metadata['expected_delivery_date'])->toDateString() : null,

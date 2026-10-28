@@ -54,6 +54,7 @@ class Order extends Model
         'user_id',
         'stripe_session_id',
         'payment_intent_id',
+        'payment_method_id',
         'initial_amount',
         'final_amount',
         'project_id',
