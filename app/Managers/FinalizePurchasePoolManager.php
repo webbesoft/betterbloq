@@ -34,7 +34,7 @@ class FinalizePurchasePoolManager
         return $purchaseCycle->purchasePools()
             ->whereIn('cycle_status', ['accumulating'])
             ->with(['orders' => function ($query) {
-                $query->whereIn('status', ['payment_authorized', 'pending_finalization'])
+                $query->whereIn('status', ['paid', 'payment_authorized', 'pending_finalization'])
                     ->whereNotNull('payment_intent_id');
             }, 'tiers'])
             ->get();
@@ -141,99 +141,99 @@ class FinalizePurchasePoolManager
         $order->update(['status' => 'processing_capture']);
 
         $finalAmount = self::calculateFinalAmount($order->initial_amount, $discountPercentage);
+        $amountInCents = (int) round($finalAmount * 100);
+
+        if ($order->payment_intent_id) {
+            $paymentIntent = $stripe->paymentIntents->retrieve($order->payment_intent_id);
+
+            if ($paymentIntent->status === 'succeeded') {
+                $refundAmount = round($order->initial_amount - $finalAmount, 2);
+
+                if ($refundAmount > 0) {
+                    $refundInCents = (int) round($refundAmount * 100);
+                    $idempotencyKey = "order_{$order->id}_cycle_{$order->purchase_cycle_id}_refund";
+
+                    try {
+                        $stripe->refunds->create(
+                            [
+                                'payment_intent' => $order->payment_intent_id,
+                                'amount' => $refundInCents,
+                                'reason' => 'requested_by_customer',
+                                'metadata' => [
+                                    'order_id' => $order->id,
+                                    'purchase_cycle_id' => $order->purchase_cycle_id,
+                                    'discount_percentage' => $discountPercentage,
+                                ],
+                            ],
+                            ['idempotency_key' => $idempotencyKey]
+                        );
+                    } catch (\Exception $e) {
+                        Log::error('Stripe refund failed during cycle finalisation', [
+                            'order_id' => $order->id,
+                            'refund_amount' => $refundAmount,
+                            'error' => $e->getMessage(),
+                        ]);
+
+                        $order->update([
+                            'status' => 'capture_failed',
+                            'notes' => ($order->notes ?? '').' Error issuing discount refund: '.$e->getMessage(),
+                        ]);
+
+                        return [
+                            'success' => false,
+                            'failure_reason' => 'Stripe refund failed: '.$e->getMessage(),
+                        ];
+                    }
+                }
+
+                return self::handleCompletedOrder($order, $finalAmount, $discountPercentage);
+            }
+
+            if ($paymentIntent->status === 'requires_capture') {
+                if ($finalAmount <= 0) {
+                    $stripe->paymentIntents->cancel($paymentIntent->id);
+
+                    return self::handleFreeOrder($order, $finalAmount);
+                }
+
+                if ($amountInCents < 50) {
+                    return self::handleInsufficientAmount($order, $finalAmount);
+                }
+
+                $paymentIntent = $stripe->paymentIntents->capture($paymentIntent->id, [
+                    'amount_to_capture' => $amountInCents,
+                ]);
+
+                if ($paymentIntent->status === 'succeeded') {
+                    return self::handleCompletedOrder($order, $finalAmount, $discountPercentage);
+                }
+            }
+
+            self::handleFailedCapture($order, $finalAmount, $paymentIntent->status);
+
+            return [
+                'success' => false,
+                'failure_reason' => 'PaymentIntent could not be finalized: '.$paymentIntent->status,
+            ];
+        }
 
         if ($finalAmount <= 0) {
             return self::handleFreeOrder($order, $finalAmount);
         }
 
-        // Always use round() before casting to int to avoid IEEE 754 float truncation.
-        // e.g. (int)(19.99 * 100) === 1998 in some float representations.
-        $amountInCents = (int) round($finalAmount * 100);
-
         if ($amountInCents < 50) {
             return self::handleInsufficientAmount($order, $finalAmount);
         }
 
-        if (! $order->payment_method_id) {
-            Log::error('Cannot finalise order: missing payment_method_id. Order may have been created before the off-session mandate migration.', [
-                'order_id' => $order->id,
-            ]);
+        $order->update([
+            'status' => 'capture_failed',
+            'notes' => ($order->notes ?? '').' Error: Missing PaymentIntent for finalization.',
+        ]);
 
-            return [
-                'success' => false,
-                'failure_reason' => 'No saved payment method on order. Manual recovery required.',
-            ];
-        }
-
-        // Deterministic idempotency key: safe to retry if a network error occurs
-        // mid-request. Stripe guarantees the same key returns the same PaymentIntent
-        // instead of creating a duplicate charge.
-        $idempotencyKey = "order_{$order->id}_cycle_{$order->purchase_cycle_id}_final_capture";
-
-        try {
-            // Create a fresh off-session PaymentIntent (Merchant-Initiated Transaction).
-            // This replaces the old capture_method: manual approach which expired after 7 days.
-            // The customer previously authenticated with 3D Secure / SCA at checkout via
-            // setup_future_usage: 'off_session', granting us a network mandate to bill later.
-            $paymentIntent = $stripe->paymentIntents->create(
-                [
-                    'amount' => $amountInCents,
-                    'currency' => 'usd',
-                    'customer' => $order->user->stripe_id,
-                    'payment_method' => $order->payment_method_id,
-                    'off_session' => true,
-                    'confirm' => true,
-                    'description' => "Cycle finalisation for Order #{$order->id} (Discount: {$discountPercentage}%)",
-                    'metadata' => [
-                        'order_id' => $order->id,
-                        'purchase_cycle_id' => $order->purchase_cycle_id,
-                        'discount_percentage' => $discountPercentage,
-                    ],
-                ],
-                ['idempotency_key' => $idempotencyKey]
-            );
-
-            if ($paymentIntent->status === 'succeeded') {
-                $order->update([
-                    'status' => 'completed',
-                    'final_amount' => $finalAmount,
-                    'payment_intent_id' => $paymentIntent->id,
-                    'notes' => self::buildSuccessNotes($order, $discountPercentage),
-                ]);
-
-                Mail::to($order->user->email)->send(new OrderFinalisedNotification($order, $discountPercentage));
-
-                return ['success' => true];
-            }
-
-            // Unexpected non-succeeded status (e.g. requires_action for SCA step-up)
-            self::handleFailedCapture($order, $finalAmount, $paymentIntent->status);
-
-            return [
-                'success' => false,
-                'failure_reason' => 'Off-session charge failed: '.$paymentIntent->status,
-            ];
-
-        } catch (\Stripe\Exception\CardException $e) {
-            // The card was declined, expired, or requires step-up authentication.
-            // Log for dunning recovery — do NOT mark as a hard failure yet.
-            Log::warning('Off-session charge declined for order. Dunning recovery required.', [
-                'order_id' => $order->id,
-                'decline_code' => $e->getDeclineCode(),
-                'stripe_error_code' => $e->getStripeCode(),
-                'error' => $e->getMessage(),
-            ]);
-
-            $order->update([
-                'status' => 'capture_failed',
-                'notes' => ($order->notes ?? '')." Card declined: {$e->getDeclineCode()}. Dunning required.",
-            ]);
-
-            return [
-                'success' => false,
-                'failure_reason' => "Card declined ({$e->getDeclineCode()}): {$e->getMessage()}",
-            ];
-        }
+        return [
+            'success' => false,
+            'failure_reason' => 'Missing PaymentIntent for finalization.',
+        ];
     }
 
     private function calculateFinalAmount(float $initialAmount, float $discountPercentage): float
@@ -256,6 +256,19 @@ class FinalizePurchasePoolManager
         ]);
 
         Mail::to($order->user->email)->send(new OrderFinalisedNotification($order));
+
+        return ['success' => true];
+    }
+
+    private function handleCompletedOrder(Order $order, float $finalAmount, float $discountPercentage): array
+    {
+        $order->update([
+            'status' => 'completed',
+            'final_amount' => $finalAmount,
+            'notes' => self::buildSuccessNotes($order, $discountPercentage),
+        ]);
+
+        Mail::to($order->user->email)->send(new OrderFinalisedNotification($order, $discountPercentage));
 
         return ['success' => true];
     }

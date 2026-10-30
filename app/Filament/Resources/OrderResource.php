@@ -245,6 +245,7 @@ class OrderResource extends Resource
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         'created' => 'Created',
+                        'paid' => 'Paid',
                         'payment_authorized' => 'Payment Authorized',
                         'pending_finalization' => 'Pending Finalization',
                     ]),
