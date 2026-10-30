@@ -87,7 +87,7 @@ class Order extends Model
             $pages = (int) ceil($ordersCount / $perPage);
 
             for ($page = 1; $page <= $pages; $page++) {
-                $cacheKey = 'user_orders_'.$userId.'_page_'.$page;
+                $cacheKey = 'user_orders_' . $userId . '_page_' . $page;
                 Cache::forget($cacheKey);
             }
         });
@@ -95,7 +95,7 @@ class Order extends Model
 
     public function name(): string
     {
-        return '#'.$this->id;
+        return '#' . $this->id;
     }
 
     public function user(): BelongsTo

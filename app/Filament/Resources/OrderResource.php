@@ -172,7 +172,7 @@ class OrderResource extends Resource
                                         $summaryHtml .= "<li>{$productName} (x{$quantity}) - \${$finalLinePrice}</li>";
                                     }
                                     $summaryHtml .= '</ul>';
-                                    $summaryHtml .= '<p><strong>Total Order Amount: $'.number_format($totalOrderAmount, 2).'</strong></p>';
+                                    $summaryHtml .= '<p><strong>Total Order Amount: $' . number_format($totalOrderAmount, 2) . '</strong></p>';
 
                                     return new HtmlString($summaryHtml);
                                 }),
@@ -224,11 +224,12 @@ class OrderResource extends Resource
                     ->sortable(),
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'created' => 'gray',
                         'pending' => 'warning',
                         'paid' => 'success',
                         'cancelled' => 'danger',
+                        'refund_failed' => 'danger',
                         default => 'primary',
                     })
                     ->sortable(),
@@ -248,6 +249,7 @@ class OrderResource extends Resource
                         'paid' => 'Paid',
                         'payment_authorized' => 'Payment Authorized',
                         'pending_finalization' => 'Pending Finalization',
+                        'refund_failed' => 'Refund Failed',
                     ]),
                 Tables\Filters\TrashedFilter::make(),
             ])

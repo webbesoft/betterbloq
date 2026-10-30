@@ -11,5 +11,6 @@ enum OrderStatusEnum: string
     case PROCESSING_CAPTURE = 'processing_capture';
     case COMPLETED = 'completed';
     case CAPTURE_FAILED = 'capture_failed';
+    case REFUND_FAILED = 'refund_failed';
     case CANCELLED = 'cancelled';
 }
