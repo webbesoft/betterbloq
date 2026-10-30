@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
+use Stripe\StripeClient;
 
 /**
  * App\Models\PurchasePoolTier
@@ -58,7 +59,7 @@ class PurchasePoolTier extends Model
         $couponId = "tier_{$this->name}_{$this->id}";
 
         try {
-            $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
+            $stripe = new StripeClient(config('services.stripe.secret'));
             $stripe->coupons->create([
                 'id' => $couponId,
                 'percent_off' => $this->discount_percentage,
@@ -79,7 +80,7 @@ class PurchasePoolTier extends Model
         }
 
         try {
-            $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
+            $stripe = new StripeClient(config('services.stripe.secret'));
             $stripe->coupons->retrieve($this->stripe_coupon_id)->delete();
         } catch (\Exception $e) {
             Log::warning('Failed to delete Stripe coupon', ['coupon_id' => $this->stripe_coupon_id, 'error' => $e->getMessage()]);

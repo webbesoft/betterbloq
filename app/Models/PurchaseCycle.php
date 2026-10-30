@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\PurchaseCycleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchaseCycle extends Model
 {
-    /** @use HasFactory<\Database\Factories\PurchaseCycleFactory> */
+    /** @use HasFactory<PurchaseCycleFactory> */
     use HasFactory;
 
     const STATUS_UPCOMING = 'upcoming';

@@ -1,5 +1,12 @@
 <?php
 
+use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
+use League\CommonMark\Extension\ExternalLink\ExternalLinkExtension;
+use League\CommonMark\Extension\FrontMatter\FrontMatterExtension;
+use League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkExtension;
+use Prezet\Prezet\Extensions\MarkdownBladeExtension;
+use Prezet\Prezet\Extensions\MarkdownImageExtension;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -46,12 +53,12 @@ return [
     'commonmark' => [
 
         'extensions' => [
-            League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension::class,
-            League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkExtension::class,
-            League\CommonMark\Extension\ExternalLink\ExternalLinkExtension::class,
-            League\CommonMark\Extension\FrontMatter\FrontMatterExtension::class,
-            Prezet\Prezet\Extensions\MarkdownBladeExtension::class,
-            Prezet\Prezet\Extensions\MarkdownImageExtension::class,
+            CommonMarkCoreExtension::class,
+            HeadingPermalinkExtension::class,
+            ExternalLinkExtension::class,
+            FrontMatterExtension::class,
+            MarkdownBladeExtension::class,
+            MarkdownImageExtension::class,
         ],
 
         'config' => [

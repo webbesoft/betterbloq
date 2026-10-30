@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\VendorFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Cache;
  */
 class Vendor extends Model
 {
-    /** @use HasFactory<\Database\Factories\VendorFactory> */
+    /** @use HasFactory<VendorFactory> */
     use HasFactory;
 
     protected $fillable = [

@@ -17,7 +17,8 @@ class UserSettingsController extends Controller
             $user->save();
 
             session()->flash('message', 'Setup guide completed!');
-             return Redirect::back()->with('message', 'Setup guide completed!');
+
+            return Redirect::back()->with('message', 'Setup guide completed!');
         }
 
         return Redirect::back()->withErrors(['message' => 'Could not mark guide as complete.']);

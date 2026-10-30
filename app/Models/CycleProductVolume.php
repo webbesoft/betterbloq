@@ -2,20 +2,21 @@
 
 namespace App\Models;
 
+use Database\Factories\CycleProductVolumeFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CycleProductVolume extends Model
 {
-    /** @use HasFactory<\Database\Factories\CycleProductVolumeFactory> */
+    /** @use HasFactory<CycleProductVolumeFactory> */
     use HasFactory;
 
     protected $fillable = [
         'purchase_cycle_id',
         'product_id',
         'total_aggregated_quantity',
-        'achieved_discount_percentage'
+        'achieved_discount_percentage',
     ];
 
     public function purchaseCycle(): BelongsTo

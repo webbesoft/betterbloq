@@ -32,7 +32,7 @@ class WarehouseResource extends JsonResource
             'supported_storage_conditions' => $supportedConditions,
             'is_active' => (bool) $this->is_active,
             'user_id' => $this->user_id,
-            'available_tiers' => $this->storageTiers
+            'available_tiers' => $this->storageTiers,
         ];
     }
 }

@@ -4,6 +4,7 @@
 
 namespace App\Filament\Resources\WarehouseResource\RelationManagers;
 
+use App\Filament\Resources\StorageOrderResource;
 use App\Models\Order;
 use App\Models\StorageOrder;
 use Filament\Forms;
@@ -86,7 +87,7 @@ class StorageOrdersRelationManager extends RelationManager
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\ViewAction::make() // To navigate to the full StorageOrderResource view
-                    ->url(fn (StorageOrder $record): string => \App\Filament\Resources\StorageOrderResource::getUrl('edit', ['record' => $record])),
+                    ->url(fn (StorageOrder $record): string => StorageOrderResource::getUrl('edit', ['record' => $record])),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

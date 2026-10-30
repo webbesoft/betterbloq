@@ -5,6 +5,7 @@ namespace App\Managers;
 use App\Models\Log;
 use App\Models\User;
 use Illuminate\Support\Facades\Log as FacadesLog;
+use Stripe\Collection;
 use Stripe\StripeClient;
 
 class CheckoutSessionCompletedManager
@@ -53,7 +54,7 @@ class CheckoutSessionCompletedManager
     /**
      * @throws ApiErrorException
      */
-    public static function fetchStripeLineItems(string $sessionId): ?\Stripe\Collection
+    public static function fetchStripeLineItems(string $sessionId): ?Collection
     {
         $stripe = new StripeClient(config('services.stripe.secret'));
         $lineItems = $stripe->checkout->sessions->allLineItems($sessionId, ['limit' => 100]);

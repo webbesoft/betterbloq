@@ -15,7 +15,7 @@ class EditPurchasePoolTemplate extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-         if (isset($data['product_id'])) {
+        if (isset($data['product_id'])) {
             $product = Product::find($data['product_id']);
             if ($product) {
                 $data['vendor_id'] = $product->vendor_id;
@@ -33,7 +33,8 @@ class EditPurchasePoolTemplate extends EditRecord
                 $targetDeliveryDate = $endDate->addDays($prepTime + $deliveryTime);
 
                 $data['target_delivery_date'] = $targetDeliveryDate->toDateString();
-            } else { $data['target_delivery_date'] = null;
+            } else {
+                $data['target_delivery_date'] = null;
             }
         } else {
             $data['target_delivery_date'] = null;

@@ -22,7 +22,7 @@ class CreatePurchasePoolTemplate extends CreateRecord
             } else {
             }
         }
-        
+
         if (isset($data['end_date'], $data['vendor_id'], $data['product_id'])) {
             $vendor = Vendor::find($data['vendor_id']);
             $product = Product::find($data['product_id']);
@@ -34,7 +34,8 @@ class CreatePurchasePoolTemplate extends CreateRecord
                 $targetDeliveryDate = $endDate->addDays($prepTime + $deliveryTime);
 
                 $data['target_delivery_date'] = $targetDeliveryDate->toDateString();
-            } else { $data['target_delivery_date'] = null;
+            } else {
+                $data['target_delivery_date'] = null;
             }
         } else {
             $data['target_delivery_date'] = null;

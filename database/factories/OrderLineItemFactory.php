@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\OrderLineItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\OrderLineItem>
+ * @extends Factory<OrderLineItem>
  */
 class OrderLineItemFactory extends Factory
 {

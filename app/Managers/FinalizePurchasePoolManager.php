@@ -117,7 +117,7 @@ class FinalizePurchasePoolManager
                 $failedOrderDetails[] = [
                     'order_id' => $order->id,
                     'user_email' => $order->user->email,
-                    'reason' => 'Exception: ' . $e->getMessage(),
+                    'reason' => 'Exception: '.$e->getMessage(),
                     'amount' => $order->initial_amount,
                 ];
             }
@@ -180,12 +180,12 @@ class FinalizePurchasePoolManager
 
                         $order->update([
                             'status' => 'refund_failed',
-                            'notes' => ($order->notes ?? '') . ' Error issuing discount refund: ' . $e->getMessage(),
+                            'notes' => ($order->notes ?? '').' Error issuing discount refund: '.$e->getMessage(),
                         ]);
 
                         return [
                             'success' => false,
-                            'failure_reason' => 'Stripe refund failed: ' . $e->getMessage(),
+                            'failure_reason' => 'Stripe refund failed: '.$e->getMessage(),
                         ];
                     }
                 }
@@ -217,7 +217,7 @@ class FinalizePurchasePoolManager
 
             return [
                 'success' => false,
-                'failure_reason' => 'PaymentIntent could not be finalized: ' . $paymentIntent->status,
+                'failure_reason' => 'PaymentIntent could not be finalized: '.$paymentIntent->status,
             ];
         }
 
@@ -231,7 +231,7 @@ class FinalizePurchasePoolManager
 
         $order->update([
             'status' => 'capture_failed',
-            'notes' => ($order->notes ?? '') . ' Error: Missing PaymentIntent for finalization.',
+            'notes' => ($order->notes ?? '').' Error: Missing PaymentIntent for finalization.',
         ]);
 
         return [
@@ -287,12 +287,12 @@ class FinalizePurchasePoolManager
         $order->update([
             'status' => 'capture_failed',
             'final_amount' => $finalAmount,
-            'notes' => ($order->notes ?? '') . ' Error: Amount too small for charge.',
+            'notes' => ($order->notes ?? '').' Error: Amount too small for charge.',
         ]);
 
         return [
             'success' => false,
-            'failure_reason' => 'Amount too small for Stripe charge (' . $finalAmount . ')',
+            'failure_reason' => 'Amount too small for Stripe charge ('.$finalAmount.')',
         ];
     }
 
@@ -323,25 +323,25 @@ class FinalizePurchasePoolManager
     {
         $notification = $discountPercentage > 0
             ? Notification::make()
-            ->title('Discount Applied')
-            ->body("Pool '{$pool->name}' applying {$discountPercentage}% discount based on volume of {$pool->current_volume}.")
-            ->info()
+                ->title('Discount Applied')
+                ->body("Pool '{$pool->name}' applying {$discountPercentage}% discount based on volume of {$pool->current_volume}.")
+                ->info()
             : Notification::make()
-            ->title('No Discount')
-            ->body("Pool '{$pool->name}' has no applicable discount for current volume.")
-            ->warning();
+                ->title('No Discount')
+                ->body("Pool '{$pool->name}' has no applicable discount for current volume.")
+                ->warning();
 
         $notification->send();
     }
 
     private function buildSuccessNotes(Order $order, float $discountPercentage): string
     {
-        return ($order->notes ?? '') . " Payment captured successfully. Discount: {$discountPercentage}%";
+        return ($order->notes ?? '')." Payment captured successfully. Discount: {$discountPercentage}%";
     }
 
     private function buildFreeOrderNotes(Order $order): string
     {
-        return ($order->notes ?? '') . ' Order completed with 100% discount. No payment captured.';
+        return ($order->notes ?? '').' Order completed with 100% discount. No payment captured.';
     }
 
     private function handleOrderError(Order $order, \Exception $e): void
@@ -352,7 +352,7 @@ class FinalizePurchasePoolManager
         ]);
 
         $order->update([
-            'notes' => ($order->notes ?? '') . ' Error: ' . $e->getMessage(),
+            'notes' => ($order->notes ?? '').' Error: '.$e->getMessage(),
         ]);
     }
 
@@ -366,7 +366,7 @@ class FinalizePurchasePoolManager
         $order->update([
             'status' => 'capture_failed',
             'final_amount' => $finalAmount,
-            'notes' => ($order->notes ?? '') . " Error: Stripe status: {$stripeStatus}",
+            'notes' => ($order->notes ?? '')." Error: Stripe status: {$stripeStatus}",
         ]);
     }
 

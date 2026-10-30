@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\PlanResource\RelationManagers;
 
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\Project;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -23,9 +26,9 @@ class PlanLimitsRelationManager extends RelationManager
                     ->label('Model')
                     ->required()
                     ->options([
-                        'Project' => \App\Models\Project::class,
-                        'Order' => \App\Models\Order::class,
-                        'Product' => \App\Models\Product::class,
+                        'Project' => Project::class,
+                        'Order' => Order::class,
+                        'Product' => Product::class,
                     ])
                     ->searchable(),
                 Forms\Components\TextInput::make('value')

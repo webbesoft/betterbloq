@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\PurchasePool;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\PurchasePool>
+ * @extends Factory<PurchasePool>
  */
 class PurchasePoolFactory extends Factory
 {

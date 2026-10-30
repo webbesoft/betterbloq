@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Services\LogService;
 use Illuminate\Database\Eloquent\Model;
 use Stripe\Exception\ApiErrorException;
+use Stripe\StripeClient;
 
 class ProductManager extends Manager
 {
@@ -19,7 +20,7 @@ class ProductManager extends Manager
     {
         if ($product instanceof Product) {
             try {
-                $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
+                $stripe = new StripeClient(config('services.stripe.secret'));
                 $stripeProduct = $stripe->products->create([
                     'name' => $product->name.' from '.$product->vendor->name,
                     'description' => $product->description ?? null,

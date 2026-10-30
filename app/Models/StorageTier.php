@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\StorageTierFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StorageTier extends Model
 {
-    /** @use HasFactory<\Database\Factories\StorageTierFactory> */
+    /** @use HasFactory<StorageTierFactory> */
     use HasFactory;
 
     protected $fillable = [

@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\PlanLimit;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\PlanLimit>
+ * @extends Factory<PlanLimit>
  */
 class PlanLimitsFactory extends Factory
 {

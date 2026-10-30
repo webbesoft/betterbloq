@@ -8,13 +8,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class PurchasePoolRequestController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @return \Inertia\Response
+     * @return Response
      */
     public function index(Request $request)
     {
@@ -64,7 +65,7 @@ class PurchasePoolRequestController extends Controller
     /**
      * Display the specified resource.
      *
-     * @return \Inertia\Response
+     * @return Response
      */
     public function show(PurchasePoolRequest $purchasePoolRequest)
     {

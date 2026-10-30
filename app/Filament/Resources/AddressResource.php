@@ -82,7 +82,7 @@ class AddressResource extends Resource
                 Forms\Components\TextInput::make('city')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Select::make('state')
+                Select::make('state')
                     ->options([
                         'texas' => 'Texas',
                     ])
@@ -91,7 +91,7 @@ class AddressResource extends Resource
                 Forms\Components\TextInput::make('postal_code')
                     ->maxLength(255)
                     ->default(null),
-                Forms\Components\Select::make('country_code')
+                Select::make('country_code')
                     ->required()
                     ->options([
                         'usa' => 'USA',

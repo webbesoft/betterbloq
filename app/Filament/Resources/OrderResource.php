@@ -172,7 +172,7 @@ class OrderResource extends Resource
                                         $summaryHtml .= "<li>{$productName} (x{$quantity}) - \${$finalLinePrice}</li>";
                                     }
                                     $summaryHtml .= '</ul>';
-                                    $summaryHtml .= '<p><strong>Total Order Amount: $' . number_format($totalOrderAmount, 2) . '</strong></p>';
+                                    $summaryHtml .= '<p><strong>Total Order Amount: $'.number_format($totalOrderAmount, 2).'</strong></p>';
 
                                     return new HtmlString($summaryHtml);
                                 }),
@@ -224,7 +224,7 @@ class OrderResource extends Resource
                     ->sortable(),
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'created' => 'gray',
                         'pending' => 'warning',
                         'paid' => 'success',

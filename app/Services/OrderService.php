@@ -107,7 +107,7 @@ class OrderService
                 'success' => true,
                 'url' => data_get($session->toArray(), 'url'),
             ];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             (new LogService)->logException($e, __CLASS__, __METHOD__, [
                 'metadata' => [
                     'item_entries' => $itemEntries,
@@ -186,7 +186,7 @@ class OrderService
         }
 
         if (! empty($errors)) {
-            $errorMessage = 'Could not find active purchase pools for all products: ' . implode('; ', $errors);
+            $errorMessage = 'Could not find active purchase pools for all products: '.implode('; ', $errors);
             Log::warning('Purchase pool association failed for some products.', ['errors' => $errors, 'item_entries' => $itemEntries]);
 
             return ['success' => false, 'error' => $errorMessage];
@@ -224,14 +224,14 @@ class OrderService
                     'order_id' => null,
                     'warehouse_id' => $defaultWarehouse->id,
                     'requested_storage_start_date' => Carbon::parse($pool->target_delivery_date)->addDay(),
-                    'requested_storage_duration_estimate' => Carbon::parse($item['expected_delivery_date'])->diffForHumans(Carbon::parse($pool->target_delivery_date)->addDay(), true) . ' (approx)',
+                    'requested_storage_duration_estimate' => Carbon::parse($item['expected_delivery_date'])->diffForHumans(Carbon::parse($pool->target_delivery_date)->addDay(), true).' (approx)',
                     'preliminary_storage_cost_estimate' => (float) ($item['storage_cost_applied'] ?? 0),
                     'status' => 'pending_arrival',
-                    'notes' => 'Storage for product: ' . $product->name . ' with extended delivery date.',
+                    'notes' => 'Storage for product: '.$product->name.' with extended delivery date.',
                 ]);
 
                 $storageOrderIds[] = $storageOrder->id;
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 Log::error('Failed to create storage order for item', [
                     'user_id' => $user->id,
                     'product_id' => $item['product_id'],
@@ -328,7 +328,7 @@ class OrderService
         if (! empty($productPoolsMap)) {
             $firstProductData = reset($productPoolsMap);
             if ($firstProductData) {
-                $firstProductName = data_get($firstProductData, 'product')->name . (count($productPoolsMap) > 1 ? ' and other materials' : '');
+                $firstProductName = data_get($firstProductData, 'product')->name.(count($productPoolsMap) > 1 ? ' and other materials' : '');
             }
         }
 
@@ -350,7 +350,7 @@ class OrderService
         $vendorIds = array_unique($vendorIds);
 
         $checkout_session_payload = [
-            'success_url' => route('orders.index') . '?session_id={CHECKOUT_SESSION_ID}',
+            'success_url' => route('orders.index').'?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => route('cart.show'),
             'metadata' => [
                 'user_id' => $user->id,
@@ -371,7 +371,7 @@ class OrderService
             // original PaymentIntent, preventing double charges and avoiding the 7-day auth expiration.
             'mode' => 'payment',
             'payment_intent_data' => [
-                'description' => "Order for {$firstProductName} - User: {$user->id} (Total: " . number_format((float) $finalLinePrice, 2) . ')',
+                'description' => "Order for {$firstProductName} - User: {$user->id} (Total: ".number_format((float) $finalLinePrice, 2).')',
                 'metadata' => [
                     'order_type' => 'purchase_pool_join_multiple',
                     'user_id' => $user->id,

@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\StorageOrderLineItemFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StorageOrderLineItem extends Model
 {
-    /** @use HasFactory<\Database\Factories\StorageOrderLineItemFactory> */
+    /** @use HasFactory<StorageOrderLineItemFactory> */
     use HasFactory;
 
     protected $fillable = [

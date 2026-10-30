@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\WarehouseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Warehouse extends Model
 {
-    /** @use HasFactory<\Database\Factories\WarehouseFactory> */
+    /** @use HasFactory<WarehouseFactory> */
     use HasFactory;
 
     protected $fillable = [
