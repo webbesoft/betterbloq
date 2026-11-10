@@ -39,6 +39,8 @@ class OrderController extends Controller
 
     public function show(Request $request, Order $order)
     {
+        abort_unless($request->user()->id === $order->user_id, 403);
+
         $order->loadMissing(['lineItems', 'lineItems.product', 'vendor', 'lineItems.purchasePool', 'lineItems.purchasePool.purchasePoolTiers', 'lineItems.purchasePool.purchaseCycle', 'lineItems.product.images', 'lineItems.product.category:id,name', 'lineItems.product.vendor:id,name', 'purchaseCycle']);
 
         return Inertia::render('shop/orders/show', [

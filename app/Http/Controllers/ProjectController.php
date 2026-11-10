@@ -42,14 +42,16 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'budget' => 'required|numeric|min:0',
             'start_date' => 'required|date',
             'target_completion_date' => 'required|date|after:start_date',
         ]);
 
-        Project::create($request->all());
+        $project = new Project($validated);
+        $project->user_id = $request->user()->id;
+        $project->save();
 
         return redirect()->route('projects.index')->with('success', 'Project created successfully.');
     }
@@ -57,16 +59,18 @@ class ProjectController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Project $project)
+    public function show(Request $request, Project $project)
     {
-        // Optionally implement a show page if needed
+        abort_unless($request->user()->id === $project->user_id, 403);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Project $project)
+    public function edit(Request $request, Project $project)
     {
+        abort_unless($request->user()->id === $project->user_id, 403);
+
         return Inertia::render('projects/edit', [
             'project' => $project,
         ]);
@@ -77,14 +81,16 @@ class ProjectController extends Controller
      */
     public function update(Request $request, Project $project)
     {
-        $request->validate([
+        abort_unless($request->user()->id === $project->user_id, 403);
+
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'budget' => 'required|numeric|min:0',
             'start_date' => 'required|date',
             'target_completion_date' => 'required|date|after:start_date',
         ]);
 
-        $project->update($request->all());
+        $project->update($validated);
 
         return redirect()->route('projects.index')->with('success', 'Project updated successfully.');
     }
@@ -92,8 +98,10 @@ class ProjectController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Project $project)
+    public function destroy(Request $request, Project $project)
     {
+        abort_unless($request->user()->id === $project->user_id, 403);
+
         $project->delete();
 
         return redirect()->route('projects.index')->with('success', 'Project deleted successfully.');
