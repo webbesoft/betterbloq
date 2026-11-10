@@ -29,6 +29,11 @@ class PurchaseCycle extends Model
         'status',
     ];
 
+    protected function casts(): array
+    {
+        return ['start_date' => 'date', 'end_date' => 'date', 'finalization_lease_until' => 'datetime'];
+    }
+
     public function purchasePools(): HasMany
     {
         return $this->hasMany(PurchasePool::class);

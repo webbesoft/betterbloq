@@ -44,7 +44,7 @@ class OrderService
         }
         $fingerprint = hash('sha256', json_encode($intent, JSON_THROW_ON_ERROR));
         $gateway = app(StripeGateway::class);
-        // Serialize customer creation as well as attempt reservation across submissions.
+        // Customer creation has its own stable key; attempt reservation uses row locks.
         $customerId = $user->stripe_id;
         if (! $customerId) {
             // Stripe customer creation itself uses a stable, per-user idempotency key.
@@ -53,13 +53,15 @@ class OrderService
         $attempt = DB::transaction(function () use ($user, $intent, $fingerprint, $customerId) {
             User::whereKey($user->id)->lockForUpdate()->firstOrFail();
             $existing = CheckoutAttempt::where('user_id', $user->id)->where('fingerprint', $fingerprint)
-                ->whereNotIn('status', ['expired', 'failed'])->latest()->first();
+                ->whereNotIn('status', ['expired', 'failed'])
+                ->where(fn ($query) => $query->where('status', '!=', 'complete')->orWhere('expires_at', '>', now()))
+                ->latest()->first();
             if ($existing) {
                 return $existing;
             }
             $cycle = PurchaseCycle::whereKey($intent[0]['purchase_cycle_id'])->lockForUpdate()->firstOrFail();
-            if ($cycle->status !== PurchaseCycle::STATUS_ACTIVE || $cycle->start_date > today()->toDateString()
-                || $cycle->end_date < today()->toDateString()) {
+            if ($cycle->status !== PurchaseCycle::STATUS_ACTIVE || $cycle->start_date->isAfter(today())
+                || $cycle->end_date->isBefore(today())) {
                 throw ValidationException::withMessages(['items' => 'The purchase cycle is not accepting orders.']);
             }
             $snapshot = $this->quote($intent);
@@ -173,7 +175,7 @@ class OrderService
             if (! in_array($session['payment_status'] ?? null, ['paid', 'no_payment_required'], true)) {
                 throw new RuntimeException('Checkout payment is not confirmed.');
             }
-            if (! in_array($cycle->status, ['active', 'calculating_discounts'], true)) {
+            if ($cycle->status !== 'active') {
                 throw new RuntimeException('A payment arrived after cycle finalization started; reconciliation is required.');
             }
             $lines = $this->resolveLines($lineItemsFromStripe, $itemDetailsLookup);

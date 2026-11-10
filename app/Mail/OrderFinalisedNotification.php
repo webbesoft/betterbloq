@@ -42,7 +42,7 @@ class OrderFinalisedNotification extends Mailable
             with: [
                 'order' => $this->order,
                 'user' => $this->order->user,
-                'product' => $this->order->product,
+                'products' => $this->order->lineItems->whereNotNull('product_id'),
                 'appliedTierPercentage' => $this->discountPercentage,
                 'initialAmount' => $this->order->initial_amount,
                 'finalAmount' => $this->order->final_amount,

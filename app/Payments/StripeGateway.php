@@ -32,6 +32,37 @@ class StripeGateway
         return Cashier::stripe()->checkout->sessions->retrieve($id)->toArray();
     }
 
+    public function findSession(string $customer, string $attemptId, int $createdAt): ?array
+    {
+        $sessions = Cashier::stripe()->checkout->sessions->all([
+            'customer' => $customer, 'created' => ['gte' => $createdAt - 60], 'limit' => 100,
+        ]);
+        foreach ($sessions->autoPagingIterator() as $session) {
+            if (data_get($session, 'metadata.checkout_attempt_id') === $attemptId) {
+                return $session->toArray();
+            }
+        }
+
+        return null;
+    }
+
+    public function refundById(string $id): array
+    {
+        return Cashier::stripe()->refunds->retrieve($id)->toArray();
+    }
+
+    public function findRefund(string $intentId, string $operationId): ?array
+    {
+        $refunds = Cashier::stripe()->refunds->all(['payment_intent' => $intentId, 'limit' => 100]);
+        foreach ($refunds->autoPagingIterator() as $refund) {
+            if (data_get($refund, 'metadata.payment_operation_id') === $operationId) {
+                return $refund->toArray();
+            }
+        }
+
+        return null;
+    }
+
     public function lineItems(string $id): Collection
     {
         $page = Cashier::stripe()->checkout->sessions->allLineItems($id, [

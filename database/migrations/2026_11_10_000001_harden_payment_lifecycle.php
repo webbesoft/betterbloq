@@ -59,20 +59,28 @@ return new class extends Migration
             $table->timestamp('sent_at')->nullable();
             $table->timestamps();
         });
-        // Rebuild existing aggregates from committed line items, rather than guessing
-        // which of any duplicate aggregate rows contained the correct quantity.
+        // Collapse duplicate keys, then rebuild quantities from committed paid
+        // line items. This also restores missing aggregates in one grouped scan.
         $groups = DB::table('cycle_product_volumes')->select('purchase_cycle_id', 'product_id')
-            ->groupBy('purchase_cycle_id', 'product_id')->get();
+            ->groupBy('purchase_cycle_id', 'product_id')->cursor();
         foreach ($groups as $group) {
             $ids = DB::table('cycle_product_volumes')->where('purchase_cycle_id', $group->purchase_cycle_id)
                 ->where('product_id', $group->product_id)->orderBy('id')->pluck('id');
-            $quantity = DB::table('order_line_items')->join('orders', 'orders.id', '=', 'order_line_items.order_id')
-                ->where('orders.purchase_cycle_id', $group->purchase_cycle_id)
-                ->where('order_line_items.product_id', $group->product_id)
-                ->whereNull('orders.deleted_at')->whereNotIn('orders.status', ['cancelled', 'created'])
-                ->sum('order_line_items.quantity');
-            DB::table('cycle_product_volumes')->where('id', $ids->first())->update(['total_aggregated_quantity' => $quantity]);
+            DB::table('cycle_product_volumes')->where('id', $ids->first())->update(['total_aggregated_quantity' => 0]);
             DB::table('cycle_product_volumes')->whereIn('id', $ids->slice(1))->delete();
+        }
+        $volumes = DB::table('order_line_items')
+            ->join('orders', 'orders.id', '=', 'order_line_items.order_id')
+            ->join('purchase_pools', 'purchase_pools.id', '=', 'order_line_items.purchase_pool_id')
+            ->whereNotNull('order_line_items.product_id')->whereNotNull('purchase_pools.purchase_cycle_id')
+            ->whereNotIn('orders.status', ['cancelled', 'created'])
+            ->select('purchase_pools.purchase_cycle_id', 'order_line_items.product_id')
+            ->selectRaw('SUM(order_line_items.quantity) as quantity')
+            ->groupBy('purchase_pools.purchase_cycle_id', 'order_line_items.product_id')->cursor();
+        foreach ($volumes as $volume) {
+            DB::table('cycle_product_volumes')->updateOrInsert([
+                'purchase_cycle_id' => $volume->purchase_cycle_id, 'product_id' => $volume->product_id,
+            ], ['total_aggregated_quantity' => $volume->quantity, 'updated_at' => now(), 'created_at' => now()]);
         }
         Schema::table('cycle_product_volumes', function (Blueprint $table) {
             $table->unique(['purchase_cycle_id', 'product_id'], 'cycle_product_unique');

@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\PurchaseCycleResource\Actions;
 
-use App\Managers\FinalizePurchasePoolManager;
+use App\Jobs\FinalizePurchaseCycle;
 use App\Models\PurchaseCycle;
 use Filament\Actions\Action;
-use Illuminate\Support\Facades\DB;
+use Filament\Notifications\Notification;
 
 class FinalisePurchaseCycleAction extends Action
 {
@@ -17,48 +17,13 @@ class FinalisePurchaseCycleAction extends Action
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->label('Finalise Cycle')
-            ->color('success')
-            ->icon('heroicon-o-check-circle')
-            ->requiresConfirmation()
-            ->modalHeading('Finalise Purchase Cycle')
-            ->modalDescription('This will calculate final discounts, attempt to capture payments for all authorized orders in this cycle, mark orders as complete, and close the pools. This action is irreversible.')
+        $this->label('Finalise Cycle')->color('success')->icon('heroicon-o-check-circle')
+            ->requiresConfirmation()->modalHeading('Finalise Purchase Cycle')
+            ->modalDescription('Finalize paid orders, refund unlocked volume discounts, and close the cycle. Outstanding checkouts must be resolved first.')
             ->modalSubmitActionLabel('Yes, Finalise Cycle')
-            ->action(function (PurchaseCycle $record, array $data) {
-                $this->processFinalization($record);
+            ->action(function (PurchaseCycle $record) {
+                FinalizePurchaseCycle::dispatch($record->id);
+                Notification::make()->title('Cycle finalization queued')->success()->send();
             });
-    }
-
-    protected function processFinalization(PurchaseCycle $purchaseCycle): void
-    {
-        if (! FinalizePurchasePoolManager::canFinalizeCycle($purchaseCycle)) {
-            return;
-        }
-
-        // Set cycle to processing state
-        $purchaseCycle->update(['status' => 'processing_payments']);
-
-        DB::beginTransaction();
-
-        try {
-            $purchasePools = FinalizePurchasePoolManager::getFinalizablePurchasePools($purchaseCycle);
-
-            if ($purchasePools->isEmpty()) {
-                FinalizePurchasePoolManager::handleEmptyCycle($purchaseCycle);
-
-                return;
-            }
-
-            $results = FinalizePurchasePoolManager::processAllPoolsInCycle($purchasePools);
-            FinalizePurchasePoolManager::finalizeCycle($purchaseCycle, $results);
-
-            DB::commit();
-            FinalizePurchasePoolManager::sendFinalizationNotification($purchaseCycle, $results);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            FinalizePurchasePoolManager::handleCriticalError($purchaseCycle, $e);
-        }
     }
 }

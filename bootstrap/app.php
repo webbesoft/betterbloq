@@ -7,6 +7,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 // use App\Models\Log;
 // use App\Models\PurchasePool;
 // use Illuminate\Console\Scheduling\Schedule;
+use App\Http\Middleware\RequireWebhookSecret;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append(RequireWebhookSecret::class);
         $middleware->encryptCookies(except: ['appearance']);
         $middleware->validateCsrfTokens(except: [
             'stripe/*',
