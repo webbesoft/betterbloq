@@ -13,10 +13,13 @@ return new class extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             //
-            $table->dropForeign('orders_purchase_pool_id_foreign');
-            $table->dropColumn('purchase_pool_id');
-            $table->dropForeign('orders_product_id_foreign');
-            $table->dropColumn('product_id');
+            $table->dropForeign(['purchase_pool_id']);
+            $table->dropForeign(['product_id']);
+            $table->dropIndex('orders_user_product_pool_index');
+            $table->dropIndex(['purchase_pool_id']);
+            $table->dropIndex(['product_id']);
+            $table->dropColumn(['purchase_pool_id', 'product_id']);
+
         });
     }
 

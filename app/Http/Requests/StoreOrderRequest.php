@@ -22,10 +22,10 @@ class StoreOrderRequest extends FormRequest
          */
         // Define the base validation rules for a single order item.
         $itemRules = [
-            'product_id' => 'sometimes|integer',
-            'quantity' => 'required|integer|min:1',
+            'product_id' => 'required|integer|exists:products,id',
+            'quantity' => 'required|integer|min:1|max:1000000',
             'expected_delivery_date' => 'required|date|after_or_equal:today',
-            'purchase_cycle_id' => 'sometimes|integer',
+            'purchase_cycle_id' => 'required|integer|exists:purchase_cycles,id',
             'requires_storage_acknowledged' => 'sometimes|boolean',
             'final_line_price' => 'required|numeric|min:0',
             'storage_cost_applied' => 'sometimes|numeric|min:0',
@@ -36,7 +36,7 @@ class StoreOrderRequest extends FormRequest
         // Check if the request contains a cart with multiple items.
         if ($this->has('items')) {
             $cartRules = [
-                'items' => 'required|array|min:1', // Ensure 'items' is a non-empty array.
+                'items' => 'required|array|min:1|max:50', // Ensure 'items' is a non-empty array.
             ];
 
             // Apply the item rules to each element in the 'items' array.

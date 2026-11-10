@@ -13,6 +13,8 @@ class OrderLineItem extends Model
     use HasFactory;
 
     protected $fillable = [
+        'original_unit_amount',
+        'charged_amount',
         'order_id',
         'product_id',
         'purchase_pool_id',
@@ -27,8 +29,8 @@ class OrderLineItem extends Model
     public function casts(): array
     {
         return [
-            'total_price' => 'float',
-            'price_per_unit' => 'float',
+            'total_price' => 'decimal:2',
+            'price_per_unit' => 'decimal:2',
         ];
     }
 

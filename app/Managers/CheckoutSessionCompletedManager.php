@@ -2,105 +2,65 @@
 
 namespace App\Managers;
 
-use App\Models\Log;
+use App\Models\CheckoutAttempt;
 use App\Models\User;
-use Illuminate\Support\Facades\Log as FacadesLog;
+use App\Payments\StripeGateway;
+use RuntimeException;
 use Stripe\Collection;
-use Stripe\StripeClient;
 
 class CheckoutSessionCompletedManager
 {
     public static function getValidatedSessionData(array $payload): ?object
     {
-        $session = data_get($payload, 'data.object');
-        $stripeCustomerId = data_get($session, 'customer');
-        $user = User::whereStripeCustomerId($stripeCustomerId)->first();
-
-        if (! $user) {
-            Log::warning('Webhook: User not found for Stripe customer ID.', ['stripe_customer_id' => $stripeCustomerId, 'session_id' => $session['id']]);
+        $session = data_get($payload, 'data.object', []);
+        if (($session['mode'] ?? null) !== 'payment') {
+            return null;
+        }
+        $metadata = $session['metadata'] ?? [];
+        if (empty($metadata['checkout_attempt_id']) && empty($metadata['item_details'])) {
+            return null; // A different Cashier checkout flow owns this session.
+        }
+        if (! in_array($session['payment_status'] ?? null, ['paid', 'no_payment_required'], true)) {
+            if (! empty($metadata['checkout_attempt_id'])) {
+                CheckoutAttempt::whereKey($metadata['checkout_attempt_id'])->whereIn('status', ['creating', 'open'])
+                    ->update(['status' => 'processing', 'stripe_session_id' => $session['id']]);
+            }
 
             return null;
         }
-
-        if (data_get($session, 'mode') === 'subscription') {
-            info('Webhook: Ignoring subscription event for checkout.session.completed.', ['session_id' => $session['id']]);
-
-            return null;
+        $user = User::where('stripe_id', $session['customer'] ?? null)->first();
+        if (! $user || empty($session['customer'])) {
+            throw new RuntimeException('Paid checkout customer could not be resolved.');
+        }
+        if (isset($metadata['user_id']) && (int) $metadata['user_id'] !== $user->id) {
+            throw new RuntimeException('Paid checkout customer metadata mismatch.');
         }
 
-        // Guard against asynchronous payment methods (e.g. ACH, SEPA, bank transfers).
-        // For these methods, checkout.session.completed fires when the customer submits
-        // the form, but with payment_status: 'unpaid'. The actual debit can fail days
-        // later. We must only provision orders once payment is confirmed.
-        //
-        // The initial charge is processed immediately at checkout, so we expect 'paid'.
-        $paymentStatus = data_get($session, 'payment_status');
-        if (! in_array($paymentStatus, ['paid', 'no_payment_required'])) {
-            FacadesLog::warning('Webhook: Skipping order creation — payment not confirmed.', [
-                'session_id' => $session['id'],
-                'payment_status' => $paymentStatus,
-            ]);
-
-            return null;
-        }
-
-        return (object) [
-            'session' => $session,
-            'user' => $user,
-            'metadata' => $session['metadata'],
-        ];
+        return (object) compact('session', 'user', 'metadata');
     }
 
-    /**
-     * @throws ApiErrorException
-     */
-    public static function fetchStripeLineItems(string $sessionId): ?Collection
+    public static function fetchStripeLineItems(string $sessionId): Collection
     {
-        $stripe = new StripeClient(config('services.stripe.secret'));
-        $lineItems = $stripe->checkout->sessions->allLineItems($sessionId, ['limit' => 100]);
-
-        if (empty($lineItems->data)) {
-            Log::error('Webhook: No line items found in completed Stripe session.', ['session_id' => $sessionId]);
-
-            return null;
+        $lines = app(StripeGateway::class)->lineItems($sessionId);
+        if (! $lines->data) {
+            throw new RuntimeException('Paid checkout has no line items.');
         }
 
-        return $lineItems;
+        return $lines;
     }
 
     public static function parseItemDetailsMetadata(array $metadata, string $sessionId): array
     {
-        $itemDetailsJson = data_get($metadata, 'item_details');
-        $productSubtotalMeta = data_get($metadata, 'product_subtotal');
-        $storageCostAppliedMeta = data_get($metadata, 'storage_cost_applied');
-        $decodedItemDetails = [];
+        if (! empty($metadata['checkout_attempt_id'])) {
+            $attempt = CheckoutAttempt::findOrFail($metadata['checkout_attempt_id']);
 
-        if ($itemDetailsJson) {
-            $decodedItemDetails = json_decode($itemDetailsJson, true);
-            if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decodedItemDetails)) {
-                info('Webhook Error: Failed to decode item_details metadata JSON.', [
-                    'json_error' => json_last_error_msg(),
-                    'itemDetailsJson' => $itemDetailsJson,
-                    'session_id' => $sessionId,
-                ]);
-
-                return []; // Return empty on error
-            }
-        } else {
-            info('Webhook Warning: item_details metadata was missing or empty.', ['session_id' => $sessionId]);
+            return collect($attempt->snapshot)->keyBy('id')->all();
+        }
+        $details = json_decode($metadata['item_details'] ?? '', true, 512, JSON_THROW_ON_ERROR);
+        if (! is_array($details) || ! $details) {
+            throw new RuntimeException('Missing checkout item details.');
         }
 
-        $itemDetailsLookup = [];
-        if (! empty($decodedItemDetails)) {
-            foreach ($decodedItemDetails as $itemDetail) {
-                if (isset($itemDetail['product_id'])) {
-                    $itemDetailsLookup[$itemDetail['product_id']] = $itemDetail;
-                } else {
-                    info("Webhook Warning: item_details metadata entry missing 'product_id'.", ['itemDetail' => $itemDetail, 'session_id' => $sessionId]);
-                }
-            }
-        }
-
-        return $itemDetailsLookup;
+        return collect($details)->keyBy('product_id')->all();
     }
 }

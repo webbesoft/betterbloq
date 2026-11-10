@@ -22,6 +22,7 @@ return new class extends Migration
             // Add new column
             $table->float('final_achieved_discount_percentage')->nullable()->after('status');
 
+            $table->dropIndex(['status']);
             $table->dropColumn('status');
             $table->enum('cycle_status', ['accumulating', 'finalized', 'failed'])->default('accumulating')->after('max_orders');
         });

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -98,7 +99,15 @@ class OrderController extends Controller
             return back()->withInput()->with('error', 'Invalid order data submitted.');
         }
 
-        $orderResponse = OrderService::createOrder($user, $serviceData);
+        try {
+            $orderResponse = OrderService::createOrder($user, $serviceData);
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->withErrors(['items' => 'Could not initiate checkout. Please retry; your checkout will be reused.']);
+        }
 
         if (! data_get($orderResponse, 'error') && ! is_null($orderResponse)) {
             return Inertia::render('shop/payment-pending', [

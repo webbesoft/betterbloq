@@ -2,98 +2,36 @@
 
 namespace App\Listeners;
 
-use App\Mail\NewOrderConfirmation;
 use App\Managers\CheckoutSessionCompletedManager;
-use App\Models\User;
-use App\Services\LogService;
+use App\Models\CheckoutAttempt;
+use App\Models\Order;
 use App\Services\OrderService;
-use Exception;
-use Illuminate\Support\Facades\Log as FacadesLog;
-use Illuminate\Support\Facades\Mail;
 use Laravel\Cashier\Events\WebhookReceived;
-use Stripe\Exception\ApiErrorException;
 
 class StripeEventListener
 {
-    /**
-     * Create the event listener.
-     */
-    public function __construct()
-    {
-        //
-    }
-
-    /**
-     * Handle the event.
-     *
-     * @throws ApiErrorException
-     */
     public function handle(WebhookReceived $event): void
     {
-        $payloadType = $event->payload['type'] ?? null;
+        $type = $event->payload['type'] ?? '';
+        if (in_array($type, ['checkout.session.expired', 'checkout.session.async_payment_failed'], true)) {
+            $id = data_get($event->payload, 'data.object.metadata.checkout_attempt_id');
+            if ($id) {
+                CheckoutAttempt::whereKey($id)->whereIn('status', ['creating', 'open', 'processing'])
+                    ->update(['status' => $type === 'checkout.session.expired' ? 'expired' : 'failed']);
+            }
 
-        switch ($payloadType) {
-            case 'checkout.session.completed':
-                $this->handleCheckoutSessionCompleted($event->payload);
-                break;
-                // case 'invoice.payment_succeeded':
-                //     $this->handleInvoicePaymentSucceeded($event->payload);
-                //     break;
-                // Add more cases as needed
-            default:
-                (new LogService)->createLog(
-                    'error',
-                    "Unhandled Stripe event type: {$payloadType}",
-                    __CLASS__,
-                    __METHOD__,
-                    ['payload' => $event->payload]
-                );
-                throw new Exception("Unhandled Stripe event type: {$payloadType}");
-        }
-    }
-
-    /**
-     * @throws ApiErrorException
-     */
-    private function handleCheckoutSessionCompleted(array $payload): void
-    {
-        $validatedData = CheckoutSessionCompletedManager::getValidatedSessionData($payload);
-        if (! $validatedData) {
             return;
         }
-
-        $session = $validatedData->session;
-        $user = $validatedData->user;
-        $metadata = $validatedData->metadata;
-
-        try {
-            $lineItemsFromStripe = CheckoutSessionCompletedManager::fetchStripeLineItems(data_get($session, 'id'));
-            if (! $lineItemsFromStripe) {
-                return;
-            }
-
-            $itemDetailsLookup = CheckoutSessionCompletedManager::parseItemDetailsMetadata($metadata, $session['id']);
-
-            $orderService = new OrderService;
-            $mainOrder = $orderService->createOrderFromStripeSession(
-                $session,
-                $user,
-                $metadata,
-                $lineItemsFromStripe,
-                $itemDetailsLookup
-            );
-
-            if ($mainOrder) {
-                // Mail::to($mainOrder->user->email)->send(new NewOrderConfirmation($mainOrder, $user));
-                // Send internal notifications, perhaps via events
-                info('Order successfully processed from Stripe webhook.', ['order_id' => $mainOrder->id, 'session_id' => $session['id']]);
-            } else {
-                FacadesLog::error('Failed to create order from Stripe webhook.', ['session_id' => $session['id']]);
-            }
-        } catch (Exception $e) {
-            (new LogService)->logException($e, __CLASS__, __METHOD__, [
-                'payload' => $payload,
-            ]);
+        if (! in_array($type, ['checkout.session.completed', 'checkout.session.async_payment_succeeded'], true)) {
+            return; // Allow Cashier to handle its own subscription/invoice events.
         }
+        $data = CheckoutSessionCompletedManager::getValidatedSessionData($event->payload);
+        if (! $data || Order::withTrashed()->where('stripe_session_id', $data->session['id'])->exists()) {
+            return;
+        }
+        $lines = CheckoutSessionCompletedManager::fetchStripeLineItems($data->session['id']);
+        $details = CheckoutSessionCompletedManager::parseItemDetailsMetadata($data->metadata, $data->session['id']);
+        // A failed transaction must fail the webhook so Stripe retries delivery.
+        app(OrderService::class)->createOrderFromStripeSession($data->session, $data->user, $data->metadata, $lines, $details);
     }
 }
