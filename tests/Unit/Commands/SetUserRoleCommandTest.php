@@ -3,18 +3,15 @@
 namespace Tests\Unit\Commands;
 
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
-use function Pest\Laravel\artisan;
+it('sets the Super Admin role only for betterbloq accounts', function () {
+    Role::findOrCreate('Super Admin', 'web');
+    $admin = User::factory()->create(['email' => 'admin@betterbloq.com']);
+    $customer = User::factory()->create(['email' => 'customer@example.org']);
 
-it('should set the Super Admin role for all example.org accounts', function () {
-    $users = User::factory()->create([
-        'email' => $this->faker->name.'@example.org',
-    ]);
+    $this->artisan('app:set-user-role')->assertSuccessful();
 
-    artisan('account:plan-check')->run();
-
-    $modelRoles = DB::table('model_has_roles')->count();
-
-    expect($modelRoles)->toBe(1);
+    expect($admin->fresh()->hasRole('Super Admin'))->toBeTrue()
+        ->and($customer->fresh()->hasRole('Super Admin'))->toBeFalse();
 });

@@ -21,7 +21,7 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $userId = $request->user()->id;
-        $cacheKey = 'user_orders_'.$userId.'_page_'.$request->query('page', 1);
+        $cacheKey = 'user_orders_'.$userId.'_'.Cache::get('user_orders_version_'.$userId, 'initial').'_page_'.$request->query('page', 1);
         $cacheDuration = 300;
 
         $orders = Cache::remember($cacheKey, $cacheDuration, function () use ($request) {

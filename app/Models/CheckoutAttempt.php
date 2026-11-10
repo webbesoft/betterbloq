@@ -2,8 +2,14 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property array<string, mixed> $stripe_payload
+ * @property list<array<string, mixed>> $snapshot
+ * @property CarbonImmutable $expires_at
+ */
 class CheckoutAttempt extends Model
 {
     public $incrementing = false;

@@ -50,6 +50,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
      *
      * @var list<string>
      */
+    protected $attributes = ['has_completed_guide' => false];
+
     protected $fillable = [
         'name',
         'email',
@@ -77,6 +79,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'has_completed_guide' => 'boolean',
             'password' => 'hashed',
         ];
     }

@@ -79,7 +79,7 @@ export const ProductPriceCalculator = (props: ProductPriceCalculatorProps) => {
             }
 
             // 3. The component's only job is to multiply the final daily rate by the days
-            const currentTotalStorageCost = calcResult.costPerPeriod * currentStorageDays;
+            const currentTotalStorageCost = calcResult.costPerDay * currentStorageDays;
 
             return {
                 storageDays: currentStorageDays,

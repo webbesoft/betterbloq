@@ -65,13 +65,13 @@
                         <th>Product</th>
                         <th>Quantity</th>
                         <th>Unit Price</th>
-                        <th>Total</th>
+                        <th>Initial Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($order->lineItems as $item)
                         <tr>
-                            <td>{{ $item->product->name }}</td>
+                            <td>{{ $item->product?->name ?? $item->description ?? 'Order item' }}</td>
                             <td>{{ $item->quantity }}</td>
                             <td>${{ number_format($item->price_per_unit, 2) }}</td>
                             <td>${{ number_format($item->total_price, 2) }}</td>
@@ -92,9 +92,15 @@
                     <td>Tax (if applicable):</td>
                     <td class="text-right">$0.00</td> {{-- Add tax logic if needed --}}
                 </tr>
+                @if($order->status === 'completed' && $order->final_amount !== null)
+                <tr>
+                    <td>Discount refunded:</td>
+                    <td class="text-right">-${{ number_format($order->initial_amount - $order->final_amount, 2) }}</td>
+                </tr>
+                @endif
                 <tr>
                     <td><strong>Grand Total:</strong></td>
-                    <td class="text-right"><strong>${{ number_format($order->total_amount ?? 0, 2) }}</strong></td>
+                    <td class="text-right"><strong>${{ number_format($order->orderTotal, 2) }}</strong></td>
                 </tr>
             </table>
         </div>

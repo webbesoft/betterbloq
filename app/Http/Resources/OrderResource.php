@@ -14,6 +14,9 @@ class OrderResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $productLine = $this->resource->relationLoaded('lineItems')
+            ? $this->resource->lineItems->first(fn ($line) => $line->product_id !== null) : null;
+
         return [
             'id' => $this->id,
             'status' => $this->status,
@@ -22,7 +25,7 @@ class OrderResource extends JsonResource
 
             'address' => $this->address,
 
-            'product' => new ProductResource($this->whenLoaded('lineItems.product')) ?? null,
+            'product' => new ProductResource($productLine?->product),
             'vendor' => new VendorResource($this->whenLoaded('vendor')),
 
             'line_items' => OrderLineItemResource::collection($this->whenLoaded('lineItems')),

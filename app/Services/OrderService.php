@@ -248,21 +248,21 @@ class OrderService
                     $product = Product::withTrashed()->find($detail['product_id']);
 
                     return $product && ($product->stripe_price_id === data_get($stripeLine, 'price.id')
-                        || $product->name === $stripeLine->description);
+                        || $product->name === data_get($stripeLine, 'description', ''));
                 });
                 if (count($matches) === 1) {
                     $detail = reset($matches);
                     $key = (string) $detail['product_id'];
                     $detail['type'] = 'product';
-                    $detail['name'] = $detail['product_name'] ?? $stripeLine->description;
-                    $detail['unit_amount'] = (int) $stripeLine->price->unit_amount;
+                    $detail['name'] = $detail['product_name'] ?? data_get($stripeLine, 'description', '');
+                    $detail['unit_amount'] = (int) data_get($stripeLine, 'price.unit_amount');
                     // Legacy purchases do not have a reliable original-price snapshot.
                     // Finalization rejects these until explicitly reconciled.
                     $detail['original_unit_amount'] = null;
                 }
             }
-            if (! $detail || isset($used[$key]) || (int) $stripeLine->quantity !== (int) $detail['quantity']
-                || (int) $stripeLine->price->unit_amount !== (int) $detail['unit_amount']
+            if (! $detail || isset($used[$key]) || (int) data_get($stripeLine, 'quantity') !== (int) $detail['quantity']
+                || (int) data_get($stripeLine, 'price.unit_amount') !== (int) $detail['unit_amount']
                 || data_get($stripeLine, 'currency') !== 'usd') {
                 throw new RuntimeException('Unmatched or inconsistent checkout line.');
             }
@@ -270,7 +270,7 @@ class OrderService
             if ($pool->product_id !== (int) $detail['product_id'] || $pool->purchase_cycle_id !== (int) $detail['purchase_cycle_id']) {
                 throw new RuntimeException('Checkout pool identity mismatch.');
             }
-            $detail['charged_amount'] = (int) $stripeLine->amount_total;
+            $detail['charged_amount'] = (int) data_get($stripeLine, 'amount_total');
             if ($detail['charged_amount'] !== $detail['unit_amount'] * $detail['quantity']) {
                 throw new RuntimeException('Unexpected checkout line adjustment.');
             }

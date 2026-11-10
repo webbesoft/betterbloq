@@ -34,6 +34,9 @@ return new class extends Migration
             $table->unsignedBigInteger('product_id');
             $table->foreign('purchase_pool_id')->references('id')->on('purchase_pools')->onDelete('cascade');
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+            $table->index('purchase_pool_id');
+            $table->index('product_id');
+            $table->index(['user_id', 'product_id', 'purchase_pool_id'], 'orders_user_product_pool_index');
         });
     }
 };

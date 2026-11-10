@@ -34,6 +34,7 @@ class Warehouse extends Model
         ];
     }
 
+    /** @return HasMany<StorageTier, $this> */
     public function storageTiers(): HasMany
     {
         return $this->hasMany(StorageTier::class);

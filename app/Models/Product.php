@@ -127,7 +127,9 @@ class Product extends Model
 
     public function getRatingsCountAttribute(): int
     {
-        return $this->ratings()->count();
+        return isset($this->attributes['ratings_count'])
+            ? (int) $this->attributes['ratings_count']
+            : $this->ratings()->count();
     }
 
     public function scopeFilterByName(Builder $query, string $name)

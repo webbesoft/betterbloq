@@ -6,7 +6,13 @@ use Database\Factories\PurchaseCycleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon $start_date
+ * @property Carbon $end_date
+ * @property Carbon|null $finalization_lease_until
+ */
 class PurchaseCycle extends Model
 {
     /** @use HasFactory<PurchaseCycleFactory> */
@@ -34,6 +40,7 @@ class PurchaseCycle extends Model
         return ['start_date' => 'date', 'end_date' => 'date', 'finalization_lease_until' => 'datetime'];
     }
 
+    /** @return HasMany<PurchasePool, $this> */
     public function purchasePools(): HasMany
     {
         return $this->hasMany(PurchasePool::class);

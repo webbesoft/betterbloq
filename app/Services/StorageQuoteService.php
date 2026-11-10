@@ -14,6 +14,9 @@ class StorageQuoteService
     {
         $delivery = CarbonImmutable::parse($item['expected_delivery_date'])->startOfDay();
         $arrival = CarbonImmutable::parse($pool->target_delivery_date)->startOfDay();
+        if ($delivery->isBefore($arrival)) {
+            throw ValidationException::withMessages(['items' => 'Delivery cannot precede the purchase pool delivery date.']);
+        }
         $days = (int) $arrival->diffInDays($delivery, false) - 7;
         if ($days <= 0) {
             return null;
@@ -52,14 +55,14 @@ class StorageQuoteService
         } else {
             throw ValidationException::withMessages(['items' => 'Unsupported storage capacity unit or missing height.']);
         }
-        $tier = $warehouse->storageTiers->sortByDesc('min_space_units')->first(fn ($tier) => $space >= $tier->min_space_units && ($tier->max_space_units === null || $space < $tier->max_space_units));
+        $tier = $warehouse->storageTiers->sortByDesc('min_space_units')->first(fn ($tier) => $space >= $tier->min_space_units && $space < $tier->max_space_units);
         $rate = $tier ? $tier->price_per_space_unit : $warehouse->default_storage_price_per_unit;
         $period = $tier ? $tier->billing_period : $warehouse->default_storage_price_period;
         $periodDays = match ($period) {
             'day', 'days' => 1, 'week', 'weeks' => 7, 'month', 'months' => 30,
             default => throw ValidationException::withMessages(['items' => 'Unsupported storage billing period.']),
         };
-        if (! is_numeric($rate) || $rate < 0) {
+        if (! is_finite($rate) || $rate < 0) {
             throw ValidationException::withMessages(['items' => 'Invalid storage rate.']);
         }
 

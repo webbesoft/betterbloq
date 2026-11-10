@@ -17,6 +17,7 @@ use App\Services\CheckoutReconciliationService;
 use App\Services\CycleFinalizationService;
 use App\Services\OrderService;
 use Illuminate\Contracts\Mail\Mailer;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Cashier\Events\WebhookReceived;
@@ -377,4 +378,63 @@ it('delivers the committed notification outbox independently and only once norma
     Mail::assertSent(OrderFinalisedNotification::class, 1);
     expect(DB::table('payment_notifications')->first()->sent_at)->not->toBeNull();
     expect((new OrderFinalisedNotification($order->fresh()))->render())->toContain('Initial payment');
+});
+
+it('matches checkout lines by identity even when Stripe returns a different order', function () {
+    $attempt = startPaymentTestCheckout($this);
+    $snapshot = $attempt->snapshot;
+    $storage = array_merge($snapshot[0], ['id' => 'storage_line', 'type' => 'storage', 'name' => 'Storage Fee', 'quantity' => 1, 'unit_amount' => 400]);
+    $snapshot[] = $storage;
+    $attempt->update(['snapshot' => $snapshot]);
+    $session = paymentTestSession($attempt);
+    $lines = paymentTestLines($attempt);
+    $lines->data = array_reverse($lines->data);
+    $order = app(OrderService::class)->createOrderFromStripeSession($session, $this->user, $session['metadata'], $lines, collect($snapshot)->keyBy('id')->all());
+    expect($order->lineItems()->whereNull('product_id')->first()->description)->toBe('Storage Fee')
+        ->and($order->lineItems()->whereNotNull('product_id')->first()->product_id)->toBe($this->product->id)
+        ->and($this->pool->fresh()->current_volume)->toBe(2.0);
+});
+
+it('enforces unique cycle product aggregates at the database boundary', function () {
+    CycleProductVolume::create(['purchase_cycle_id' => $this->cycle->id, 'product_id' => $this->product->id, 'total_aggregated_quantity' => 1]);
+    expect(fn () => DB::transaction(fn () => CycleProductVolume::create([
+        'purchase_cycle_id' => $this->cycle->id, 'product_id' => $this->product->id, 'total_aggregated_quantity' => 1,
+    ])))->toThrow(QueryException::class);
+    expect(CycleProductVolume::count())->toBe(1);
+});
+
+it('assigns project ownership from the session and ignores submitted owner IDs', function () {
+    $other = User::factory()->create();
+    $this->actingAs($this->user)->post(route('projects.store'), [
+        'name' => 'My project', 'budget' => 100, 'start_date' => today()->toDateString(),
+        'target_completion_date' => today()->addMonth()->toDateString(), 'user_id' => $other->id,
+    ])->assertRedirect(route('projects.index'));
+    expect(Project::first()->user_id)->toBe($this->user->id);
+});
+
+it('records verified historical prices without issuing a refund', function () {
+    $order = createPaidTestOrder($this);
+    $line = $order->lineItems()->first();
+    $line->update(['original_unit_amount' => null, 'charged_amount' => null]);
+    $this->mock(StripeGateway::class, function ($mock) {
+        $mock->shouldReceive('paymentIntent')->once()->andReturn([
+            'currency' => 'usd', 'status' => 'succeeded', 'amount_received' => 20000, 'latest_charge' => ['amount_refunded' => 0],
+        ]);
+        $mock->shouldNotReceive('refund');
+    });
+    $this->artisan('payments:reconcile-order-prices', ['order' => $order->id, 'original-unit-amounts' => json_encode([$line->id => 12500])])->assertSuccessful();
+    expect($line->fresh()->original_unit_amount)->toBe(12500)
+        ->and($line->fresh()->charged_amount)->toBe(20000)
+        ->and(PaymentOperation::count())->toBe(0);
+});
+
+it('renders storage and final refund amounts on the invoice', function () {
+    $order = createPaidTestOrder($this);
+    $order->lineItems()->create([
+        'product_id' => null, 'purchase_pool_id' => $this->pool->id, 'quantity' => 1, 'description' => 'Storage Fee',
+        'price_per_unit' => 4, 'total_price' => 4, 'charged_amount' => 400,
+    ]);
+    $order->update(['initial_amount' => 204, 'total_amount' => 204, 'final_amount' => 184, 'status' => 'completed']);
+    $html = view('invoices.order', ['order' => $order->fresh()->load('lineItems.product')])->render();
+    expect($html)->toContain('Storage Fee')->toContain('Discount refunded:')->toContain('-$20.00')->toContain('$184.00');
 });

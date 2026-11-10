@@ -198,7 +198,7 @@ export default function ProductPage(props: ProductProps) {
     const getFormButtonText = () => {
         if (processing) return 'Placing Order...';
         if (activePurchasePool) {
-            return `Order Now & Join Pool (${dynamicPrice.discountPercent}% Off)`;
+            return 'Pay Upfront & Join Pool';
         }
         return 'Place Order';
     };
@@ -255,7 +255,7 @@ export default function ProductPage(props: ProductProps) {
     const handleAddToCartClick = () => {
         const cartProduct: CartItem = {
             ...productData,
-            price: dynamicPrice.pricePerUnit,
+            price: productData.price,
             vendor_id: productData.vendor.id,
             delivery_time: productData.delivery_time,
             image: productData.image,
@@ -372,13 +372,13 @@ export default function ProductPage(props: ProductProps) {
                                     {/* Use the new dynamicPrice state for display */}
                                     {activePurchasePool && dynamicPrice.discountPercent > 0 ? (
                                         <>
-                                            <p className="text-muted-foreground text-xl font-medium line-through">
+                                            <p className="text-foreground text-3xl font-bold">
                                                 ${productData.price.toFixed(2)} / {productData.unit}
                                             </p>
-                                            <p className="text-primary text-3xl font-bold sm:text-4xl">
-                                                ${dynamicPrice.pricePerUnit.toFixed(2)} / {productData.unit}
+                                            <p className="text-muted-foreground text-sm">
+                                                Estimated after final discount: ${dynamicPrice.pricePerUnit.toFixed(2)} / {productData.unit}
                                                 <Badge variant="destructive" className="ml-2 align-middle text-sm">
-                                                    -{dynamicPrice.discountPercent}%
+                                                    Up to {dynamicPrice.discountPercent}% refund
                                                 </Badge>
                                             </p>
                                         </>
@@ -515,7 +515,7 @@ export default function ProductPage(props: ProductProps) {
                                             purchaseDate={new Date()}
                                             onStateChange={handleCalculatorUpdate}
                                             minimumDeliveryDate={new Date(activePurchasePool.target_delivery_date ?? '').toISOString().split('T')[0]}
-                                            basePricePerUnit={dynamicPrice.pricePerUnit}
+                                            basePricePerUnit={productData.price}
                                             errors={errors}
                                         />
 
@@ -526,7 +526,7 @@ export default function ProductPage(props: ProductProps) {
                                                 <span className="text-foreground text-2xl font-bold">
                                                     {activePurchasePool && dynamicPrice.discountPercent > 0 && (
                                                         <Badge variant="secondary" className="text-primary ml-2 align-middle text-xs">
-                                                            {dynamicPrice.discountPercent}% off applied
+                                                            Up to {dynamicPrice.discountPercent}% refunded when the cycle is finalized
                                                         </Badge>
                                                     )}
                                                 </span>

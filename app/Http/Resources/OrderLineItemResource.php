@@ -16,9 +16,11 @@ class OrderLineItemResource extends JsonResource
             'purchase_pool_id' => $this->purchase_pool_id,
             'product' => new ProductResource($this->whenLoaded('product')),
             'purchase_pool' => new PurchasePoolResource($this->whenLoaded('purchasePool')),
-            'purchase_pool_tier' => $this->resource->purchasePool->getApplicableTier(),
-            'price_per_unit' => $this->price_per_unit,
-            'total_price' => $this->total_price,
+            'purchase_pool_tier' => $this->resource->purchasePool?->getApplicableTier(),
+            'price_per_unit' => (float) $this->price_per_unit,
+            'final_line_price' => $this->final_line_price === null ? null : (float) $this->final_line_price,
+            'applied_discount_percentage' => $this->applied_discount_percentage === null ? null : (float) $this->applied_discount_percentage,
+            'total_price' => (float) $this->total_price,
             'description' => $this->description ?? null,
         ];
     }

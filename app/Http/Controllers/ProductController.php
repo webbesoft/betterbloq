@@ -51,7 +51,7 @@ class ProductController extends Controller
                 'price',
                 'name',
             ])
-            ->with(['category', 'vendor:id,name', 'images', 'ratings:rating'])
+            ->with(['category', 'vendor:id,name', 'images'])->withCount('ratings')->withAvg('ratings', 'rating')
             ->paginate(10)
             ->withQueryString();
 
@@ -70,14 +70,12 @@ class ProductController extends Controller
             'category',
         ]);
 
-        $request->user()?->loadMissing('orders');
-
         $userRating = null;
         // user related data
         $hasOrdersInPool = false;
         if ($request->user()) {
             $userRating = Cache::remember("user_rating_{$request->user()->id}_{$product->id}", 600, function () use ($request, $product) {
-                return $request->user()->product_ratings()->where('id', $product->id)->first();
+                return $request->user()->product_ratings()->where('product_id', $product->id)->first();
             });
         }
 

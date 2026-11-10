@@ -67,12 +67,12 @@ const OrderLineItemsList = (props: Props) => {
                                         </Badge>
                                     )}
                                     {/* Display Purchase Pool Discount if available */}
-                                    {line_item.purchase_pool && line_item.purchase_pool.discount_percentage > 0 && (
+                                    {(line_item.applied_discount_percentage ?? 0) > 0 && (
                                         <Badge variant="default" color="green" className="text-xs">
                                             {' '}
                                             {/* Use a variant that indicates a benefit */}
                                             <PercentIcon className="mr-1 h-3 w-3" />
-                                            {line_item.purchase_pool.discount_percentage}% Pool Discount
+                                            {line_item.applied_discount_percentage}% Final Discount
                                             {/* Optional: Link to pool details if needed */}
                                             {/* {line_item.purchase_pool.id && (
                                                 <Link href={`/purchase-pools/${line_item.purchase_pool.id}`} className="ml-1 underline">
@@ -82,7 +82,7 @@ const OrderLineItemsList = (props: Props) => {
                                         </Badge>
                                     )}
                                     {/* Optional: Display Pool Name if available */}
-                                    {line_item.purchase_pool.name && (
+                                    {line_item.purchase_pool?.name && (
                                         <Badge variant="outline" className="text-xs">
                                             Pool: {line_item.purchase_pool.name}
                                         </Badge>
@@ -104,7 +104,9 @@ const OrderLineItemsList = (props: Props) => {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Total:</span>
-                                    <p className="font-semibold text-gray-900 dark:text-gray-100">{formatPrice(line_item.total_price)}</p>
+                                    <p className="font-semibold text-gray-900 dark:text-gray-100">
+                                        {formatPrice(line_item.final_line_price ?? line_item.total_price)}
+                                    </p>
                                 </div>
                             </div>
                         </div>

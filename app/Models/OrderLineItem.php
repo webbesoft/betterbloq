@@ -44,6 +44,7 @@ class OrderLineItem extends Model
         return $this->belongsTo(Product::class);
     }
 
+    /** @return BelongsTo<PurchasePool, $this> */
     public function purchasePool(): BelongsTo
     {
         return $this->belongsTo(PurchasePool::class);

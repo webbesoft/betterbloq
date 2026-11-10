@@ -20,26 +20,26 @@ class DashboardController extends Controller
         $cacheDuration = 300;
 
         $dashboardData = Cache::remember($cacheKey, $cacheDuration, function () use ($request, $userId) {
-            $ongoingProjectsCount = Project::where('status', 'ongoing')->count();
+            $ongoingProjectsCount = Project::where('user_id', $userId)->where('status', 'ongoing')->count();
 
             $totalExpenses = Order::where('user_id', $userId)
                 ->where('status', 'completed')
-                ->sum('total_amount');
+                ->sum('final_amount');
 
-            $projectBudgetSpent = Project::withSum('orders', 'id')->get()->map(function ($project) {
+            $projectBudgetSpent = Project::where('user_id', $userId)->withSum('orders', 'final_amount')->get()->map(function ($project) {
                 return [
                     'id' => $project->id,
                     'name' => $project->name,
                     'budget' => $project->budget,
-                    'total_expenses' => $project->orders_sum_total_amount ?? 0,
+                    'total_expenses' => $project->orders_sum_final_amount ?? 0,
                 ];
             });
 
-            $purchasePoolCompletion = PurchasePool::all()->map(function ($pool) {
+            $purchasePoolCompletion = PurchasePool::query()->get()->map(function ($pool) {
                 return [
                     'id' => $pool->id,
-                    'target_amount' => $pool->target_amount ?? 0,
-                    'current_amount' => $pool->current_amount ?? 0,
+                    'target_amount' => $pool->target_volume ?? 0,
+                    'current_amount' => $pool->current_volume ?? 0,
                 ];
             });
 

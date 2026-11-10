@@ -49,6 +49,15 @@ export default function OrderView(props: ShowOrderProps) {
                         Created
                     </Badge>
                 );
+            case 'paid':
+                return (
+                    <Badge variant="secondary">
+                        <CheckCircle className="mr-1 h-3 w-3" />
+                        Paid; awaiting finalization
+                    </Badge>
+                );
+            case 'refund_failed':
+                return <Badge variant="outline">Refund needs attention</Badge>;
             case 'payment_authorized':
                 return (
                     <Badge variant="secondary">
@@ -67,7 +76,7 @@ export default function OrderView(props: ShowOrderProps) {
                 return (
                     <Badge variant="secondary">
                         <Loader className="mr-1 h-3 w-3 animate-spin" />
-                        Processing Capture
+                        Finalizing Payment
                     </Badge>
                 );
             case 'completed':

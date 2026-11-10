@@ -171,6 +171,8 @@ export interface OrderLineItem {
     quantity: number;
     price_per_unit: number;
     total_price: number;
+    final_line_price?: number | null;
+    applied_discount_percentage?: number | null;
     product: Product;
     purchase_pool: PurchasePool;
     description: string;
@@ -197,7 +199,7 @@ interface StorageTier {
     min_space_units: number;
     max_space_units: number;
     price_per_space_unit: number;
-    billing_period: 'days' | 'weeks' | 'months';
+    billing_period: 'day' | 'week' | 'month' | 'days' | 'weeks' | 'months';
 }
 
 export interface CalculationResult {
@@ -207,6 +209,6 @@ export interface CalculationResult {
     isUsingDefaultRate: boolean;
     costPerPeriod: number;
     costPerItemPerPeriod: number;
-    billingPeriod: 'days' | 'weeks' | 'months';
+    billingPeriod: 'day' | 'week' | 'month' | 'days' | 'weeks' | 'months';
     costPerDay: number;
 }

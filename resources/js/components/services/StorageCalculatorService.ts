@@ -70,13 +70,16 @@ export class StorageCalculatorService {
      * Calculates daily price from ANY provided price and period.
      * Note: Approximating month as 30 days. For financial accuracy, handle monthly billing separately.
      */
-    public getDailyPrice(price: number, period: 'days' | 'weeks' | 'months'): number {
+    public getDailyPrice(price: number, period: 'day' | 'week' | 'month' | 'days' | 'weeks' | 'months'): number {
         if (isNaN(price) || price < 0) return 0;
         switch (period) {
+            case 'day':
             case 'days':
                 return price;
+            case 'week':
             case 'weeks':
                 return price / 7;
+            case 'month':
             case 'months':
                 return price / 30; // Approximation
             default:
@@ -137,12 +140,15 @@ export class StorageCalculatorService {
 
         let costPerDay = 0;
         switch (billingPeriod) {
+            case 'day':
             case 'days':
                 costPerDay = costPerPeriod;
                 break;
+            case 'week':
             case 'weeks':
                 costPerDay = costPerPeriod / 7;
                 break;
+            case 'month':
             case 'months':
                 costPerDay = costPerPeriod / 30;
                 break; // Approximation

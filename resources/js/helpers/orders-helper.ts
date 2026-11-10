@@ -3,18 +3,24 @@ export const getOrderPaymentStatusText = (status: string): string => {
     switch (status.toLocaleLowerCase()) {
         case 'created':
             return 'Created';
+        case 'paid':
+            return 'Paid; awaiting finalization';
+        case 'refund_failed':
+            return 'Paid; refund needs attention';
         case 'payment_authorized':
             return 'Authorized';
         case 'pending_finalization':
             return 'Pending Finalization';
         case 'processing_capture':
-            return 'Processing Capture';
+            return 'Finalizing Payment';
         case 'completed':
             return 'Completed';
         case 'capture_failed':
             return 'Failed';
-        default:
+        case 'cancelled':
             return 'Cancelled';
+        default:
+            return 'Unknown';
     }
 };
 

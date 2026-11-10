@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,10 +12,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * App\Models\Order
  *
+ * @property-read Collection<int, OrderLineItem> $lineItems
  * @property int id
  * @property string name
  * @property string email
@@ -81,17 +85,14 @@ class Order extends Model
     {
         parent::boot();
 
-        static::created(function ($model) {
-            $userId = $model->user_id;
-            $ordersCount = static::where('user_id', $userId)->count();
-            $perPage = 10;
-            $pages = (int) ceil($ordersCount / $perPage);
-
-            for ($page = 1; $page <= $pages; $page++) {
-                $cacheKey = 'user_orders_'.$userId.'_page_'.$page;
-                Cache::forget($cacheKey);
-            }
-        });
+        $invalidate = function ($model) {
+            DB::afterCommit(function () use ($model) {
+                Cache::put('user_orders_version_'.$model->user_id, (string) Str::uuid());
+                Cache::forget('dashboard_data_'.$model->user_id);
+            });
+        };
+        static::saved($invalidate);
+        static::deleted($invalidate);
     }
 
     public function name(): string
@@ -119,6 +120,7 @@ class Order extends Model
         return $this->belongsTo(PurchaseCycle::class, 'purchase_cycle_id');
     }
 
+    /** @return HasMany<OrderLineItem, $this> */
     public function lineItems(): HasMany
     {
         return $this->hasMany(OrderLineItem::class);
@@ -126,7 +128,9 @@ class Order extends Model
 
     public function getOrderTotalAttribute(): float
     {
-        return $this->lineItems->sum('total_price');
+        return $this->status === 'completed' && $this->final_amount !== null
+            ? (float) $this->final_amount
+            : (float) $this->total_amount;
     }
 
     public function billingAddress(): BelongsTo

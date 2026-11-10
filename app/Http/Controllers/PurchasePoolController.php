@@ -15,7 +15,7 @@ class PurchasePoolController extends Controller
     public function index(Request $request): Response
     {
         $purchasePoolQuery = QueryBuilder::for(PurchasePool::class)
-            ->with('purchasePoolTiers')
+            ->with(['purchasePoolTiers', 'purchaseCycle'])
             ->paginate(10)
             ->withQueryString();
 
@@ -26,7 +26,7 @@ class PurchasePoolController extends Controller
 
     public function show(PurchasePool $purchasePool, Request $request): Response
     {
-        $purchasePool->with(['purchasePoolTiers']);
+        $purchasePool->loadMissing(['purchasePoolTiers', 'purchaseCycle']);
 
         return Inertia::render('shop/purchase-pools/show', [
             'purchasePool' => new PurchasePoolResource($purchasePool),

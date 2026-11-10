@@ -25,7 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(RequireWebhookSecret::class);
         $middleware->encryptCookies(except: ['appearance']);
         $middleware->validateCsrfTokens(except: [
-            'stripe/*',
+            'stripe/webhook',
         ]);
         $middleware->trustProxies(at: '*');
 

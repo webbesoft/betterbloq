@@ -41,6 +41,7 @@ return new class extends Migration
             $table->dropColumn('final_achieved_discount_percentage');
             $table->renameColumn('cycle_status', 'status');
             $table->enum('status', ['pending', 'active', 'closed'])->default('pending')->change();
+            $table->index('status');
         });
     }
 };
