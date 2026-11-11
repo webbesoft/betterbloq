@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Box, House, HousePlus, LayoutGrid, ShoppingBag, TargetIcon, TruckIcon } from 'lucide-react';
+import { House, HousePlus, LayoutGrid, ShoppingBag, TargetIcon, TruckIcon } from 'lucide-react';
 import AppLogo from './app-logo';
 
 interface UserData {
@@ -25,7 +25,7 @@ const mainNavItems: NavItem[] = [
         title: 'Home',
         url: '/',
         icon: House,
-        allowedPlans: []
+        allowedPlans: [],
     },
     {
         title: 'Dashboard',
@@ -58,10 +58,10 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Upgrade Plan',
-        url: '/shop/plans',
+        url: route('plans.index'),
         icon: ShoppingBag,
         allowedPlans: [],
-    }
+    },
 ];
 
 const footerNavItems: NavItem[] = [
@@ -78,28 +78,25 @@ export function AppSidebar() {
 
     const userPlanSlug = currentUser?.plan_slug || 'free';
 
-    
-    const filteredMainNavItems = mainNavItems.filter(item => {
-    
+    const filteredMainNavItems = mainNavItems.filter((item) => {
         if (!item.allowedPlans) {
             return true;
         }
-    
+
         if (!currentUser) {
-             return false;
+            return false;
         }
-    
+
         return item.allowedPlans.includes(userPlanSlug);
     });
 
-    
-     const filteredFooterNavItems = footerNavItems.filter(item => {
+    const filteredFooterNavItems = footerNavItems.filter((item) => {
         if (!item.allowedPlans) {
-            return true; 
+            return true;
         }
-         if (!currentUser) {
-             return false; 
-         }
+        if (!currentUser) {
+            return false;
+        }
         return item.allowedPlans.includes(userPlanSlug);
     });
 

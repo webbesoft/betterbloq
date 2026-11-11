@@ -1,15 +1,14 @@
+import EmailVerificationNotice from '@/components/EmailVerificationNotice';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
+import SetupGuide from '@/pages/shop/components/setup-guide';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { DollarSign, Eye, HelpCircle, ListChecks, MapPin, PieChart, ShoppingBag } from 'lucide-react';
-import SetupGuide from '@/pages/shop/components/setup-guide';
-import { useState, useEffect } from 'react';
 import { Separator } from '@radix-ui/react-separator';
-import EmailVerificationNotice from '@/components/EmailVerificationNotice';
+import { ArrowUpRight, DollarSign, Eye, HelpCircle, ListChecks, ShoppingBag } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import ActivePoolsProgress from './components/dashboard/active-pools-progress';
-import { Button } from '@/components/ui/button';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -33,19 +32,18 @@ interface FrequentItem {
     frequency: number;
 }
 
-
 interface DashboardProps {
-    activeOrdersCount: number,
-    completedOrdersCount: number,
-    ongoingProjectsCount: number,
-    totalExpenses: number,
-    projectBudgetSpent: any[],
-    purchasePoolCompletion: any[],
-    watchedPurchasePools: any[],
-    frequentProducts: FrequentItem[],
-    regularVendors: FrequentItem[],
-    hasCompletedGuide: boolean,
-    activePoolsProgress: PoolProgressData[]
+    activeOrdersCount: number;
+    completedOrdersCount: number;
+    ongoingProjectsCount: number;
+    totalExpenses: number;
+    projectBudgetSpent: any[];
+    purchasePoolCompletion: any[];
+    watchedPurchasePools: any[];
+    frequentProducts: FrequentItem[];
+    regularVendors: FrequentItem[];
+    hasCompletedGuide: boolean;
+    activePoolsProgress: PoolProgressData[];
 }
 
 const LOCAL_STORAGE_DISMISSED_KEY = 'setupGuideDismissed';
@@ -61,7 +59,7 @@ export default function Dashboard({
     regularVendors,
     hasCompletedGuide,
     activeOrdersCount,
-    completedOrdersCount
+    completedOrdersCount,
 }: DashboardProps) {
     const [isGuideCompletedInDb, setIsGuideCompletedInDb] = useState<boolean>(Boolean(hasCompletedGuide) ?? false);
     const [isGuideDismissed, setIsGuideDismissed] = useState<boolean>(false);
@@ -101,11 +99,23 @@ export default function Dashboard({
 
     const shouldShowReinstateButton = !isGuideCompletedInDb && isGuideDismissed;
 
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+            <div className="mx-auto flex h-full w-full max-w-7xl flex-1 flex-col gap-6 p-4 sm:p-6 lg:p-8">
+                <div className="flex flex-col justify-between gap-5 pb-2 sm:flex-row sm:items-end">
+                    <div>
+                        <p className="page-eyebrow mb-3">Your building workspace</p>
+                        <h1 className="page-title">Your building overview.</h1>
+                        <p className="text-muted-foreground mt-4 text-sm">Your projects, orders, and purchase cycles, all in view.</p>
+                    </div>
+                    <Button asChild className="h-11 w-fit shrink-0 rounded-xl">
+                        <Link href={route('market')}>
+                            Find your next materials
+                            <ArrowUpRight className="size-4" />
+                        </Link>
+                    </Button>
+                </div>
                 {/*email verification banner*/}
                 <EmailVerificationNotice />
                 {/* setup guide */}
@@ -127,34 +137,34 @@ export default function Dashboard({
                     {/* Completed Orders */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                            <CardTitle className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
                                 <ListChecks className="h-4 w-4" /> Completed orders
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-2xl font-bold">{completedOrdersCount ?? '...'}</p>
+                            <p className="text-3xl font-semibold tracking-tight">{completedOrdersCount ?? '...'}</p>
                         </CardContent>
                     </Card>
                     {/* Active Orders */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                            <CardTitle className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
                                 <ShoppingBag className="h-4 w-4" /> Active Orders
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-2xl font-bold">{activeOrdersCount ?? '...'}</p>
+                            <p className="text-3xl font-semibold tracking-tight">{activeOrdersCount ?? '...'}</p>
                         </CardContent>
                     </Card>
                     {/* Total Expenses */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                            <CardTitle className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
                                 <DollarSign className="h-4 w-4" /> Total Expenses
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-2xl font-bold">
+                            <p className="text-3xl font-semibold tracking-tight">
                                 ${totalExpenses?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? '0.00'}
                             </p>
                         </CardContent>
@@ -162,7 +172,6 @@ export default function Dashboard({
                 </div>
 
                 <div className="grid auto-rows-min grid-cols-1 gap-4 lg:grid-cols-2">
-
                     {/* Active Pools Progress Card - Spanning full width */}
                     <div className="lg:col-span-2">
                         {/* Pass the activePoolsProgress data */}
@@ -175,25 +184,25 @@ export default function Dashboard({
                         {/* Card Header/Content same as previous suggestion */}
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-base font-semibold">Frequently Bought</CardTitle>
-                            <span className="text-muted-foreground text-xs">
-                                {`(${frequentProducts.length} products)`}
-                            </span>
+                            <span className="text-muted-foreground text-xs">{`(${frequentProducts.length} products)`}</span>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-2 pt-2">
                             {frequentProducts.length > 0 ? (
                                 <ul className="space-y-1">
                                     {frequentProducts.map((product) => (
-                                        <li key={product.product_id} className="text-sm flex justify-between items-center">
+                                        <li key={product.product_id} className="flex items-center justify-between text-sm">
                                             {product.product_id ? (
-                                                <Link href={`/market/product/${product.product_id}`} className="hover:underline truncate pr-2" title={product.name}>
+                                                <Link
+                                                    href={`/market/product/${product.product_id}`}
+                                                    className="truncate pr-2 hover:underline"
+                                                    title={product.name}
+                                                >
                                                     {product.name}
                                                 </Link>
                                             ) : (
-                                                <span className='pr-2 truncate'>{product.name}</span> // Handle case if ID is missing
+                                                <span className="truncate pr-2">{product.name}</span> // Handle case if ID is missing
                                             )}
-                                            <span className="text-muted-foreground text-xs whitespace-nowrap">
-                                                ({product.frequency} times)
-                                            </span>
+                                            <span className="text-muted-foreground text-xs whitespace-nowrap">({product.frequency} times)</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -208,25 +217,25 @@ export default function Dashboard({
                         {/* Card Header/Content same as previous suggestion */}
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-base font-semibold">Regular Vendors</CardTitle>
-                            <span className="text-muted-foreground text-xs">
-                                {`(${regularVendors.length} vendors)`}
-                            </span>
+                            <span className="text-muted-foreground text-xs">{`(${regularVendors.length} vendors)`}</span>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-2 pt-2">
                             {regularVendors.length > 0 ? (
                                 <ul className="space-y-1">
                                     {regularVendors.map((vendor) => (
-                                        <li key={vendor.vendor_id} className="text-sm flex justify-between items-center">
+                                        <li key={vendor.vendor_id} className="flex items-center justify-between text-sm">
                                             {vendor.vendor_id ? (
-                                                <Link href={`/vendor/${vendor.vendor_id}`} className="hover:underline truncate pr-2" title={vendor.name}>
+                                                <Link
+                                                    href={`/vendor/${vendor.vendor_id}`}
+                                                    className="truncate pr-2 hover:underline"
+                                                    title={vendor.name}
+                                                >
                                                     {vendor.name}
                                                 </Link>
                                             ) : (
-                                                <span className='pr-2 truncate'>{vendor.name}</span> // Handle case if ID is missing
+                                                <span className="truncate pr-2">{vendor.name}</span> // Handle case if ID is missing
                                             )}
-                                            <span className="text-muted-foreground text-xs whitespace-nowrap">
-                                                ({vendor.frequency} times)
-                                            </span>
+                                            <span className="text-muted-foreground text-xs whitespace-nowrap">({vendor.frequency} times)</span>
                                         </li>
                                     ))}
                                 </ul>

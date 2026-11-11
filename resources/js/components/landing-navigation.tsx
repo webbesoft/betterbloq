@@ -1,7 +1,10 @@
+import { cn } from '@/lib/utils';
 import { CartDropdown } from '@/pages/shop/components/cart-dropdown';
 import { SharedData, type NavItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
-import { LayoutDashboard, LogOut, Menu, User } from 'lucide-react';
+import { ArrowUpRight, LayoutDashboard, LogOut, Menu, User } from 'lucide-react';
+import { useState } from 'react';
+import { Brand } from './brand';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import {
@@ -12,189 +15,141 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from './ui/navigation-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 
-// Helper to get initials from name
-const getInitials = (name = '') => {
-    return name
+export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
+    const { props, url } = usePage<SharedData>();
+    const user = props.auth?.user;
+    const pathname = url.split('?')[0];
+    const [menuOpen, setMenuOpen] = useState(false);
+    const active = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
+    const initials = user?.name
         .split(' ')
-        .map((n) => n[0])
+        .map((part) => part[0])
         .slice(0, 2)
         .join('')
         .toUpperCase();
-};
-
-export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
-    const { auth } = usePage<SharedData>().props;
-    const { user } = auth;
-
-    const handleLogout = (e: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
-        e.preventDefault();
-        router.post(route('logout'));
-    };
 
     return (
-        <div className="z-100 container mx-auto border-b px-4 sm:px-6 lg:px-8">
-            {' '}
-            <header className="w-full py-3">
-                {' '}
-                <nav className="flex h-14 items-center justify-between gap-6">
-                    {/* Logo */}
-                    <Link href="/" className="mr-4 flex items-center gap-2">
-                        {' '}
-                        <div className="rounded-md">
-                            <img src="/images/3.png" alt="betterbloq logo" className="bg-background h-10 w-auto rounded-md" />
+        <header className="bg-background/95 sticky top-0 z-40 border-b backdrop-blur-xl">
+            <div className="shop-container flex h-20 items-center justify-between gap-4">
+                <Link href="/" aria-label="BetterBloq home" className="shrink-0">
+                    <Brand />
+                </Link>
+                <nav aria-label="Main navigation" className="hidden h-full items-center gap-8 lg:flex">
+                    {items.map((item) => (
+                        <Link
+                            key={item.title}
+                            href={item.url}
+                            aria-current={active(item.url) ? 'page' : undefined}
+                            className={cn(
+                                'relative flex h-full items-center text-sm font-medium transition-colors after:absolute after:right-0 after:bottom-0 after:left-0 after:h-0.5 after:rounded-full',
+                                active(item.url) ? 'text-foreground after:bg-primary' : 'text-muted-foreground hover:text-foreground',
+                            )}
+                        >
+                            {item.title}
+                        </Link>
+                    ))}
+                </nav>
+                <div className="flex items-center gap-2 sm:gap-4">
+                    <CartDropdown />
+                    <span className="bg-border hidden h-6 w-px sm:block" aria-hidden="true" />
+                    {user ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="size-10 rounded-full p-0" aria-label="Open account menu">
+                                    <Avatar className="size-9">
+                                        {typeof user.avatar === 'string' && <AvatarImage src={user.avatar} alt="" />}
+                                        <AvatarFallback className="bg-secondary text-secondary-foreground text-xs font-semibold">
+                                            {initials}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="z-50 w-60 rounded-xl p-2" align="end">
+                                <DropdownMenuLabel className="py-3">
+                                    <p>{user.name}</p>
+                                    <p className="text-muted-foreground mt-1 truncate text-xs font-normal">{user.email}</p>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                    <Link href={route('dashboard')}>
+                                        <LayoutDashboard />
+                                        Workspace
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href={route('profile.edit')}>
+                                        <User />
+                                        Profile & settings
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onSelect={() => router.post(route('logout'))}>
+                                    <LogOut />
+                                    Log out
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : (
+                        <div className="hidden items-center gap-2 sm:flex">
+                            <Button variant="ghost" asChild>
+                                <Link href={route('login')}>Log in</Link>
+                            </Button>
+                            <Button asChild className="rounded-xl">
+                                <Link href={route('register')}>
+                                    Get started <ArrowUpRight className="size-4" />
+                                </Link>
+                            </Button>
                         </div>
-                        <span className="text-foreground hidden font-bold sm:inline-block">BetterBloq</span>
-                    </Link>
-
-                    {/* Desktop Navigation */}
-                    {items && items.length > 0 && (
-                        <NavigationMenu className="hidden flex-1 lg:flex">
-                            {' '}
-                            <NavigationMenuList>
-                                {items.map((item) => (
-                                    <NavigationMenuItem key={item.title}>
-                                        <NavigationMenuLink className={navigationMenuTriggerStyle()} href={item.url}>
-                                            {item.title}
-                                        </NavigationMenuLink>
-                                    </NavigationMenuItem>
-                                ))}
-                            </NavigationMenuList>
-                        </NavigationMenu>
                     )}
-
-                    {/* Auth Area */}
-                    <div className="flex items-center gap-3">
-                        <CartDropdown />
-                        {user ? (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                                        <Avatar className="h-8 w-8">
-                                            {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
-                                            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                                        </Avatar>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="z-100 w-56" align="end" forceMount>
-                                    <DropdownMenuLabel className="font-normal">
-                                        <div className="flex flex-col space-y-1">
-                                            <p className="text-sm leading-none font-medium">{user.name}</p>
-                                            {user.email && <p className="text-muted-foreground text-xs leading-none">{user.email}</p>}
-                                        </div>
-                                    </DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem asChild>
-                                        <Link href={route('dashboard')}>
-                                            <LayoutDashboard className="mr-2 h-4 w-4" />
-                                            <span>Dashboard</span>
-                                        </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem asChild>
-                                        <Link href={route('profile.edit')}>
-                                            <User className="mr-2 h-4 w-4" />
-                                            <span>Profile</span>
-                                        </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    {/* Logout needs special handling */}
-                                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-                                        <LogOut className="mr-2 h-4 w-4" />
-                                        <span>Log out</span>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        ) : (
-                            <>
-                                <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
-                                    {' '}
-                                    {/* Hide on extra-small screens */}
-                                    <Link href={route('login')} className="stretch text">
-                                        <span className={'text-foreground'}>Log in</span>
+                    <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open navigation menu">
+                                <Menu className="size-5" />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent className="bg-background w-[min(22rem,90vw)] p-6">
+                            <SheetHeader className="px-0">
+                                <SheetTitle>
+                                    <Brand compact />
+                                </SheetTitle>
+                            </SheetHeader>
+                            <nav aria-label="Mobile navigation" className="mt-8 grid gap-2">
+                                {items.map((item) => (
+                                    <Link
+                                        key={item.title}
+                                        href={item.url}
+                                        onClick={() => setMenuOpen(false)}
+                                        aria-current={active(item.url) ? 'page' : undefined}
+                                        className={cn(
+                                            'rounded-xl px-4 py-3 text-base',
+                                            active(item.url) ? 'bg-secondary font-semibold' : 'text-muted-foreground hover:bg-muted',
+                                        )}
+                                    >
+                                        {item.title}
+                                    </Link>
+                                ))}
+                            </nav>
+                            <div className="mt-8 grid gap-3 border-t pt-6">
+                                <Button asChild>
+                                    <Link href={user ? route('dashboard') : route('register')} onClick={() => setMenuOpen(false)}>
+                                        {user ? 'Open workspace' : 'Create an account'}
+                                        <ArrowUpRight />
                                     </Link>
                                 </Button>
-                                <Button variant="default" size="sm" className="hidden sm:inline-flex">
-                                    {' '}
-                                    {/* Hide on extra-small screens */}
-                                    <Link href={route('register')}>Register</Link>
-                                </Button>
-                                {/* Mobile Login/Register Buttons */}
-                                <div className="flex gap-2 sm:hidden">
-                                    <Button variant="ghost" size="sm">
-                                        <Link href={route('login')} className="stretch text">
-                                            <span className={'text-foreground'}>Log in</span>
+                                {!user && (
+                                    <Button variant="outline" asChild>
+                                        <Link href={route('login')} onClick={() => setMenuOpen(false)}>
+                                            Log in
                                         </Link>
                                     </Button>
-                                    <Button variant="default" size="sm">
-                                        <Link href={route('register')}>Register</Link>
-                                    </Button>
-                                </div>
-                            </>
-                        )}
-
-                        {/* Mobile Menu */}
-                        {items && items.length > 0 && (
-                            <div className="lg:hidden">
-                                <Sheet>
-                                    <SheetTrigger asChild>
-                                        <Button variant="outline" size="icon">
-                                            <Menu className="h-4 w-4" />
-                                        </Button>
-                                    </SheetTrigger>
-                                    <SheetContent className="z-1000 bg-[var(--custom-background)] pr-4 sm:pr-6 lg:pr-8">
-                                        <SheetHeader>
-                                            <SheetTitle>Menu</SheetTitle>
-                                        </SheetHeader>
-                                        <div className="grid gap-4 py-4">
-                                            {items.map((item) => (
-                                                <Link key={item.title} href={item.url} className="px-4 hover:underline">
-                                                    {item.title}
-                                                </Link>
-                                            ))}
-                                            {user && (
-                                                <>
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" className="relative w-full justify-start rounded-md">
-                                                                <Avatar className="mr-2 h-6 w-6">
-                                                                    {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
-                                                                    <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                                                                </Avatar>
-                                                                <span>{user.name || 'User'}</span>
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent className="w-56 p-4" align="start" forceMount>
-                                                            <DropdownMenuItem>
-                                                                <Link href={route('dashboard')}>
-                                                                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                                                                    <span>Dashboard</span>
-                                                                </Link>
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem>
-                                                                <Link href={route('profile.edit')}>
-                                                                    <User className="mr-2 h-4 w-4" />
-                                                                    <span>Profile</span>
-                                                                </Link>
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-                                                                <LogOut className="mr-2 h-4 w-4" />
-                                                                <span>Log out</span>
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </>
-                                            )}
-                                        </div>
-                                    </SheetContent>
-                                </Sheet>
+                                )}
                             </div>
-                        )}
-                    </div>
-                </nav>
-            </header>
-        </div>
+                        </SheetContent>
+                    </Sheet>
+                </div>
+            </div>
+        </header>
     );
 }

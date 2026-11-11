@@ -2,16 +2,16 @@ import { Button } from '@/components/ui/button';
 import LandingLayout from '@/layouts/landing-layout';
 import { useCartStore } from '@/stores/use-cart-store';
 import { type BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/react';
-import { ShoppingCart } from 'lucide-react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { ArrowLeft, ArrowRight, LockKeyhole, ShoppingBag, ShoppingCart } from 'lucide-react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import CartItemComponent from './components/cart/cart-item';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Market',
-        href: '/market',
+        title: 'Cart',
+        href: '/cart',
     },
 ];
 
@@ -29,9 +29,9 @@ interface CheckoutForm {
     }[];
 }
 
-export default function CartPage(props) {
-    const { items, expectedDeliveryDate, removeItem, updateQuantity, clearCart } = useCartStore();
-    const { data, setData, post, processing, errors, reset } = useForm<CheckoutForm>({
+export default function CartPage() {
+    const { items, removeItem, updateQuantity, clearCart } = useCartStore();
+    const { setData, post, processing, errors } = useForm<CheckoutForm>({
         items: [],
     });
 
@@ -59,28 +59,6 @@ export default function CartPage(props) {
             const itemSubtotal = Number(item.product_subtotal) || Number(item.final_line_price);
             return total + itemSubtotal;
         }, 0);
-    };
-
-    const formatDate = (date: Date | null): string => {
-        if (!date) return 'N/A';
-
-        if (typeof date !== 'object') {
-            const asDate = new Date(date);
-
-            return asDate.toLocaleDateString(undefined, {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-            });
-        }
-
-        return date.toLocaleDateString(undefined, {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
     };
 
     const handleCheckout = (e: React.FormEvent) => {
@@ -123,59 +101,108 @@ export default function CartPage(props) {
 
     return (
         <LandingLayout breadcrumbs={breadcrumbs}>
-            <Head title="My Cart" />
-            <div className="container mx-auto p-4">
-                <h1 className="mb-4 text-center text-2xl font-bold">Your Shopping Cart</h1>
-
+            <Head title="Your project cart" />
+            <div className="shop-container pt-8 sm:pt-10">
+                <div className="mb-9 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+                    <div>
+                        <p className="page-eyebrow mb-3">One step closer to building</p>
+                        <h1 className="page-title">Your project starts here.</h1>
+                        <p className="text-muted-foreground mt-4 text-sm">Review your materials before heading to checkout.</p>
+                    </div>
+                    <Link
+                        href={route('market')}
+                        className="text-muted-foreground hover:text-primary flex w-fit items-center gap-2 text-xs font-medium"
+                    >
+                        <ArrowLeft className="size-3.5" />
+                        Back to the market
+                    </Link>
+                </div>
                 {items.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">
-                        <div className="bg-muted mb-4 rounded-full p-4">
-                            <ShoppingCart className="text-muted-foreground h-12 w-12" />
-                        </div>
-                        <h3 className="text-xl font-semibold">Your Shopping Cart is Empty</h3>
-                        <p className="text-muted-foreground mt-2 mb-6">Browser our offering to find something you'll love.</p>
-                        <Button>
-                            <a className="" href={route('market')}>
-                                Continue Shopping
-                            </a>
+                    <div className="surface flex flex-col items-center px-6 py-20 text-center sm:py-28">
+                        <span className="bg-secondary mb-6 flex size-20 items-center justify-center rounded-3xl">
+                            <ShoppingBag className="text-secondary-foreground size-9 stroke-1" />
+                        </span>
+                        <p className="page-eyebrow mb-3">Room for something good</p>
+                        <h2 className="text-2xl font-semibold tracking-tight">A solid project starts with the right materials.</h2>
+                        <p className="text-muted-foreground mt-3 max-w-md text-sm leading-7">
+                            Your cart is empty for now. Explore the market and find what you need for your next build.
+                        </p>
+                        <Button asChild className="mt-7 h-11 rounded-xl px-6">
+                            <Link href={route('market')}>
+                                Explore materials
+                                <ArrowRight className="size-4" />
+                            </Link>
                         </Button>
                     </div>
                 ) : (
-                    <div>
-                        {/* <p className="mb-4 text-sm text-gray-600">
-                            Items from Vendor: <span className="font-semibold">{currentVendorName}</span>
-                        </p> */}
-
-                        {/* Cart Items List */}
-                        <div className="mb-6 space-y-4">
-                            {items.map((item) => (
-                                <CartItemComponent key={item.id} item={item} onQuantityChange={handleQuantityChange} onRemoveItem={removeItem} />
-                            ))}
-                        </div>
-
-                        {/* Cart Summary & Delivery */}
-                        <div className="rounded-lg bg-gray-100 p-4">
-                            <div className="mb-2 flex items-center justify-between">
-                                <span className="font-semibold">Items Subtotal:</span>
-                                <span className="text-lg font-bold">${calculateSubtotal().toFixed(2)}</span>
+                    <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+                        <section aria-label="Cart materials" className="min-w-0">
+                            <div className="text-muted-foreground mb-4 flex items-center gap-2 text-xs">
+                                <ShoppingCart className="size-3.5" />
+                                {items.length} {items.length === 1 ? 'material' : 'materials'} in your cart
                             </div>
-                            {calculateTotalStorageCost() > 0 && (
-                                <div className="mb-2 flex items-center justify-between">
-                                    <span className="font-semibold">Storage Costs:</span>
-                                    <span className="text-lg font-bold">${calculateTotalStorageCost().toFixed(2)}</span>
+                            <div className="space-y-4">
+                                {items.map((item) => (
+                                    <CartItemComponent key={item.id} item={item} onQuantityChange={handleQuantityChange} onRemoveItem={removeItem} />
+                                ))}
+                            </div>
+                        </section>
+                        <form onSubmit={handleCheckout} className="surface overflow-hidden lg:sticky lg:top-28">
+                            <div className="border-b p-6">
+                                <h2 className="text-lg font-semibold tracking-tight">Project summary</h2>
+                                <p className="text-muted-foreground mt-1.5 text-xs">A clear view of what’s in your cart.</p>
+                            </div>
+                            <div className="p-6">
+                                <dl className="space-y-4 text-sm">
+                                    <div className="flex justify-between gap-4">
+                                        <dt className="text-muted-foreground">Materials</dt>
+                                        <dd className="font-medium tabular-nums">${calculateSubtotal().toFixed(2)}</dd>
+                                    </div>
+                                    {calculateTotalStorageCost() > 0 && (
+                                        <div className="flex justify-between gap-4">
+                                            <dt className="text-muted-foreground">Estimated storage</dt>
+                                            <dd className="font-medium tabular-nums">${calculateTotalStorageCost().toFixed(2)}</dd>
+                                        </div>
+                                    )}
+                                    <div className="flex items-baseline justify-between gap-4 border-t pt-5">
+                                        <dt className="font-medium">Estimated upfront total</dt>
+                                        <dd className="text-2xl font-semibold tracking-tight tabular-nums">
+                                            ${(calculateSubtotal() + calculateTotalStorageCost()).toFixed(2)}
+                                        </dd>
+                                    </div>
+                                </dl>
+                                <p className="text-muted-foreground mt-3 text-xs leading-5">
+                                    Final prices are confirmed at checkout. Any unlocked volume discount is refunded after your purchase cycle is
+                                    finalized.
+                                </p>
+                                {Object.values(errors).find(Boolean) && (
+                                    <p role="alert" className="text-destructive bg-destructive/5 mt-4 rounded-lg p-3 text-xs leading-5">
+                                        {Object.values(errors).find(Boolean)}
+                                    </p>
+                                )}
+                                <Button
+                                    type="submit"
+                                    className="mt-6 h-12 w-full justify-between rounded-xl px-5"
+                                    disabled={processing || items.length === 0}
+                                >
+                                    {processing ? 'Opening checkout…' : 'Continue to checkout'}
+                                    <ArrowRight className="size-4" />
+                                </Button>
+                                <div className="text-muted-foreground mt-3 flex items-center justify-center gap-1.5 text-[10px]">
+                                    <LockKeyhole className="size-3" />
+                                    Secure checkout with Stripe
                                 </div>
-                            )}
-                            <div className="mb-4 flex items-center justify-between border-t pt-2">
-                                <span className="text-lg font-bold">Total:</span>
-                                <span className="text-xl font-bold">${(calculateSubtotal() + calculateTotalStorageCost()).toFixed(2)}</span>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={clearCart}
+                                    className="text-muted-foreground mt-4 h-9 w-full text-xs"
+                                    disabled={processing}
+                                >
+                                    Clear cart
+                                </Button>
                             </div>
-                            <Button className="mt-4 w-full" onClick={handleCheckout} disabled={processing || items.length === 0}>
-                                {processing ? 'Placing Orders...' : 'Proceed to Checkout'}
-                            </Button>
-                            <Button variant="outline" onClick={clearCart} className="mt-2 w-full" disabled={processing}>
-                                Clear Cart
-                            </Button>
-                        </div>
+                        </form>
                     </div>
                 )}
             </div>

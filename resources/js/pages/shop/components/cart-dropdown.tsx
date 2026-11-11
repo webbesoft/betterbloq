@@ -32,12 +32,16 @@ export function CartDropdown() {
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="relative">
+                <Button
+                    variant="outline"
+                    size="icon"
+                    className="hover:bg-secondary relative size-10 rounded-xl border-transparent bg-transparent shadow-none"
+                >
                     <ShoppingCart className="h-5 w-5" />
                     {cartItemCount > 0 && (
                         <Badge
                             variant="destructive"
-                            className="absolute -top-2 -right-2 flex h-5 w-7 items-center justify-center rounded-full p-0 text-xs"
+                            className="bg-primary text-primary-foreground border-background absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full border-2 px-0.5 text-[9px]"
                         >
                             {cartItemCount}
                         </Badge>
@@ -45,7 +49,7 @@ export function CartDropdown() {
                     <span className="sr-only">Open shopping cart</span>
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="z-100 w-96" align="end">
+            <PopoverContent className="z-50 w-[min(24rem,calc(100vw-2rem))] rounded-2xl p-5" align="end">
                 <div className="p-1">
                     {items.length === 0 ? (
                         <p className="text-muted-foreground text-center">Your cart is empty.</p>

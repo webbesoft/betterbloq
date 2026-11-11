@@ -1,124 +1,101 @@
-// components/ProductListItemListLayout.jsx
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/types/model-types';
-import { Star, Truck } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { ArrowUpRight, Package, Star, Truck } from 'lucide-react';
+import { useState } from 'react';
 
-interface ProductListItemProps {
-    product: Product;
-}
-
-// Define a Skeleton component for loading states (Optional but recommended)
 export function ProductListItemSkeleton() {
     return (
-        <div className="bg-card flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:gap-6">
-            {/* Skeleton for Image */}
-            <div className="flex-shrink-0 sm:w-32 md:w-40">
-                <div className="bg-muted aspect-square w-full animate-pulse rounded-md"></div>
-            </div>
-            {/* Skeleton for Details */}
-            <div className="flex-1 space-y-3 py-1">
-                <div className="bg-muted h-4 w-1/4 animate-pulse rounded"></div> {/* Vendor */}
-                <div className="bg-muted h-5 w-3/4 animate-pulse rounded"></div> {/* Title */}
-                <div className="bg-muted h-4 w-1/2 animate-pulse rounded"></div> {/* Rating */}
-                <div className="bg-muted h-4 w-1/3 animate-pulse rounded"></div> {/* Stock */}
-            </div>
-            {/* Skeleton for Price/Actions */}
-            <div className="flex flex-col items-start pt-2 sm:w-32 sm:items-end sm:pt-0 md:w-40">
-                <div className="bg-muted mb-2 h-6 w-1/2 animate-pulse rounded"></div> {/* Price */}
-                <div className="bg-muted h-9 w-full animate-pulse rounded sm:w-24"></div> {/* Button */}
+        <div className="surface overflow-hidden" aria-label="Loading material">
+            <div className="bg-muted aspect-[4/3] animate-pulse" />
+            <div className="space-y-3 p-5">
+                <div className="bg-muted h-3 w-1/3 animate-pulse rounded" />
+                <div className="bg-muted h-5 w-2/3 animate-pulse rounded" />
+                <div className="bg-muted mt-6 h-9 animate-pulse rounded" />
             </div>
         </div>
     );
 }
 
-export default function ProductListItemListLayout({ product }: ProductListItemProps) {
-    const averageRating = product.average_rating || 0;
-    const reviewCount = product.ratings_count || 0;
+export default function ProductListItemListLayout({ product }: { product: Product }) {
+    const [imageFailed, setImageFailed] = useState(false);
+    const href = route('product.show', product.id);
+    const reviewCount = Number(product.ratings_count) || 0;
+    const rating = Number(product.average_rating) || 0;
 
     return (
-        <div className="bg-card text-card-foreground flex flex-col gap-4 rounded-lg border p-4 shadow-sm transition-all hover:shadow-md sm:flex-row sm:gap-6">
-            <div className="mx-auto w-40 flex-shrink-0 sm:mx-0 sm:w-32 md:w-40">
-                {' '}
-                <a href={'/market/product/' + product.id} className="block aspect-square overflow-hidden rounded-md bg-gray-100">
-                    {' '}
+        <article className="surface group hover:border-primary/30 flex h-full flex-col overflow-hidden transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-1 hover:shadow-[0_12px_28px_-16px_rgb(25_40_28/0.25)]">
+            <Link
+                href={href}
+                aria-label={`View ${product.name}`}
+                className="bg-muted/60 relative flex aspect-[4/3] items-center justify-center overflow-hidden border-b"
+            >
+                {product.image && !imageFailed ? (
                     <img
                         src={product.image}
                         alt={product.name}
-                        className="h-full w-full object-cover transition-transform duration-300 ease-in-out hover:scale-105"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy"
-                        onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://placehold.co/600x400/e2e8f0/cbd5e0?text=Image+Not+Available';
-                        }}
+                        onError={() => setImageFailed(true)}
                     />
-                </a>
-            </div>
-
-            <div className="flex flex-1 flex-col justify-center">
-                {' '}
-                <p className="text-muted-foreground mb-1 text-xs">{product.vendor.name}</p>
-                <a href={'/market/product/' + product.id} className="block">
-                    <h3 className="hover:text-primary mb-1 line-clamp-2 text-base leading-tight font-semibold sm:text-lg">{product.name}</h3>
-                </a>
-                {/* Ratings */}
-                {reviewCount > 0 ? (
-                    <a
-                        href={'/market/product/' + product.id + '#reviews'}
-                        className="mb-2 flex items-center gap-1"
-                        title={`${averageRating.toFixed(1)} out of 5 stars`}
-                    >
-                        <div className="flex items-center text-yellow-500">
-                            {[...Array(5)].map((_, i) => (
-                                <Star key={i} size={16} className={i < Math.round(averageRating) ? 'fill-current' : 'stroke-current'} />
-                            ))}
-                        </div>
-                        <span className="text-muted-foreground text-xs hover:underline">({reviewCount})</span>
-                    </a>
                 ) : (
-                    <div className="mb-2 h-5"></div>
+                    <div className="text-muted-foreground/50 flex flex-col items-center gap-3">
+                        <Package className="size-14 stroke-1" />
+                        <span className="text-[10px] tracking-[0.16em] uppercase">Material preview</span>
+                    </div>
                 )}
-                <div className="mb-2 flex items-center gap-2 text-sm text-green-600">
-                    <Truck size={16} />
-
-                    <span>In Stock</span>
-                    {/* Example: <span className="text-orange-600">Low Stock</span> */}
-                    {/* Example: <span className="text-gray-500">Ships in 2-3 days</span> */}
-                </div>
-                {/* Badges */}
-                <div className="mt-1 flex flex-wrap gap-2">
-                    {product.is_on_sale && <Badge variant="destructive">Sale</Badge>}
-                    {product.is_new && <Badge>New</Badge>}
-                </div>
-            </div>
-
-            {/* --- Price & Actions Section (Right) --- */}
-            <div className="flex flex-col items-start justify-center pt-2 sm:w-32 sm:items-end sm:pt-0 md:w-40">
-                {/* Price */}
-                <div className="mb-2">
-                    <p className="text-lg font-semibold sm:text-xl">${Number(product.price).toFixed(2)}</p>
-                    {product.is_on_sale && product.original_price && (
-                        <p className="text-muted-foreground text-sm line-through">${product.original_price}</p>
+                {product.category && (
+                    <span className="bg-card/95 text-foreground absolute top-3 left-3 max-w-[calc(100%-1.5rem)] truncate rounded-md px-2.5 py-1 text-[10px] font-medium backdrop-blur-sm">
+                        {product.category}
+                    </span>
+                )}
+            </Link>
+            <div className="flex flex-1 flex-col p-5">
+                <p className="text-muted-foreground text-[11px]">{product.vendor.name}</p>
+                <Link href={href} className="mt-1.5">
+                    <h2 className="group-hover:text-primary line-clamp-2 text-base leading-6 font-semibold tracking-tight transition-colors">
+                        {product.name}
+                    </h2>
+                </Link>
+                <div className="text-muted-foreground mt-3 flex min-h-5 items-center gap-2 text-[11px]">
+                    {reviewCount > 0 ? (
+                        <>
+                            <Star className="size-3.5 fill-[#b88a40] text-[#b88a40]" />
+                            <span className="text-foreground font-medium">{rating.toFixed(1)}</span>
+                            <span>
+                                ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})
+                            </span>
+                        </>
+                    ) : (
+                        <>
+                            <Package className="size-3.5" />
+                            <span>Explore buying options</span>
+                        </>
                     )}
                 </div>
-
-                {/* Actions */}
-                <div className="flex w-full flex-col gap-2 sm:items-end">
-                    <a href={'/market/product/' + product.id}>
-                        <Button variant="outline" size="sm" className="mt-1">
-                            View
-                        </Button>
-                    </a>
-                    {/* <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-muted-foreground hover:text-primary hidden items-center gap-1 sm:inline-flex"
-                        title="Add to Wishlist"
+                <div className="mt-auto pt-5">
+                    <div className="flex items-baseline gap-1.5">
+                        <span className="text-2xl font-semibold tracking-tight tabular-nums">${Number(product.price).toFixed(2)}</span>
+                        <span className="text-muted-foreground text-xs">/ {product.unit}</span>
+                    </div>
+                    {Number(product.delivery_time) > 0 && (
+                        <p className="text-muted-foreground mt-1.5 flex items-center gap-1.5 text-[10px]">
+                            <Truck className="size-3" />
+                            Product lead time: {product.delivery_time} days
+                        </p>
+                    )}
+                    <Button
+                        asChild
+                        variant="outline"
+                        className="group-hover:border-primary/40 group-hover:text-primary mt-4 h-10 w-full justify-between rounded-xl text-xs"
                     >
-                        <ShoppingCart size={14} />
-                        <span className="text-xs">Add to cart</span>
-                    </Button> */}
+                        <Link href={href}>
+                            View material
+                            <ArrowUpRight className="size-3.5" />
+                        </Link>
+                    </Button>
                 </div>
             </div>
-        </div>
+        </article>
     );
 }

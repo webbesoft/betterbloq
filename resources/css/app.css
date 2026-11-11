@@ -1,54 +1,38 @@
 @import 'tailwindcss';
-
 @plugin 'tailwindcss-animate';
-
-@source "../views";
+@source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-    --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
-
     --color-background: var(--background);
     --color-foreground: var(--foreground);
-
     --color-card: var(--card);
     --color-card-foreground: var(--card-foreground);
-
     --color-popover: var(--popover);
     --color-popover-foreground: var(--popover-foreground);
-
     --color-primary: var(--primary);
     --color-primary-foreground: var(--primary-foreground);
-
     --color-secondary: var(--secondary);
     --color-secondary-foreground: var(--secondary-foreground);
-
     --color-muted: var(--muted);
     --color-muted-foreground: var(--muted-foreground);
-
     --color-accent: var(--accent);
     --color-accent-foreground: var(--accent-foreground);
-
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
-
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
-
     --color-chart-1: var(--chart-1);
     --color-chart-2: var(--chart-2);
     --color-chart-3: var(--chart-3);
     --color-chart-4: var(--chart-4);
     --color-chart-5: var(--chart-5);
-
     --color-sidebar: var(--sidebar);
     --color-sidebar-foreground: var(--sidebar-foreground);
     --color-sidebar-primary: var(--sidebar-primary);
@@ -59,308 +43,201 @@
     --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-    *,
-    ::after,
-    ::before,
-    ::backdrop,
-    ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
-    }
-}
-
-/* Your original theme with Oklch variables - Keep this as is in the global :root */
 :root {
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --destructive-foreground: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.87 0 0);
-    --chart-1: oklch(0.646 0.222 41.116);
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.87 0 0);
+    color-scheme: light;
+    --background: #f7f7f2;
+    --foreground: #28332d;
+    --card: #ffffff;
+    --card-foreground: #28332d;
+    --popover: #ffffff;
+    --popover-foreground: #28332d;
+    --primary: #b5492b;
+    --primary-foreground: #ffffff;
+    --secondary: #e9ede5;
+    --secondary-foreground: #344439;
+    --muted: #efefe9;
+    --muted-foreground: #687269;
+    --accent: #f1e8df;
+    --accent-foreground: #88391f;
+    --destructive: #b63131;
+    --destructive-foreground: #ffffff;
+    --border: #dfe3da;
+    --input: #d1d8cd;
+    --ring: #b5492b;
+    --radius: 0.875rem;
+    --chart-1: #b5492b;
+    --chart-2: #607e65;
+    --chart-3: #d8b688;
+    --chart-4: #879e96;
+    --chart-5: #505e52;
+    --sidebar: #f0f2eb;
+    --sidebar-foreground: #344439;
+    --sidebar-primary: #b5492b;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #e3e8dd;
+    --sidebar-accent-foreground: #28332d;
+    --sidebar-border: #dfe3da;
+    --sidebar-ring: #b5492b;
+    /* Compatibility for existing shop components. All values are complete colors. */
+    --custom-text: var(--foreground);
+    --custom-background: var(--background);
+    --custom-primary: var(--primary);
+    --custom-secondary: var(--secondary);
+    --custom-accent: var(--primary);
 }
 
 .dark {
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.145 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.145 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.985 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.396 0.141 25.723);
-    --destructive-foreground: oklch(0.637 0.237 25.331);
-    --border: oklch(0.269 0 0);
-    --input: oklch(0.269 0 0);
-    --ring: oklch(0.439 0 0);
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.985 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(0.269 0 0);
-    --sidebar-ring: oklch(0.439 0 0);
-}
-
-@layer base {
-    .landing-page {
-        /* shadcn variables mapped from your custom theme */
-        --background: 24 6% 91%; /* #eae8e6 - Mapped from --custom-background */
-        --foreground: 24 6% 7%; /* #100c09 - Mapped from --custom-text */
-
-        --primary: 20 65% 54%; /* #d46f40 - Mapped from --custom-primary */
-        --primary-foreground: 0 0% 100%; /* White text for contrast on primary */
-
-        --secondary: 191 64% 69%; /* #78cee3 - Mapped from --custom-secondary */
-        --secondary-foreground: 200 70% 10%; /* Dark text for contrast on secondary */
-
-        --accent: 211 27% 50%; /* #5b7a9f - Mapped from --custom-accent */
-        --accent-foreground: 0 0% 100%; /* White text for contrast on accent */
-
-        /* Add other required shadcn variables (sensible defaults) */
-        --card: var(--background);
-        --card-foreground: var(--foreground);
-
-        --popover: var(--background);
-        --popover-foreground: var(--foreground);
-
-        --muted: 24 6% 85%; /* Lighter shade of background/gray */
-        --muted-foreground: 24 6% 45%; /* Darker muted text */
-
-        --destructive: 0 84% 60%; /* Standard red */
-        --destructive-foreground: 0 0% 100%; /* White */
-
-        --border: 24 6% 80%; /* Slightly darker than background */
-        --input: 24 6% 75%; /* Slightly darker border for inputs */
-        --ring: var(--primary); /* Use primary color for focus rings */
-
-        --radius: 0.5rem; /* Default border radius */
-
-        /* Your original custom variables (can keep for direct use if needed) */
-        --custom-text: #100c09;
-        --custom-background: #eae8e6;
-        --custom-primary: #d46f40;
-        --custom-secondary: #78cee3;
-        --custom-accent: #5b7a9f;
-    }
-
-    .landing-page.dark {
-        /* shadcn variables mapped from your custom dark theme */
-        --background: 24 6% 9%; /* #191715 - Mapped from --custom-background */
-        --foreground: 24 6% 95%; /* #f6f2ef - Mapped from --custom-text */
-
-        --primary: 20 65% 46%; /* #bf5a2b - Mapped from --custom-primary */
-        --primary-foreground: 24 6% 95%; /* Light text for contrast */
-
-        --secondary: 191 64% 32%; /* #1c7287 - Mapped from --custom-secondary */
-        --secondary-foreground: 24 6% 95%; /* Light text for contrast */
-
-        --accent: 211 27% 51%; /* #607fa4 - Mapped from --custom-accent */
-        --accent-foreground: 24 6% 95%; /* Light text for contrast */
-
-        /* Add other required shadcn variables for dark mode */
-        --card: var(--background);
-        --card-foreground: var(--foreground);
-
-        --popover: var(--background);
-        --popover-foreground: var(--foreground);
-
-        --muted: 24 6% 15%; /* Darker shade */
-        --muted-foreground: 24 6% 65%; /* Lighter muted text */
-
-        --destructive: 0 63% 31%; /* Darker red */
-        --destructive-foreground: 24 6% 95%;
-
-        --border: 24 6% 20%; /* Slightly lighter than dark background */
-        --input: 24 6% 25%; /* Slightly lighter border for inputs */
-        --ring: var(--primary); /* Use primary color */
-
-        /* Your original custom dark variables */
-        --custom-text: #f6f2ef;
-        --custom-background: #191715;
-        --custom-primary: #bf5a2b;
-        --custom-secondary: #1c7287;
-        --custom-accent: #607fa4;
-    }
-}
-
-/* Apply base background/text color for the landing page */
-@layer base {
-    body.landing-page {
-        @apply bg-background text-foreground;
-    }
-
-    .landing-page {
-        .link {
-            @apply text-accent;
-        }
-
-        .alert {
-            @apply bg-destructive text-foreground w-max rounded-md p-4;
-        }
-
-        .button {
-            @apply rounded-md px-5 py-3.5 text-sm font-semibold opacity-85 shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2;
-        }
-
-        .error-text {
-            @apply text-destructive;
-        }
-
-        .primary-button {
-            @apply bg-primary hover:bg-primary-foreground text-foreground;
-        }
-
-        .secondary-button {
-            @apply bg-secondary text-foreground hover:bg-secondary-foreground;
-        }
-
-        .accent-button {
-            @apply bg-accent text-foreground hover:bg-accent;
-        }
-
-        .transparent-button {
-            @apply bg-[var(--custom-background)] text-[var(--custom-text)];
-        }
-
-        .h1-text {
-            @apply text-3xl;
-        }
-
-        .h2-text {
-            @apply text-2xl font-bold;
-        }
-
-        .text {
-            @apply text-[var(--text)];
-        }
-
-        .label {
-            @apply font-light text-[var(--text)];
-        }
-
-        .form-with-label {
-            @apply flex flex-col items-start justify-center gap-2;
-        }
-
-        .nav-element {
-            @apply relative rounded-md bg-[var(--custom-secondary)] p-2;
-        }
-    }
-
-    .link {
-        @apply text-[var(--custom-accent)] underline;
-    }
-
-    /* In your CSS file (e.g., styles/globals.css) */
-
-    .countdown-display {
-    }
-
-    .countdown-digit {
-        color: var(--foreground);
-        /* Style for each individual digit */
-        display: inline-block;
-        width: 0.6em;
-        /* Adjust size as needed */
-        text-align: center;
-        position: relative;
-    }
-
-    .countdown-colon {
-        color: var(--foreground);
-        display: inline-block;
-        /* Adjust size */
-        text-align: center;
-        position: relative;
-        /* Basic colon styling */
-        font-weight: bold;
-        margin-inline: auto;
-        margin-bottom: auto;
-    }
-
-    .countdown-group {
-        /* Optional: Add margin/padding between groups if space-x is not enough */
-    }
-
-    .countdown-unit {
-        color: var(--foreground);
-        /* Style for the unit labels (Days, Hrs, etc.) */
-        font-size: 0.4em;
-        /* Smaller than digits */
-        opacity: 0.8;
-        margin-top: 0.1em;
-    }
+    color-scheme: dark;
+    --background: #181e1a;
+    --foreground: #edeee7;
+    --card: #202822;
+    --card-foreground: #edeee7;
+    --popover: #252e27;
+    --popover-foreground: #edeee7;
+    --primary: #ecaa89;
+    --primary-foreground: #301b12;
+    --secondary: #2c3930;
+    --secondary-foreground: #e2e7dd;
+    --muted: #27302a;
+    --muted-foreground: #b0b9ad;
+    --accent: #3b3027;
+    --accent-foreground: #f0b99a;
+    --destructive: #f08d86;
+    --destructive-foreground: #311613;
+    --border: #354137;
+    --input: #465348;
+    --ring: #ecaa89;
+    --chart-1: #ecaa89;
+    --chart-2: #a4b79a;
+    --chart-3: #d8b688;
+    --chart-4: #879e96;
+    --chart-5: #b2bfaa;
+    --sidebar: #1e2620;
+    --sidebar-foreground: #d6dfd1;
+    --sidebar-primary: #ecaa89;
+    --sidebar-primary-foreground: #301b12;
+    --sidebar-accent: #2f3c32;
+    --sidebar-accent-foreground: #edeee7;
+    --sidebar-border: #354137;
+    --sidebar-ring: #ecaa89;
 }
 
 @layer base {
     * {
         @apply border-border;
     }
-
-    @layer base {
-        :root {
-            --custom-text: #100c09;
-            --custom-background: #eae8e6;
-            --custom-primary: #d46f40;
-            --custom-secondary: #78cee3;
-            --custom-accent: #5b7a9f;
-        }
-        .dark {
-            --custom-text: #f6f2ef;
-            --custom-background: #191715;
-            --custom-primary: #bf5a2b;
-            --custom-secondary: #1c7287;
-            --custom-accent: #607fa4;
-        }
+    html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 7rem;
     }
-
     body {
-        @apply bg-[var(--custom-background)] text-[var(--custom-text)];
+        @apply bg-background text-foreground antialiased;
+    }
+    ::selection {
+        background: #b5492b;
+        color: #ffffff;
+    }
+    button:not(:disabled),
+    [role='button']:not([aria-disabled='true']) {
+        cursor: pointer;
+    }
+    a:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 4px;
+        border-radius: 4px;
+    }
+}
+
+@layer components {
+    .shop-container {
+        width: min(1280px, calc(100% - 3rem));
+        margin-inline: auto;
+    }
+    .page-eyebrow {
+        @apply text-primary text-xs font-semibold tracking-[0.17em] uppercase;
+    }
+    .page-title {
+        @apply text-foreground text-3xl leading-[1.08] font-semibold tracking-[-0.045em] sm:text-4xl;
+    }
+    .surface {
+        @apply bg-card rounded-2xl border shadow-[0_2px_12px_-8px_rgb(25_40_28/0.16)];
+    }
+    .link {
+        @apply text-primary underline-offset-4 hover:underline;
+    }
+    .landing-page .button {
+        @apply inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold;
+    }
+    .landing-page .primary-button {
+        @apply bg-primary text-primary-foreground hover:opacity-90;
+    }
+    .landing-page .secondary-button {
+        @apply bg-secondary text-secondary-foreground;
+    }
+    .landing-page .accent-button {
+        @apply bg-accent text-accent-foreground;
+    }
+    .landing-page .transparent-button {
+        @apply bg-background text-foreground;
+    }
+    .landing-page .error-text {
+        @apply text-destructive;
+    }
+    .landing-page .h1-text {
+        @apply text-3xl font-semibold tracking-tight;
+    }
+    .landing-page .h2-text {
+        @apply text-2xl font-semibold tracking-tight;
+    }
+    .landing-page .form-with-label {
+        @apply flex flex-col gap-2;
+    }
+    .landing-page .alert {
+        @apply bg-destructive/10 text-destructive rounded-xl p-4;
+    }
+    .countdown-digit {
+        display: inline-block;
+        width: 0.6em;
+        text-align: center;
+    }
+    .countdown-colon {
+        font-weight: bold;
+    }
+    .countdown-unit {
+        font-size: 0.4em;
+        opacity: 0.8;
+        margin-top: 0.1em;
+    }
+    .reveal-in {
+        animation: reveal-in 600ms ease-out both;
+    }
+}
+
+@keyframes reveal-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 639px) {
+    .shop-container {
+        width: calc(100% - 2rem);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }
