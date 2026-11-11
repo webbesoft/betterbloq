@@ -12,6 +12,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Sentry\Laravel\Integration;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -40,7 +42,13 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (InvalidSignatureException $exception, Request $request) {
+            if ($request->routeIs('verification.verify') && ! $request->expectsJson()) {
+                return redirect()->route('verification.notice')->with('status', 'verification-link-invalid');
+            }
+
+            return null;
+        });
         Integration::handles($exceptions);
     })
     // ->withSchedule(function (Schedule $schedule) {
