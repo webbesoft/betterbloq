@@ -3,26 +3,18 @@ set -e
 
 container_mode=${CONTAINER_MODE:-"http"}
 octane_server=${OCTANE_SERVER}
-running_migrations_and_seeders=${RUNNING_MIGRATIONS_AND_SEEDERS:-"true"}
+running_migrations=${RUNNING_MIGRATIONS:-"false"}
 
 initialStuff() {
     echo "Container mode: $container_mode"
     
-    if [ "${running_migrations_and_seeders}" = "true" ]; then
-        echo "Running migrations..."
-        
-        if ! php artisan migrate --isolated --force; then
-            echo "Migration with --isolated failed (this is expected on a fresh database). Retrying without lock..."
-            # If it fails, run it again without the lock. This will create the cache tables.
-            php artisan migrate --force
-        fi
-        
-        echo "Seeding the database..."
-        php artisan db:seed --force
-        
-        echo "Migrations and seeding completed."
+    if [ "${running_migrations}" = "true" ]; then
+        echo "Running explicitly enabled migrations..."
+        php artisan migrate --isolated --force
     fi
-    
+    # Demo seeders must never run as a side effect of starting an HTTP,
+    # scheduler, or queue container. Provision data in a separate release step.
+
     php artisan storage:link; \
     php artisan optimize:clear; \
     php artisan optimize;

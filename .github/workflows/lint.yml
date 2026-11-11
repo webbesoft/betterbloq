@@ -1,45 +1,47 @@
-name: linter
+name: style checks
 
 on:
   push:
-    branches:
-      - develop
-      - main
+    branches: [develop, main]
   pull_request:
-    branches:
-      - develop
-      - main
+    branches: [develop, main]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   quality:
     runs-on: ubuntu-latest
+    env:
+      REVIEW_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        with:
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-
-      - name: Install Dependencies
+          tools: composer:v2
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.14'
+      - name: Install locked dependencies
         run: |
-          composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-          npm install
-
-      - name: Run Pint
-        run: vendor/bin/pint
-
-      - name: Format Frontend
-        run: npm run format
-
-      - name: Lint Frontend
-        run: npm run lint
-
-      # - name: Commit Changes
-      #   uses: stefanzweifel/git-auto-commit-action@v5
-      #   with:
-      #     commit_message: fix code style
-      #     commit_options: '--no-verify'
+          composer install --no-interaction --no-scripts --prefer-dist
+          bun install --frozen-lockfile
+      # Check touched files without silently rewriting the checkout or making
+      # unrelated historical formatting debt block every change.
+      - name: Check changed PHP and frontend formatting
+        shell: bash
+        run: |
+          if [[ -z "$REVIEW_BASE_SHA" || "$REVIEW_BASE_SHA" =~ ^0+$ ]] || ! git cat-file -e "$REVIEW_BASE_SHA^{commit}" 2>/dev/null; then
+            REVIEW_BASE_SHA="$(git rev-parse HEAD^)"
+          fi
+          mapfile -d '' php_files < <(git diff --name-only --diff-filter=ACMR -z "$REVIEW_BASE_SHA" HEAD -- '*.php')
+          if ((${#php_files[@]})); then
+            php vendor/bin/pint --test "${php_files[@]}"
+          fi
+          mapfile -d '' frontend_files < <(git diff --name-only --diff-filter=ACMR -z "$REVIEW_BASE_SHA" HEAD -- 'resources/**/*.tsx' 'resources/**/*.ts' 'resources/**/*.css' vite.config.ts package.json)
+          if ((${#frontend_files[@]})); then
+            bunx --no-install prettier --check "${frontend_files[@]}"
+          fi

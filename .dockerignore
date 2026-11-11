@@ -1,17 +1,32 @@
 .git
 .github
+# Docker does not honor .gitignore: keep all runtime credentials out of the context.
 .env
-.env.backup
-.env.example
+.env.*
+.kamal/secrets
+.kamal/secrets.*
+.aws
+.ssh
+.codex
+.agents
+auth.json
+.npmrc
+*.pem
+*.key
 storage/framework/sessions/*
 storage/framework/views/*
 storage/framework/cache/data/*
-storage/logs/*.log
-storage/app/public/* # If you use symbolic links, manage storage links differently
+storage/logs/*
+database/*.sqlite*
+storage/app/private/*
+storage/app/public/*
 bootstrap/cache/*.php
 node_modules
 vendor
-public/storage # If linked from storage/app/public
+public/build
+public/storage
 public/hot
-*.DS_Store
-docker-compose.yml
+.DS_Store
+**/.DS_Store
+.phpunit.cache
+.phpunit.result.cache

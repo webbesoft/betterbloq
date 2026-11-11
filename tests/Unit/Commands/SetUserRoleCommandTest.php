@@ -10,7 +10,7 @@ it('sets the Super Admin role only for betterbloq accounts', function () {
     $admin = User::factory()->create(['email' => 'admin@betterbloq.com']);
     $customer = User::factory()->create(['email' => 'customer@example.org']);
 
-    $this->artisan('app:set-user-role')->assertSuccessful();
+    $this->artisan('app:set-user-role', ['email' => $admin->email])->assertSuccessful();
 
     expect($admin->fresh()->hasRole('Super Admin'))->toBeTrue()
         ->and($customer->fresh()->hasRole('Super Admin'))->toBeFalse();

@@ -4,33 +4,33 @@ namespace App\Console\Commands;
 
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Models\Role;
 
 class SetUserRoleCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'app:set-user-role';
+    protected $signature = 'app:set-user-role {email? : The verified account to grant Super Admin}';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'This command will set the admin user account as an account admin.';
+    protected $description = 'Grant Super Admin to one explicitly selected, verified account';
 
-    /**
-     * Execute the console command.
-     */
-    public function handle()
+    public function handle(): int
     {
-        //
-        $users = User::where('email', 'like', '%@betterbloq.com')->with(['roles'])->get();
+        $email = $this->argument('email');
+        if (! is_string($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->error('Supply the exact email of the verified administrator account. No roles were changed.');
 
-        foreach ($users as $user) {
-            $user->assignRole('Super Admin');
+            return self::FAILURE;
         }
+        $user = User::where('email', $email)->first();
+        if (! $user || ! $user->hasVerifiedEmail()) {
+            $this->error('The selected account must exist and have a verified email. No roles were changed.');
+
+            return self::FAILURE;
+        }
+        $user->assignRole(Role::findOrCreate('Super Admin', 'web'));
+        Log::notice('Administrator access explicitly granted from the console.', ['target_user_id' => $user->id]);
+        $this->info('Administrator access granted to the selected account.');
+
+        return self::SUCCESS;
     }
 }
