@@ -18,11 +18,12 @@ interface MarketProps {
 }
 
 export default function Market({ products, filters = {}, availableFilters }: MarketProps) {
-    const [category, setCategory] = useState(String(filters.filter?.category ?? filters.category ?? 'all'));
-    const [vendor, setVendor] = useState(String(filters.filter?.vendor ?? 'all'));
-    const [priceRange, setPriceRange] = useState<number[]>(filters.filter?.price_between?.split(':').map(Number) ?? [0, 1000]);
-    const [searchQuery, setSearchQuery] = useState(filters.filter?.name ?? '');
-    const [sortBy, setSortBy] = useState(filters.sort ?? '-created_at');
+    const initialFilters = Array.isArray(filters) ? {} : filters;
+    const [category, setCategory] = useState(String(initialFilters.filter?.category ?? initialFilters.category ?? 'all'));
+    const [vendor, setVendor] = useState(String(initialFilters.filter?.vendor ?? 'all'));
+    const [priceRange, setPriceRange] = useState<number[]>(initialFilters.filter?.price_between?.split(':').map(Number) ?? [0, 1000]);
+    const [searchQuery, setSearchQuery] = useState(initialFilters.filter?.name ?? '');
+    const [sortBy, setSortBy] = useState(initialFilters.sort ?? '-created_at');
     const [filtersOpen, setFiltersOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const { data, meta, links } = products;

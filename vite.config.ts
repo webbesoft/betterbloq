@@ -6,6 +6,8 @@ import { defineConfig } from 'vite';
 import { watchAndRun } from 'vite-plugin-watch-and-run';
 
 export default defineConfig({
+    // Resolve preloaded chunks and CSS from the bundle's own URL on any host.
+    base: './',
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx', 'resources/css/prezet.css'],
