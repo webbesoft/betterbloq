@@ -1,0 +1,124 @@
+/* Shared details from the materials-led public identity. Functional controls stay restrained. */
+[data-slot='button'],
+[data-slot='input'],
+[data-slot='select-trigger'],
+[data-slot='popover-content'],
+[data-slot='dropdown-menu-content'],
+[data-slot='select-content'],
+[data-slot='dialog-content'],
+[data-slot='alert-dialog-content'],
+[data-slot='alert'],
+[data-slot='card'] {
+    border-radius: 2px;
+}
+
+[data-slot='card'] {
+    box-shadow: none;
+}
+
+[data-slot='table-head'] {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+}
+
+.bb-shop-header,
+.bb-workspace-header {
+    border-top: 3px solid #e36b3e;
+}
+
+.bb-shop-footer h2 {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+}
+
+.bb-shop-header nav a::after {
+    border-radius: 0;
+}
+
+.bb-workspace [data-slot='sidebar-header'] {
+    padding-block: 20px;
+    border-bottom: 1px solid var(--sidebar-border);
+    margin-bottom: 16px;
+}
+
+.bb-workspace [data-slot='sidebar-group-label'] {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.bb-workspace [data-slot='sidebar-menu-button'] {
+    border-radius: 2px;
+}
+
+.bb-workspace [data-slot='sidebar-menu-button'][data-active='true'] {
+    background: var(--sidebar-accent);
+    box-shadow: inset 3px 0 0 #e36b3e;
+}
+
+.bb-workspace [data-slot='sidebar-inset'] {
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    box-shadow: none;
+}
+
+.bb-workspace .page-title {
+    font-size: clamp(1.875rem, 3vw, 2.5rem);
+}
+
+.bb-auth-story {
+    background: #e36b3e;
+    color: #242522;
+}
+
+.bb-auth-story .text-primary {
+    color: #242522;
+}
+
+.bb-auth-story img {
+    filter: none;
+}
+
+.bb-auth-blocks {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    max-width: 360px;
+}
+
+.bb-auth-blocks span {
+    height: 36px;
+    flex: 1;
+    background: #242522;
+}
+
+.bb-auth-blocks span:nth-child(2) {
+    height: 72px;
+}
+
+.bb-auth-blocks span:nth-child(3) {
+    height: 108px;
+}
+
+@media (max-width: 767px) {
+    .bb-workspace [data-slot='sidebar-inset'] {
+        border: 0;
+    }
+}
+
+.bb-dashboard-stats [data-slot='card'] {
+    border-top: 3px solid #e36b3e;
+}
+
+.bb-dashboard-stats [data-slot='card-title'] {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 11px;
+}
+
+.bb-dashboard-stats [data-slot='card-content'] > p {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.05em;
+}

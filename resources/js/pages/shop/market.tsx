@@ -187,7 +187,7 @@ export default function Market({ products, filters = {}, availableFilters }: Mar
                                     onChange={(event) => setSearchQuery(event.target.value)}
                                     placeholder="Search materials…"
                                     aria-label="Search materials"
-                                    className="bg-card h-11 rounded-xl pr-10 pl-11"
+                                    className="bg-card h-11 rounded-sm pr-10 pl-11"
                                 />
                                 {searchQuery && (
                                     <button
@@ -201,7 +201,7 @@ export default function Market({ products, filters = {}, availableFilters }: Mar
                                 )}
                             </div>
                             <Select value={sortBy} onValueChange={setSortBy}>
-                                <SelectTrigger className="bg-card h-11 w-full rounded-xl sm:w-48" aria-label="Sort materials">
+                                <SelectTrigger className="bg-card h-11 w-full rounded-sm sm:w-48" aria-label="Sort materials">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -231,7 +231,7 @@ export default function Market({ products, filters = {}, availableFilters }: Mar
                             </div>
                         ) : (
                             <div className="surface flex flex-col items-center px-6 py-20 text-center">
-                                <span className="bg-secondary mb-5 rounded-2xl p-4">
+                                <span className="bg-secondary mb-5 rounded-sm p-4">
                                     <Search className="text-secondary-foreground size-7" />
                                 </span>
                                 <h2 className="text-xl font-semibold tracking-tight">No materials found</h2>

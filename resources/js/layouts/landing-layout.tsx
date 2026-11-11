@@ -10,6 +10,7 @@ import { Toaster } from 'sonner';
 interface LandingLayoutProps {
     children: ReactNode;
     breadcrumbs: BreadcrumbItem[];
+    className?: string;
 }
 
 const navItems: NavItem[] = [
@@ -18,13 +19,13 @@ const navItems: NavItem[] = [
     { title: 'Categories', url: '/categories' },
 ];
 
-export default function LandingLayout({ children, breadcrumbs }: LandingLayoutProps) {
+export default function LandingLayout({ children, breadcrumbs, className = '' }: LandingLayoutProps) {
     const { flash } = usePage<{ flash?: { message?: { success?: string; error?: string; message?: string } } }>().props;
     const message = flash?.message;
     const Icon = message?.error ? CircleAlert : message?.success ? CircleCheck : Info;
 
     return (
-        <div className="flex min-h-screen flex-col">
+        <div className={`flex min-h-screen flex-col ${className}`}>
             <a
                 href="#main-content"
                 className="bg-foreground text-background fixed top-2 left-2 z-[100] -translate-y-24 rounded-lg px-4 py-3 text-sm focus:translate-y-0"
@@ -40,7 +41,7 @@ export default function LandingLayout({ children, breadcrumbs }: LandingLayoutPr
             {message && (message.success || message.error || message.message) && (
                 <div className="shop-container mt-5">
                     <div
-                        className={`flex items-start gap-3 rounded-xl border p-4 text-sm ${message.error ? 'border-destructive/25 bg-destructive/5 text-destructive' : 'bg-secondary text-secondary-foreground'}`}
+                        className={`flex items-start gap-3 rounded-sm border p-4 text-sm ${message.error ? 'border-destructive/25 bg-destructive/5 text-destructive' : 'bg-secondary text-secondary-foreground'}`}
                         role="alert"
                     >
                         <Icon className="mt-0.5 size-4 shrink-0" />

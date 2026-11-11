@@ -1,6 +1,6 @@
-import AppLogoIcon from '@/components/app-logo-icon';
-import { type SharedData } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
+import { Brand } from '@/components/brand';
+import { Link } from '@inertiajs/react';
+import { ArrowUpRight } from 'lucide-react';
 import { type PropsWithChildren } from 'react';
 
 interface AuthLayoutProps {
@@ -9,33 +9,41 @@ interface AuthLayoutProps {
 }
 
 export default function AuthSplitLayout({ children, title, description }: PropsWithChildren<AuthLayoutProps>) {
-    const { name, quote } = usePage<SharedData>().props;
-
     return (
-        <div className="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
-            <div className="bg-muted relative hidden h-full flex-col p-10 text-white lg:flex dark:border-r">
-                <div className="absolute inset-0 bg-zinc-900" />
-                <Link href={route('landing')} className="relative z-20 flex items-center text-lg font-medium">
-                    <AppLogoIcon className="mr-2 size-8 fill-current text-white" />
-                    {name}
+        <div className="bb-auth grid min-h-dvh lg:grid-cols-2">
+            <aside className="bb-auth-story hidden flex-col justify-between p-10 lg:flex xl:p-16">
+                <Link href={route('landing')} className="w-fit" aria-label="Betterbloq home">
+                    <Brand />
                 </Link>
-                {quote && (
-                    <div className="relative z-20 mt-auto">
-                        <blockquote className="space-y-2">
-                            <p className="text-lg">&ldquo;{quote.message}&rdquo;</p>
-                            <footer className="text-sm text-neutral-300">{quote.author}</footer>
-                        </blockquote>
+                <div className="my-16">
+                    <p className="font-mono text-[10px] font-semibold tracking-wider uppercase">Building materials. Greater buying power.</p>
+                    <h2 className="mt-7 text-[clamp(3.5rem,5.5vw,6rem)] leading-[0.96] font-semibold tracking-[-0.065em]">
+                        Your next build
+                        <br />
+                        starts here.
+                    </h2>
+                    <p className="mt-7 max-w-xs text-base leading-7">
+                        Find your materials. Order alongside other builders. Put greater buying power behind your project.
+                    </p>
+                    <div className="bb-auth-blocks mt-12" aria-hidden="true">
+                        <span />
+                        <span />
+                        <span />
                     </div>
-                )}
-            </div>
-            <div className="w-full lg:p-8">
-                <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-                    <Link href={route('landing')} className="relative z-20 flex items-center justify-center lg:hidden">
-                        <AppLogoIcon className="h-10 fill-current text-black sm:h-12" />
+                </div>
+                <Link href={route('market')} className="flex w-fit items-center gap-8 border-b border-current pb-2 text-sm font-medium">
+                    Take a look around the market <ArrowUpRight className="size-4" />
+                </Link>
+            </aside>
+            <div className="flex items-center px-6 py-12 sm:px-10 lg:px-12">
+                <div className="mx-auto flex w-full max-w-sm flex-col gap-7">
+                    <Link href={route('landing')} className="mb-5 w-fit lg:hidden" aria-label="Betterbloq home">
+                        <Brand />
                     </Link>
-                    <div className="flex flex-col items-start gap-2 text-left sm:items-center sm:text-center">
-                        <h1 className="text-xl font-medium">{title}</h1>
-                        <p className="text-muted-foreground text-sm text-balance">{description}</p>
+                    <div className="border-primary border-t-2 pt-6">
+                        <p className="page-eyebrow mb-4">Your Betterbloq account</p>
+                        <h1 className="text-3xl leading-tight font-semibold tracking-[-0.05em]">{title}</h1>
+                        <p className="text-muted-foreground mt-3 text-sm leading-6">{description}</p>
                     </div>
                     {children}
                 </div>

@@ -31,7 +31,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
         .toUpperCase();
 
     return (
-        <header className="bg-background/95 sticky top-0 z-40 border-b backdrop-blur-xl">
+        <header className="bb-shop-header bg-background sticky top-0 z-40 border-b">
             <div className="shop-container flex h-20 items-center justify-between gap-4">
                 <Link href="/" aria-label="BetterBloq home" className="shrink-0">
                     <Brand />
@@ -66,7 +66,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                                     </Avatar>
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent className="z-50 w-60 rounded-xl p-2" align="end">
+                            <DropdownMenuContent className="z-50 w-60 rounded-sm p-2" align="end">
                                 <DropdownMenuLabel className="py-3">
                                     <p>{user.name}</p>
                                     <p className="text-muted-foreground mt-1 truncate text-xs font-normal">{user.email}</p>
@@ -96,7 +96,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                             <Button variant="ghost" asChild>
                                 <Link href={route('login')}>Log in</Link>
                             </Button>
-                            <Button asChild className="rounded-xl">
+                            <Button asChild className="rounded-sm">
                                 <Link href={route('register')}>
                                     Get started <ArrowUpRight className="size-4" />
                                 </Link>
@@ -123,7 +123,7 @@ export function LandingNavigation({ items = [] }: { items: NavItem[] }) {
                                         onClick={() => setMenuOpen(false)}
                                         aria-current={active(item.url) ? 'page' : undefined}
                                         className={cn(
-                                            'rounded-xl px-4 py-3 text-base',
+                                            'rounded-sm px-4 py-3 text-base',
                                             active(item.url) ? 'bg-secondary font-semibold' : 'text-muted-foreground hover:bg-muted',
                                         )}
                                     >

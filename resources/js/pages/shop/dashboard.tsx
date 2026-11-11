@@ -109,7 +109,7 @@ export default function Dashboard({
                         <h1 className="page-title">Your building overview.</h1>
                         <p className="text-muted-foreground mt-4 text-sm">Your projects, orders, and purchase cycles, all in view.</p>
                     </div>
-                    <Button asChild className="h-11 w-fit shrink-0 rounded-xl">
+                    <Button asChild className="h-11 w-fit shrink-0 rounded-sm">
                         <Link href={route('market')}>
                             Find your next materials
                             <ArrowUpRight className="size-4" />
@@ -133,7 +133,7 @@ export default function Dashboard({
                 {!shouldShowGuide && !shouldShowReinstateButton && <Separator className="my-4" />}
 
                 <Separator />
-                <div className="grid auto-rows-min gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="bb-dashboard-stats grid auto-rows-min gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {/* Completed Orders */}
                     <Card>
                         <CardHeader>

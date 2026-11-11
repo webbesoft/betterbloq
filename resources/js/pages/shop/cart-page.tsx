@@ -119,7 +119,7 @@ export default function CartPage() {
                 </div>
                 {items.length === 0 ? (
                     <div className="surface flex flex-col items-center px-6 py-20 text-center sm:py-28">
-                        <span className="bg-secondary mb-6 flex size-20 items-center justify-center rounded-3xl">
+                        <span className="bg-secondary mb-6 flex size-20 items-center justify-center rounded-sm">
                             <ShoppingBag className="text-secondary-foreground size-9 stroke-1" />
                         </span>
                         <p className="page-eyebrow mb-3">Room for something good</p>
@@ -127,7 +127,7 @@ export default function CartPage() {
                         <p className="text-muted-foreground mt-3 max-w-md text-sm leading-7">
                             Your cart is empty for now. Explore the market and find what you need for your next build.
                         </p>
-                        <Button asChild className="mt-7 h-11 rounded-xl px-6">
+                        <Button asChild className="mt-7 h-11 rounded-sm px-6">
                             <Link href={route('market')}>
                                 Explore materials
                                 <ArrowRight className="size-4" />
@@ -182,7 +182,7 @@ export default function CartPage() {
                                 )}
                                 <Button
                                     type="submit"
-                                    className="mt-6 h-12 w-full justify-between rounded-xl px-5"
+                                    className="mt-6 h-12 w-full justify-between rounded-sm px-5"
                                     disabled={processing || items.length === 0}
                                 >
                                     {processing ? 'Opening checkout…' : 'Continue to checkout'}

@@ -22,7 +22,7 @@ export function AppShell({ children, variant = 'header' }: AppShellProps) {
     }
 
     return (
-        <SidebarProvider defaultOpen={isOpen} open={isOpen} onOpenChange={handleSidebarChange}>
+        <SidebarProvider className="bb-workspace" defaultOpen={isOpen} open={isOpen} onOpenChange={handleSidebarChange}>
             {children}
         </SidebarProvider>
     );

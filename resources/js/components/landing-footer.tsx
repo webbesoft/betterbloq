@@ -4,7 +4,7 @@ import { Brand } from './brand';
 
 export function LandingFooter() {
     return (
-        <footer className="bg-secondary/45 mt-20 border-t sm:mt-28">
+        <footer className="bb-shop-footer bg-secondary/45 mt-20 border-t sm:mt-28">
             <div className="shop-container grid gap-10 py-12 sm:grid-cols-[1.5fr_1fr_1fr] sm:py-16">
                 <div>
                     <Link href="/" aria-label="BetterBloq home">

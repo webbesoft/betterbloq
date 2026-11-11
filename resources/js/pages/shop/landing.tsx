@@ -1,143 +1,159 @@
-import { Button } from '@/components/ui/button';
+import '@/../css/betterbloq-home.css';
 import LandingLayout from '@/layouts/landing-layout';
 import { SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowDown, ArrowRight, ArrowUpRight, Boxes, CalendarDays, Layers3, PackageSearch, ReceiptText, Users } from 'lucide-react';
-import BuildingIllustration from './components/landing/building-illustration';
+import { ArrowDown, ArrowRight, ArrowUpRight, Plus } from 'lucide-react';
 
 const steps = [
     {
-        number: '01',
-        icon: PackageSearch,
-        title: 'Find your materials.',
-        text: 'Explore the market, compare suppliers, and find the right materials for the job.',
+        title: 'Choose what your build needs.',
+        text: 'Browse materials and compare suppliers in the market. Find what fits your project and your budget.',
+        note: 'Materials first',
     },
     {
-        number: '02',
-        icon: Users,
-        title: 'Buy alongside others.',
-        text: 'Join a purchase cycle. Your order combines with other builders’ orders to unlock volume pricing.',
+        title: 'Put your order with the others.',
+        text: 'Join a purchase cycle. We combine your order with other builders’ orders to unlock volume pricing.',
+        note: 'One shared purchase cycle',
     },
     {
-        number: '03',
-        icon: Layers3,
-        title: 'Build with more value.',
-        text: 'Pay upfront, then receive any unlocked volume discount as a refund when the cycle is finalized.',
+        title: 'Get your share of the savings.',
+        text: 'Pay the upfront price. When the cycle is finalized, any unlocked volume discount comes back to you as a refund.',
+        note: 'Volume discounts refunded',
     },
 ];
 
 export default function Landing() {
     const { auth } = usePage<SharedData>().props;
+
     return (
-        <LandingLayout breadcrumbs={[]}>
-            <Head title="Build better, together">
+        <LandingLayout breadcrumbs={[]} className="betterbloq-home">
+            <Head title="Building materials. Greater buying power.">
                 <meta
                     name="description"
-                    content="Source building materials, join shared purchase cycles, and put collective buying power behind your next project with BetterBloq."
+                    content="Find building materials and buy alongside other builders. BetterBloq combines orders in shared purchase cycles to unlock volume pricing."
                 />
             </Head>
-            <section className="shop-container grid items-center gap-12 pt-12 pb-14 lg:grid-cols-[1.1fr_1fr] lg:gap-20 lg:pt-20 lg:pb-20">
-                <div className="reveal-in">
-                    <p className="page-eyebrow mb-6 flex items-center gap-2.5">
-                        <span className="bg-primary size-1.5 rounded-full" />
-                        Built for the way you build
-                    </p>
-                    <h1 className="max-w-2xl text-[clamp(3.4rem,6.8vw,6.2rem)] leading-[0.98] font-medium tracking-[-0.065em]">
-                        Better building
+
+            <section className="bb-hero" aria-labelledby="hero-heading">
+                <div className="shop-container">
+                    <div className="bb-hero-label">
+                        <span>Building materials. Greater buying power.</span>
+                        <span aria-hidden="true">Better together / Betterbloq</span>
+                    </div>
+                    <h1 id="hero-heading">
+                        Build more.
                         <br />
-                        starts <span className="text-primary">together.</span>
+                        Buy together<span className="bb-stop">.</span>
                     </h1>
-                    <p className="text-muted-foreground mt-7 max-w-md text-base leading-7 sm:text-lg sm:leading-8">
-                        Your project might be individual. Your buying power doesn’t have to be. Find materials, pool demand, and make more of your
-                        building budget.
-                    </p>
-                    <div className="mt-8 flex flex-wrap items-center gap-3">
-                        <Button asChild size="lg" className="h-12 rounded-xl px-6">
-                            <Link href={route('market')}>
-                                Explore the market
-                                <ArrowUpRight className="ml-2 size-4" />
+                    <div className="bb-hero-bottom">
+                        <a href="#how-it-works" className="bb-how-link">
+                            <ArrowDown aria-hidden="true" />
+                            <span>A stronger way to buy</span>
+                        </a>
+                        <div className="bb-hero-intro">
+                            <p>
+                                Bricks. Cement. The next floor up. Whatever you’re building, put more buying power behind it by ordering alongside
+                                other builders.
+                            </p>
+                            <Link href={route('market')} className="bb-button">
+                                Find your materials <ArrowUpRight aria-hidden="true" />
                             </Link>
-                        </Button>
-                        <Button asChild variant="ghost" size="lg" className="h-12">
-                            <a href="#how-it-works">
-                                How it works
-                                <ArrowDown className="ml-1 size-4" />
-                            </a>
-                        </Button>
-                    </div>
-                    <div className="text-muted-foreground mt-10 flex items-center gap-3 text-xs">
-                        <span className="bg-secondary flex size-8 items-center justify-center rounded-full">
-                            <Boxes className="size-4" />
-                        </span>
-                        From your first brick to your next big project.
-                    </div>
-                </div>
-                <div className="reveal-in min-w-0" style={{ animationDelay: '100ms' }}>
-                    <BuildingIllustration />
-                </div>
-            </section>
-            <div className="bg-card/50 border-y">
-                <div className="shop-container grid gap-5 py-6 text-sm sm:grid-cols-3 sm:gap-10 sm:py-7">
-                    {[
-                        { icon: ReceiptText, text: 'Clear upfront pricing' },
-                        { icon: CalendarDays, text: 'Shared purchase cycles' },
-                        { icon: Users, text: 'The power of buying together' },
-                    ].map(({ icon: Icon, text }) => (
-                        <div key={text} className="flex items-center gap-3">
-                            <Icon className="text-primary size-4 shrink-0" />
-                            <span className="font-medium">{text}</span>
                         </div>
-                    ))}
-                </div>
-            </div>
-            <section id="how-it-works" className="shop-container py-16 sm:py-24">
-                <div className="mb-10 flex flex-col justify-between gap-5 sm:mb-14 sm:flex-row sm:items-end">
-                    <div>
-                        <p className="page-eyebrow mb-4">A simpler way to source</p>
-                        <h2 className="page-title">Your project. Our collective strength.</h2>
                     </div>
-                    <p className="text-muted-foreground max-w-xs text-sm leading-6">
-                        Good materials and better buying power, with a clear path from browsing to building.
-                    </p>
                 </div>
-                <div className="grid gap-5 md:grid-cols-3">
-                    {steps.map(({ number, icon: Icon, title, text }) => (
-                        <article key={number} className="surface p-7 sm:p-8">
-                            <div className="mb-10 flex items-center justify-between">
-                                <span className="bg-secondary text-secondary-foreground flex size-11 items-center justify-center rounded-xl">
-                                    <Icon className="size-5" />
-                                </span>
-                                <span className="text-muted-foreground/60 text-xs tabular-nums">/ {number}</span>
-                            </div>
-                            <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
-                            <p className="text-muted-foreground mt-3 text-sm leading-7">{text}</p>
-                        </article>
-                    ))}
+                <div className="bb-materials" aria-label="From foundations to finishes">
+                    <div className="bb-material bb-material-brick">
+                        <div className="bb-texture bb-brickwork" aria-hidden="true" />
+                        <span>
+                            <span>01 /</span> Brick by brick
+                        </span>
+                    </div>
+                    <div className="bb-material bb-material-concrete">
+                        <div className="bb-texture bb-concrete" aria-hidden="true" />
+                        <span>
+                            <span>02 /</span> On solid ground
+                        </span>
+                    </div>
+                    <div className="bb-material bb-material-steel">
+                        <div className="bb-texture bb-steel" aria-hidden="true" />
+                        <span>
+                            <span>03 /</span> Built for strength
+                        </span>
+                    </div>
+                    <div className="bb-material bb-material-timber">
+                        <div className="bb-texture bb-timber" aria-hidden="true" />
+                        <span>
+                            <span>04 /</span> Room to grow
+                        </span>
+                    </div>
                 </div>
             </section>
-            <section className="shop-container">
-                <div className="relative overflow-hidden rounded-[1.75rem] bg-[#2e4234] p-8 text-[#f5f5eb] sm:p-12 lg:flex lg:items-center lg:justify-between lg:gap-10">
-                    <div className="relative z-10">
-                        <p className="mb-4 text-xs font-medium tracking-[0.16em] text-[#becdb8] uppercase">Make your next project a better one</p>
-                        <h2 className="max-w-xl text-3xl leading-tight font-medium tracking-[-0.04em] sm:text-4xl">
-                            Let’s put something
+
+            <section id="how-it-works" className="shop-container bb-process" aria-labelledby="process-heading">
+                <div className="bb-process-heading">
+                    <p className="bb-label">The buying power of more people</p>
+                    <h2 id="process-heading">
+                        Your own project.
+                        <br />A bigger order.
+                    </h2>
+                    <p className="bb-process-intro">
+                        You don’t need a big development to buy with the crowd. Betterbloq brings individual orders together in shared purchase
+                        cycles.
+                    </p>
+                    <Link href={route('market')} className="bb-text-link">
+                        Explore the market <ArrowUpRight aria-hidden="true" />
+                    </Link>
+                </div>
+                <ol className="bb-steps">
+                    {steps.map(({ title, text, note }, index) => (
+                        <li key={title}>
+                            <span className="bb-step-number">0{index + 1}</span>
+                            <div>
+                                <h3>{title}</h3>
+                                <p>{text}</p>
+                                <span className="bb-step-note">{note}</span>
+                            </div>
+                        </li>
+                    ))}
+                </ol>
+            </section>
+
+            <section className="bb-collective" aria-labelledby="collective-heading">
+                <div className="shop-container bb-collective-inner">
+                    <div className="bb-order-stack" aria-hidden="true">
+                        <div>
+                            <span>Your build</span>
+                            <Plus />
+                        </div>
+                        <div>
+                            <span>Another builder’s order</span>
+                            <Plus />
+                        </div>
+                        <div>
+                            <span>And the next one</span>
+                            <Plus />
+                        </div>
+                        <div className="bb-combined-order">
+                            <span>Greater buying power</span>
+                            <ArrowUpRight />
+                        </div>
+                    </div>
+                    <div className="bb-collective-copy">
+                        <p className="bb-label">Small orders add up.</p>
+                        <h2 id="collective-heading">
+                            There’s strength
                             <br />
-                            great on solid ground.
+                            in numbers.
                         </h2>
+                        <p>
+                            Same project. More people on your side. Start with the materials you need and let a shared purchase cycle do the heavy
+                            lifting.
+                        </p>
+                        <Link href={auth?.user ? route('dashboard') : route('register')} className="bb-button bb-button-orange">
+                            {auth?.user ? 'Open your workspace' : 'Join Betterbloq'} <ArrowRight aria-hidden="true" />
+                        </Link>
+                        <p className="bb-collective-note">Clear upfront prices. Any unlocked discount refunded at the end of the cycle.</p>
                     </div>
-                    <div className="relative z-10 mt-7 lg:mt-0">
-                        <Button asChild size="lg" className="h-12 rounded-xl bg-[#f0e6cf] px-6 text-[#2e4234] hover:bg-[#ffffff]">
-                            <Link href={auth?.user ? route('dashboard') : route('register')}>
-                                {auth?.user ? 'Open your workspace' : 'Start building with us'}
-                                <ArrowRight className="ml-2 size-4" />
-                            </Link>
-                        </Button>
-                        <p className="mt-3 text-xs text-[#becdb8]">A better way to buy. A better way to build.</p>
-                    </div>
-                    <div
-                        className="pointer-events-none absolute -right-10 -bottom-24 size-72 rotate-45 rounded-3xl border border-white/10"
-                        aria-hidden="true"
-                    />
                 </div>
             </section>
         </LandingLayout>

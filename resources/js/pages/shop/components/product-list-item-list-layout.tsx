@@ -24,7 +24,7 @@ export default function ProductListItemListLayout({ product }: { product: Produc
     const rating = Number(product.average_rating) || 0;
 
     return (
-        <article className="surface group hover:border-primary/30 flex h-full flex-col overflow-hidden transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-1 hover:shadow-[0_12px_28px_-16px_rgb(25_40_28/0.25)]">
+        <article className="surface group hover:border-primary/30 flex h-full flex-col overflow-hidden transition-colors duration-200">
             <Link
                 href={href}
                 aria-label={`View ${product.name}`}
@@ -87,7 +87,7 @@ export default function ProductListItemListLayout({ product }: { product: Produc
                     <Button
                         asChild
                         variant="outline"
-                        className="group-hover:border-primary/40 group-hover:text-primary mt-4 h-10 w-full justify-between rounded-xl text-xs"
+                        className="group-hover:border-primary/40 group-hover:text-primary mt-4 h-10 w-full justify-between rounded-sm text-xs"
                     >
                         <Link href={href}>
                             View material

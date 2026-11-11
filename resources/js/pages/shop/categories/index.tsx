@@ -19,7 +19,7 @@ function CategoryTile({ category }: { category: CategoryItem }) {
     return (
         <Link
             href={route('market', { filter: { category: category.id } })}
-            className="surface group hover:border-primary/40 overflow-hidden transition-[transform,border-color] hover:-translate-y-1"
+            className="surface group hover:border-primary/40 overflow-hidden transition-colors"
         >
             <div className="bg-secondary/60 relative flex aspect-[4/3] items-center justify-center overflow-hidden border-b">
                 {category.image_url && !imageFailed ? (
@@ -62,7 +62,7 @@ export default function CategoryIndex({ categories }: CategoryProps) {
                             Find the right materials for each part of your project.
                         </p>
                     </div>
-                    <Button asChild variant="outline" className="w-fit rounded-xl">
+                    <Button asChild variant="outline" className="w-fit rounded-sm">
                         <Link href={route('market')}>
                             View all materials
                             <ArrowRight className="size-4" />
@@ -77,7 +77,7 @@ export default function CategoryIndex({ categories }: CategoryProps) {
                     </div>
                 ) : (
                     <div className="surface flex flex-col items-center px-6 py-20 text-center">
-                        <span className="bg-secondary mb-5 rounded-2xl p-4">
+                        <span className="bg-secondary mb-5 rounded-sm p-4">
                             <Layers3 className="text-secondary-foreground size-8 stroke-1" />
                         </span>
                         <h2 className="text-xl font-semibold tracking-tight">The next layer is taking shape.</h2>
