@@ -224,7 +224,7 @@ it('blocks finalization while a checkout can still become payable', function () 
 });
 
 it('rejects concurrent finalization and recovers an expired lease', function () {
-    $this->cycle->forceFill(['status' => 'processing_payments', 'finalization_token' => 'running', 'finalization_lease_until' => now()->addMinute()])->save();
+    $this->cycle->forceFill(['status' => 'processing_payments', 'finalization_token' => '11111111-1111-4111-8111-111111111111', 'finalization_lease_until' => now()->addMinute()])->save();
     $service = app(CycleFinalizationService::class);
     expect(fn () => $service->finalize($this->cycle->id))->toThrow(RuntimeException::class, 'already being finalized');
     $this->cycle->forceFill(['finalization_lease_until' => now()->subMinute()])->save();
@@ -437,4 +437,16 @@ it('renders storage and final refund amounts on the invoice', function () {
     $order->update(['initial_amount' => 204, 'total_amount' => 204, 'final_amount' => 184, 'status' => 'completed']);
     $html = view('invoices.order', ['order' => $order->fresh()->load('lineItems.product')])->render();
     expect($html)->toContain('Storage Fee')->toContain('Discount refunded:')->toContain('-$20.00')->toContain('$184.00');
+});
+
+it('retains a finalization lease when a same-second heartbeat changes no column values', function () {
+    $this->freezeTime(function () {
+        $order = createPaidTestOrder($this);
+        $this->mock(StripeGateway::class)->shouldReceive('paymentIntent')->once()->andReturn([
+            'status' => 'succeeded', 'currency' => 'usd', 'amount_received' => 20000,
+            'latest_charge' => ['amount_refunded' => 0],
+        ]);
+        expect(app(CycleFinalizationService::class)->finalize($this->cycle->id)['successful'])->toBe(1)
+            ->and($order->fresh()->status)->toBe('completed');
+    });
 });

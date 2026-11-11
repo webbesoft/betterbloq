@@ -33,4 +33,4 @@ Use actual numeric line IDs as the JSON keys. Include every product line and omi
 
 ## Validation limits
 
-The regression suite covers signed webhook handling, payment failures and retries, amount validation, checkout reuse, per-line discounts, storage fees, notification isolation, and lease recovery using SQLite and a mocked Stripe gateway. Database row-lock behavior and DDL must also be validated on the deployment's MariaDB/MySQL version; SQLite cannot establish production concurrency behavior.
+The regression suite covers signed webhook handling, payment failures and retries, amount validation, checkout reuse, per-line discounts, storage fees, notification isolation, and lease recovery using SQLite and MariaDB 11.4 with a mocked Stripe gateway. Both database engines are exercised in CI. Production-scale contention and provider configuration still need staging validation; a single-process test suite cannot establish every concurrency behavior.

@@ -94,11 +94,15 @@ class CycleFinalizationService
 
     private function heartbeat(int $cycleId, string $token): void
     {
-        if (! PurchaseCycle::whereKey($cycleId)->where('finalization_token', $token)->update([
-            'finalization_lease_until' => now()->addMinutes(10),
-        ])) {
-            throw new RuntimeException('Finalization lease was lost.');
-        }
+        DB::transaction(function () use ($cycleId, $token) {
+            $cycle = PurchaseCycle::whereKey($cycleId)->lockForUpdate()->firstOrFail();
+            if ($cycle->finalization_token !== $token) {
+                throw new RuntimeException('Finalization lease was lost.');
+            }
+            // MariaDB reports changed rows, so a same-second renewal may report
+            // zero despite still owning the lease. Ownership is checked above.
+            $cycle->forceFill(['finalization_lease_until' => now()->addMinutes(10)])->save();
+        }, 3);
     }
 
     private function finalizeOrder(Order $order): void
